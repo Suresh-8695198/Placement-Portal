@@ -276,12 +276,12 @@ const CompanyLogin = () => {
           border: none;
           border-radius: 1.1rem;
           transition: all 0.35s ease;
-          box-shadow: 0 6px 20px var(--primary-glow);
+          box-shadow: none;
         }
 
         .btn-login:hover:not(:disabled) {
           transform: translateY(-3px);
-          box-shadow: 0 14px 35px var(--primary-glow);
+          box-shadow: none;
         }
 
         .btn-login:disabled { opacity: 0.7; cursor: not-allowed; }

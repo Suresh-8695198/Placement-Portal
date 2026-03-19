@@ -21,18 +21,19 @@ export default function CompanyDashboard() {
 
       <style>{`
         :root {
-          --primary-start: #6366f1;
-          --primary-end: #8b5cf6;
-          --primary-glow: rgba(99, 102, 241, 0.4);
+          --bg-main: #f8fafc;
+          --card-bg: #ffffff;
+          --primary-brand: #4f46e5;
+          --text-main: #0f172a;
+          --text-muted: #64748b;
         }
 
         * { margin:0; padding:0; box-sizing:border-box; }
 
-        html, body {
-          height: 100%;
-          font-family: 'Segoe UI', system-ui, sans-serif;
-          background: linear-gradient(135deg, #0f172a, #1e3a8a, var(--primary-start));
-          color: #e2e8f0;
+        body {
+          background-color: var(--bg-main);
+          color: var(--text-main);
+          font-family: 'Inter', -apple-system, sans-serif;
           overflow: hidden;
         }
 
@@ -53,44 +54,60 @@ export default function CompanyDashboard() {
           display: flex;
           flex-direction: column;
           min-width: 0;
-          background: rgba(15, 23, 42, 0.35);
-          backdrop-filter: blur(8px);
+          background: var(--bg-main);
         }
 
         .topbar-wrapper {
           flex-shrink: 0;
+          border-bottom: 1px solid #e2e8f0;
+          background: #ffffff;
         }
 
         .content-wrapper {
           flex: 1;
           overflow-y: auto;
-          padding: 2rem;
-          -webkit-overflow-scrolling: touch;
+          padding: 2.5rem;
+          scroll-behavior: smooth;
         }
 
+        /* Standardized Content Card */
         .content-wrapper > * {
-          background: rgba(255, 255, 255, 0.92);
-          border-radius: 1.4rem;
-          padding: 2rem;
-          box-shadow: 0 12px 40px rgba(0,0,0,0.22);
-          backdrop-filter: blur(12px);
-          border: 1px solid rgba(255,255,255,0.25);
-          animation: fadeIn 0.6s ease-out;
+          background: #ffffff;
+          border-radius: 20px;
+          padding: 2.5rem;
+          box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+          border: 1px solid #e2e8f0;
+          animation: slideUp 0.5s ease-out;
         }
 
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(20px); }
+        @keyframes slideUp {
+          from { opacity: 0; transform: translateY(15px); }
           to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Custom Scrollbar */
+        .content-wrapper::-webkit-scrollbar {
+          width: 8px;
+        }
+        .content-wrapper::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .content-wrapper::-webkit-scrollbar-thumb {
+          background: #cbd5e1;
+          border-radius: 10px;
+        }
+        .content-wrapper::-webkit-scrollbar-thumb:hover {
+          background: #94a3b8;
         }
 
         @media (max-width: 992px) {
           .content-wrapper { padding: 1.5rem; }
-          .content-wrapper > * { padding: 1.6rem; border-radius: 1.2rem; }
+          .content-wrapper > * { padding: 1.8rem; border-radius: 16px; }
         }
 
         @media (max-width: 576px) {
-          .content-wrapper { padding: 1.2rem; }
-          .content-wrapper > * { padding: 1.4rem; border-radius: 1rem; }
+          .content-wrapper { padding: 1rem; }
+          .content-wrapper > * { padding: 1.2rem; border-radius: 12px; }
         }
       `}</style>
 
@@ -111,4 +128,4 @@ export default function CompanyDashboard() {
       </div>
     </>
   );
-}
+}

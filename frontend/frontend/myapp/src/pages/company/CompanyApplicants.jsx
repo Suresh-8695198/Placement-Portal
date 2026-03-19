@@ -148,22 +148,22 @@ export default function CompanyApplicants() {
 
   return (
     <>
+
       <style>{`
         :root {
-          --primary-start: #6366f1;
-          --primary-end: #8b5cf6;
-          --primary-glow: rgba(99, 102, 241, 0.4);
-          --glass-bg: rgba(255, 255, 255, 0.94);
-          --glass-border: rgba(255,255,255,0.28);
-          --text-main: #1e293b;
-          --text-secondary: #475569;
+          --bg-main: #f8fafc;
+          --card-bg: #ffffff;
+          --primary-brand: #4f46e5;
+          --text-main: #0f172a;
+          --text-secondary: #64748b;
+          --border-color: #e2e8f0;
         }
 
         .applicants-container {
           min-height: 100vh;
-          padding: 2rem 1rem;
-          background: linear-gradient(135deg, rgba(15,23,42,0.3), rgba(30,58,138,0.2));
-          backdrop-filter: blur(8px);
+          padding: 2.5rem 2rem;
+          background: var(--bg-main);
+          color: var(--text-main);
         }
 
         .main-content-wrapper {
@@ -171,667 +171,670 @@ export default function CompanyApplicants() {
           margin: 0 auto;
         }
 
-        .section-title {
-          font-size: 2.1rem;
-          font-weight: 900;
-          margin-bottom: 1.8rem;
-          background: linear-gradient(90deg, var(--primary-start), var(--primary-end));
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
+        .section-header {
+          margin-bottom: 2rem;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
         }
 
-        /* Search Bar Styles */
-        .search-wrapper {
-          position: relative;
+        .section-title {
+          font-size: 1.85rem;
+          font-weight: 800;
+          color: var(--text-main);
+          margin: 0;
+          letter-spacing: -0.02em;
+        }
+
+        .search-area {
+          background: #ffffff;
+          border-radius: 12px;
+          border: 1px solid var(--border-color);
+          padding: 0.6rem 1.2rem;
+          display: flex;
+          align-items: center;
+          gap: 12px;
           max-width: 500px;
-          margin: 1.5rem auto 2.5rem;
+          margin-bottom: 2.5rem;
+          box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+
+        .search-area i {
+          color: var(--text-secondary);
         }
 
         .search-input {
-          width: 100%;
-          padding: 0.95rem 1.4rem;
-          padding-right: 3.5rem;
-          border: 1px solid rgba(209,213,219,0.6);
-          border-radius: 9999px;
-          font-size: 1rem;
-          background: rgba(255,255,255,0.85);
-          transition: all 0.3s ease;
-        }
-
-        .search-input:focus {
-          outline: none;
-          border-color: var(--primary-start);
-          box-shadow: 0 0 0 4px var(--primary-glow);
-        }
-
-        .clear-btn {
-          position: absolute;
-          right: 1.1rem;
-          top: 50%;
-          transform: translateY(-50%);
-          background: none;
           border: none;
-          font-size: 1.6rem;
-          color: #9ca3af;
-          cursor: pointer;
-          padding: 0;
-          line-height: 1;
-        }
-
-        .clear-btn:hover {
-          color: #ef4444;
+          outline: none;
+          width: 100%;
+          font-size: 1rem;
+          color: var(--text-main);
         }
 
         .applicants-grid {
           display: grid;
-          gap: 1.6rem 1.8rem;
+          grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+          gap: 1.5rem;
         }
 
-        @media (min-width: 992px) { .applicants-grid { grid-template-columns: repeat(3, 1fr); } }
-        @media (min-width: 768px) and (max-width: 991px) { .applicants-grid { grid-template-columns: repeat(2, 1fr); } }
-        @media (max-width: 767px) { .applicants-grid { grid-template-columns: 1fr; } }
-
         .applicant-card {
-          background: var(--glass-bg);
-          border-radius: 1.4rem;
-          padding: 1.8rem;
-          box-shadow: 0 10px 32px rgba(0,0,0,0.15), inset 0 0 18px rgba(255,255,255,0.25);
-          backdrop-filter: blur(14px);
-          border: 1px solid var(--glass-border);
-          transition: all 0.35s ease;
+          background: #ffffff;
+          border: 1px solid var(--border-color);
+          border-radius: 16px;
+          padding: 1.5rem;
           display: flex;
           flex-direction: column;
-          height: 100%;
-          min-height: 340px;
+          gap: 1rem;
+          transition: all 0.3s ease;
+          position: relative;
         }
 
         .applicant-card:hover {
-          transform: translateY(-6px);
-          box-shadow: 0 20px 50px rgba(99,102,241,0.28);
+          border-color: var(--primary-brand);
+          box-shadow: 0 10px 20px rgba(0,0,0,0.04);
+          transform: translateY(-4px);
+        }
+
+        .applicant-header {
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
         }
 
         .applicant-name {
-          font-size: 1.35rem;
-          font-weight: 800;
+          font-size: 1.2rem;
+          font-weight: 700;
           color: var(--text-main);
-          margin-bottom: 1rem;
-          line-height: 1.3;
+          margin: 0;
         }
 
-        .applicant-info {
-          font-size: 0.96rem;
+        .applicant-subinfo {
+          font-size: 0.85rem;
           color: var(--text-secondary);
-          margin-bottom: 0.7rem;
+          display: flex;
+          align-items: center;
+          gap: 6px;
         }
 
-        .status-section {
-          margin: 1.2rem 0;
-        }
-
-        .status-label {
-          font-weight: 600;
-          color: var(--text-main);
-          margin-right: 0.5rem;
+        .job-tag {
+          font-size: 0.8rem;
+          background: #f1f5f9;
+          color: #475569;
+          padding: 0.25rem 0.75rem;
+          border-radius: 999px;
+          border: 1px solid #e2e8f0;
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          margin-top: 4px;
         }
 
         .status-badge {
-          padding: 0.35rem 0.9rem;
-          border-radius: 9999px;
-          font-size: 0.82rem;
+          display: inline-block;
+          font-size: 0.75rem;
           font-weight: 700;
           text-transform: uppercase;
-          color: white;
+          padding: 0.2rem 0.6rem;
+          border-radius: 999px;
+          width: fit-content;
         }
 
-        .status-applied { background: #cbd5e1; color: #334155; }
-        .status-shortlisted { background: linear-gradient(135deg, #facc15, #fde047); color: #713f12; }
-        .status-selected { background: linear-gradient(135deg, #10b981, #34d399); color: white; }
-        .status-rejected { background: linear-gradient(135deg, #ef4444, #f87171); color: white; }
+        .status-Applied { background: #f8fafc; color: #64748b; border: 1px solid #e2e8f0; }
+        .status-Shortlisted { background: #fffbeb; color: #92400e; border: 1px solid #fef3c7; }
+        .status-Selected { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+        .status-Rejected { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
 
-        .action-row {
-          display: flex;
-          gap: 0.9rem;
-          margin-top: auto;
-          padding-top: 1.2rem;
-          flex-wrap: wrap;
+        .action-btns {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 8px;
+          margin-top: 1rem;
+          padding-top: 1.25rem;
+          border-top: 1px solid var(--border-color);
         }
 
-        .action-btn {
-          flex: 1 1 110px;
-          padding: 0.8rem 1.4rem;
-          border-radius: 1rem;
+        .btn-action {
+          padding: 0.6rem;
+          border-radius: 8px;
+          font-size: 0.85rem;
           font-weight: 600;
-          font-size: 0.96rem;
+          border: 1px solid var(--border-color);
           cursor: pointer;
-          transition: all 0.28s ease;
-          border: none;
-          color: white;
-          box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+          transition: all 0.2s ease;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 6px;
         }
 
-        .action-btn:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+        .btn-view-profile {
+          grid-column: span 2;
+          background: #f5f3ff;
+          color: #5b21b6;
+          border: 1px solid #ddd6fe;
         }
 
-        .btn-view { background: linear-gradient(135deg, #6366f1, #8b5cf6); }
-        .btn-shortlist { background: linear-gradient(135deg, #facc15, #fde047); color: #713f12; }
-        .btn-select { background: linear-gradient(135deg, #10b981, #34d399); }
-        .btn-reject { background: linear-gradient(135deg, #ef4444, #f87171); }
+        .btn-view-profile:hover { background: #ede9fe; }
+
+        .btn-shortlist-action {
+          background: #fffbeb;
+          color: #92400e;
+          border: 1px solid #fef3c7;
+        }
+        .btn-shortlist-action:hover { background: #fef3c7; }
+
+        .btn-select-action {
+          background: #f0fdf4;
+          color: #166534;
+          border: 1px solid #bbf7d0;
+        }
+        .btn-select-action:hover { background: #dcfce7; }
+
+        .btn-reject-action {
+          background: #fef2f2;
+          color: #991b1b;
+          border: 1px solid #fecaca;
+        }
+        .btn-reject-action:hover { background: #fee2e2; }
 
         .modal-overlay {
           position: fixed;
           inset: 0;
-          background: rgba(15, 23, 42, 0.65);
+          background: rgba(15, 23, 42, 0.4);
           backdrop-filter: blur(4px);
-          z-index: 1000;
+          z-index: 2000;
           display: flex;
           align-items: center;
           justify-content: center;
-          padding: 1rem;
+          padding: 2rem;
         }
 
         .modal-content {
-          background: var(--glass-bg);
-          border-radius: 1.4rem;
-          padding: 2rem;
+          background: #ffffff;
+          border-radius: 24px;
           width: 100%;
-          max-width: 680px;
+          max-width: 850px;
           max-height: 90vh;
-          overflow-x: hidden;
           overflow-y: auto;
-          box-shadow: 0 20px 60px rgba(0,0,0,0.28), inset 0 0 30px rgba(255,255,255,0.35);
-          backdrop-filter: blur(16px);
-          border: 1px solid var(--glass-border);
+          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
           position: relative;
-          scrollbar-width: thin;
-          scrollbar-color: #6366f1 transparent;
+          color: #000;
         }
 
-        .modal-content * {
-          max-width: 100% !important;
-          box-sizing: border-box;
-        }
-
-        .modal-close {
+        .modal-close-btn {
           position: absolute;
-          top: 1.2rem;
-          right: 1.4rem;
-          background: none;
-          border: none;
-          font-size: 1.9rem;
-          color: #64748b;
-          cursor: pointer;
-        }
-
-        .modal-close:hover { color: var(--text-main); }
-
-        .modal-title {
-          font-size: 1.85rem;
-          font-weight: 800;
-          color: #000000;
-          margin-bottom: 1.8rem;
-          padding-right: 2.5rem;
-        }
-
-        .modal-section-title {
-          font-size: 1.4rem;
-          font-weight: 700;
-          color: #000000;
-          margin: 2.4rem 0 1.2rem;
-          border-bottom: 1px solid rgba(99,102,241,0.18);
-          padding-bottom: 0.5rem;
-        }
-
-        .modal-info {
-          font-size: 1.05rem;
-          color: #000000;
-          margin-bottom: 0.9rem;
-          line-height: 1.5;
-        }
-
-        .modal-info strong {
-          color: #000000;
-          font-weight: 600;
-        }
-
-        .skill-tag {
-          background: rgba(99,102,241,0.12);
-          color: #4f46e5;
-          padding: 0.45rem 1.1rem;
-          border-radius: 999px;
-          font-size: 0.95rem;
-          margin-right: 0.7rem;
-          margin-bottom: 0.7rem;
-          display: inline-block;
-        }
-
-        .education-item,
-        .internship-item,
-        .certificate-item,
-        .project-item {
-          margin-bottom: 1.6rem;
-          padding-left: 1.2rem;
-          border-left: 4px solid #6366f1;
-          color: #000000;
-        }
-
-        .project-item {
-          border-left-color: #8b5cf6;
-        }
-
-        .certificate-item {
-          border-left-color: #10b981;
-        }
-
-        .loading-spinner {
-          border: 5px solid rgba(99,102,241,0.12);
-          border-top: 5px solid var(--primary-start);
+          top: 1.5rem;
+          right: 1.5rem;
+          background: #f1f5f9;
+          border: 1px solid #e2e8f0;
+          width: 36px;
+          height: 36px;
           border-radius: 50%;
-          width: 48px;
-          height: 48px;
-          animation: spin 1s linear infinite;
-          margin: 4rem auto;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          color: #64748b;
+          z-index: 100;
         }
 
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
+        .modal-close-btn:hover {
+          background: #fee2e2;
+          color: #ef4444;
+          border-color: #fecaca;
         }
 
-        .social-link {
-          color: #6366f1;
+        .profile-header {
+          padding: 3rem 3rem 1.5rem;
+          background: #f8fafc;
+          border-bottom: 1px solid #e2e8f0;
+          display: flex;
+          flex-direction: column;
+          gap: 0.75rem;
+        }
+
+        .profile-name {
+          font-size: 2.2rem;
+          font-weight: 800;
+          color: #0f172a;
+          letter-spacing: -0.02em;
+        }
+
+        .profile-badges {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 12px;
+          font-size: 0.9rem;
+          color: #64748b;
+        }
+
+        .profile-badge-item {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        }
+
+        .modal-body {
+          padding: 2.5rem 3rem;
+        }
+
+        .profile-section {
+          margin-bottom: 3rem;
+        }
+
+        .section-title-alt {
+          font-size: 1.1rem;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          color: var(--primary-brand);
+          margin-bottom: 1.5rem;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+
+        .section-title-alt::after {
+          content: "";
+          height: 1px;
+          flex: 1;
+          background: #e2e8f0;
+        }
+
+        .grid-detail {
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 1.5rem;
+        }
+
+        .detail-card {
+          padding: 1.25rem;
+          background: #f8fafc;
+          border-radius: 12px;
+          border: 1px solid #e2e8f0;
+        }
+
+        .detail-card-label {
+          font-size: 0.75rem;
           font-weight: 600;
+          color: #64748b;
+          text-transform: uppercase;
+          margin-bottom: 6px;
+        }
+
+        .detail-card-value {
+          font-size: 1rem;
+          font-weight: 600;
+          color: #0f172a;
+        }
+
+        .skill-tags {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+        }
+
+        .skill-tag-pill {
+          background: #ffffff;
+          border: 1px solid #e2e8f0;
+          padding: 0.4rem 1rem;
+          border-radius: 8px;
+          font-weight: 600;
+          font-size: 0.9rem;
+          color: #334155;
+          box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+        }
+
+        .timeline-item {
+          position: relative;
+          padding-left: 24px;
+          border-left: 2px solid var(--primary-brand);
+          margin-bottom: 2rem;
+        }
+
+        .timeline-item::before {
+          content: "";
+          position: absolute;
+          left: -7px;
+          top: 0;
+          width: 12px;
+          height: 12px;
+          background: #ffffff;
+          border: 2px solid var(--primary-brand);
+          border-radius: 50%;
+        }
+
+        .timeline-title {
+          font-weight: 700;
+          font-size: 1.1rem;
+          color: #0f172a;
+          margin-bottom: 4px;
+        }
+
+        .timeline-subtitle {
+          font-size: 0.9rem;
+          font-weight: 600;
+          color: var(--primary-brand);
+          margin-bottom: 8px;
+        }
+
+        .timeline-meta {
+          font-size: 0.85rem;
+          color: #64748b;
+          margin-bottom: 10px;
+        }
+
+        .timeline-desc {
+          font-size: 0.95rem;
+          color: #334155;
+          line-height: 1.6;
+        }
+
+        .social-link-box {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 1rem 1.5rem;
+          background: #ffffff;
+          border: 1px solid #e2e8f0;
+          border-radius: 12px;
+          text-decoration: none;
+          color: #334155;
+          font-weight: 600;
+          transition: all 0.2s ease;
+        }
+
+        .social-link-box:hover {
+          border-color: var(--primary-brand);
+          color: var(--primary-brand);
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+        }
+
+        .resume-action-box {
+          padding: 2.5rem;
+          background: #f1f5f9;
+          border-radius: 20px;
+          text-align: center;
+          border: 2px dashed #cbd5e1;
+        }
+
+        .btn-view-resume {
+          background: var(--primary-brand);
+          color: #ffffff;
+          padding: 1rem 2.5rem;
+          border-radius: 12px;
+          font-weight: 700;
           text-decoration: none;
           display: inline-flex;
           align-items: center;
-          gap: 0.5rem;
-          margin-right: 1.2rem;
-          margin-bottom: 0.8rem;
+          gap: 10px;
+          box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.3);
+          transition: all 0.2s ease;
         }
 
-        .social-link:hover {
-          color: #4f46e5;
-          text-decoration: underline;
+        .btn-view-resume:hover {
+          background: #4338ca;
+          transform: translateY(-2px);
         }
 
-        .resume-btn {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.6rem;
-          padding: 0.85rem 1.8rem;
-          background: linear-gradient(135deg, #6366f1, #8b5cf6);
-          color: white;
-          font-weight: 600;
-          border-radius: 0.9rem;
-          text-decoration: none;
-          box-shadow: 0 4px 14px rgba(99,102,241,0.3);
-          transition: all 0.3s ease;
-          width: fit-content;
-          white-space: nowrap;
+        @media (max-width: 640px) {
+          .grid-detail { grid-template-columns: 1fr; }
+          .modal-content { border-radius: 0; max-height: 100vh; }
+          .profile-header, .modal-body { padding: 1.5rem; }
+          .profile-name { font-size: 1.8rem; }
         }
-
-        .resume-btn:hover {
-          transform: translateY(-3px);
-          box-shadow: 0 10px 28px rgba(99,102,241,0.4);
-        }
-
-        /* Limit internship description to 2 lines with ellipsis */
-        .internship-description {
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          line-height: 1.5;
-          max-height: 3em;
-          margin-top: 0.6rem;
-          color: #000000;
-        }
-
-        /* Fallback for non-webkit browsers */
-        .internship-description {
-          max-height: 3em;
-          overflow: hidden;
-        }
-
-        .modal-content::-webkit-scrollbar {
-          width: 6px;
-        }
-
-        .modal-content::-webkit-scrollbar-track {
-          background: transparent;
-        }
-
-        .modal-content::-webkit-scrollbar-thumb {
-          background: #6366f1;
-          border-radius: 0;
-        }
-
-        .modal-content::-webkit-scrollbar-thumb:hover {
-          background: #4f46e5;
-        }
-/* Force Education section text fully black */
-.education-item,
-.education-item div,
-.education-item span,
-.education-item p {
-  color: #000000 !important;
-}
       `}</style>
 
       <div className="applicants-container">
         <div className="main-content-wrapper">
-          <h1 className="section-title">Job Applicants</h1>
+          <div className="section-header">
+            <h1 className="section-title">Inbound Applicants</h1>
+          </div>
 
-          {/* Search Bar */}
-          <div className="search-wrapper">
+          <div className="search-area">
+            <i className="fas fa-search"></i>
             <input
               type="text"
               className="search-input"
-              placeholder="Search by name, email, department, job title..."
+              placeholder="Filter by name, department, or job title..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
             {searchTerm && (
-              <button className="clear-btn" onClick={clearSearch}>
-                ×
-              </button>
+              <i 
+                className="fas fa-times" 
+                style={{ cursor: "pointer", color: "#94a3b8" }} 
+                onClick={clearSearch}
+              ></i>
             )}
           </div>
 
           {loading ? (
-            <div className="text-center py-12">
-              <div className="loading-spinner"></div>
-              <p style={{ marginTop: "1.2rem", color: "#94a3b8" }}>Loading applicants...</p>
+            <div style={{ textAlign: "center", padding: "4rem" }}>
+              <div className="loading-spinner" style={{ margin: "0 auto 1.5rem" }}></div>
+              <p style={{ color: "#64748b" }}>Retreiving application records...</p>
             </div>
           ) : error ? (
-            <div style={{ color: "#991b1b", fontWeight: 500, textAlign: "center", padding: "2rem" }}>
+            <div style={{ background: "#fef2f2", color: "#b91c1c", padding: "1.5rem", borderRadius: "12px", border: "1px solid #fecaca", textAlign: "center" }}>
               {error}
             </div>
           ) : filteredApplicants.length === 0 ? (
-            <div className="text-center py-10" style={{ color: "#64748b", fontSize: "1.1rem" }}>
-              {searchTerm
-                ? "No matching applicants found."
-                : "No pending applications at the moment.\nSelected / Rejected applications are hidden from this view."}
+            <div style={{ background: "#ffffff", padding: "4rem", borderRadius: "20px", border: "1px solid #e2e8f0", textAlign: "center" }}>
+              <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>📂</div>
+              <h3 style={{ margin: "0 0 0.5rem" }}>No Records Found</h3>
+              <p style={{ color: "#64748b", margin: 0 }}>
+                {searchTerm ? "Adjust your filter criteria" : "All current applications have been processed"}
+              </p>
             </div>
           ) : (
             <div className="applicants-grid">
-              {filteredApplicants.map((app) => {
-                const status = app.status || "Applied";
-                let statusClass =
-                  status === "Shortlisted" ? "status-shortlisted"
-                  : status === "Selected" ? "status-selected"
-                  : status === "Rejected" ? "status-rejected"
-                  : "status-applied";
-
-                return (
-                  <div key={app.application_id} className="applicant-card">
-                    <h3 className="applicant-name">
-                      {app.student?.name || "Unknown Applicant"}
-                    </h3>
-                    <div className="applicant-info"><strong>Email:</strong> {app.student?.email}</div>
-                    <div className="applicant-info"><strong>Department:</strong> {app.student?.department || "—"}</div>
-                    <div className="applicant-info"><strong>Applied for:</strong> {app.job?.title}</div>
-                    <div className="status-section">
-                      <span className="status-label">Status:</span>
-                      <span className={`status-badge ${statusClass}`}>{status}</span>
+              {filteredApplicants.map((app) => (
+                <div key={app.application_id} className="applicant-card">
+                  <div className="applicant-header">
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                      <h3 className="applicant-name">{app.student?.name}</h3>
+                      <span className={`status-badge status-${app.status || "Applied"}`}>{app.status || "Applied"}</span>
                     </div>
-                    <div className="action-row">
-                      <button
-                        className="action-btn btn-view"
-                        onClick={() => setSelectedStudentEmail(app.student?.email)}
-                      >
-                        View Profile
-                      </button>
-                      <button
-                        className="action-btn btn-shortlist"
-                        onClick={() => updateStatus(app.application_id, "Shortlisted")}
-                        disabled={status === "Shortlisted"}
-                      >
-                        Shortlist
-                      </button>
-                      <button
-                        className="action-btn btn-select"
-                        onClick={() => updateStatus(app.application_id, "Selected")}
-                        disabled={status === "Selected"}
-                      >
-                        Select
-                      </button>
-                      <button
-                        className="action-btn btn-reject"
-                        onClick={() => updateStatus(app.application_id, "Rejected")}
-                        disabled={status === "Rejected"}
-                      >
-                        Reject
-                      </button>
+                    <div className="applicant-subinfo">
+                       <i className="far fa-envelope"></i>
+                       {app.student?.email}
+                    </div>
+                    <div className="applicant-subinfo">
+                       <i className="fas fa-university"></i>
+                       {app.student?.department || "Department N/A"}
                     </div>
                   </div>
-                );
-              })}
+
+                  <div className="job-tag">
+                    <i className="fas fa-briefcase"></i>
+                    {app.job?.title}
+                  </div>
+
+                  <div className="action-btns">
+                    <button
+                      className="btn-action btn-view-profile"
+                      onClick={() => setSelectedStudentEmail(app.student?.email)}
+                    >
+                      <i className="far fa-user"></i>
+                      Review Profile
+                    </button>
+                    <button
+                      className="btn-action btn-shortlist-action"
+                      onClick={() => updateStatus(app.application_id, "Shortlisted")}
+                      disabled={app.status === "Shortlisted"}
+                    >
+                      Shortlist
+                    </button>
+                    <button
+                      className="btn-action btn-select-action"
+                      onClick={() => updateStatus(app.application_id, "Selected")}
+                    >
+                      Selected
+                    </button>
+                    <button
+                      className="btn-action btn-reject-action"
+                      onClick={() => updateStatus(app.application_id, "Rejected")}
+                    >
+                      Rejected
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
 
-          {/* ── STUDENT PROFILE MODAL ── */}
           {selectedStudentEmail && (
             <div className="modal-overlay" onClick={closeModal}>
               <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-                <button className="modal-close" onClick={closeModal}>✕</button>
+                <button className="modal-close-btn" onClick={closeModal}>
+                  <i className="fas fa-times"></i>
+                </button>
 
                 {profileLoading ? (
-                  <div className="loading-spinner" style={{ margin: "5rem auto" }}></div>
+                  <div style={{ padding: "8rem 2rem", textAlign: "center" }}>
+                    <div className="loading-spinner" style={{ margin: "0 auto 1rem" }}></div>
+                    <p>Fetching full credentials...</p>
+                  </div>
                 ) : profileError ? (
-                  <div style={{ color: "#991b1b", textAlign: "center", padding: "4rem 1rem" }}>
+                  <div style={{ padding: "5rem 2rem", textAlign: "center", color: "#ef4444" }}>
                     {profileError}
                   </div>
                 ) : profile ? (
                   <>
-                    <h2 className="modal-title">{profile.student?.name || "Student Profile"}</h2>
-
-                    <div className="modal-info"><strong>Email:</strong> {profile.student?.email}</div>
-                    <div className="modal-info"><strong>Phone:</strong> {profile.student?.phone || "—"}</div>
-                    <div className="modal-info"><strong>Department:</strong> {profile.student?.department || "—"}</div>
-                    <div className="modal-info"><strong>Programme:</strong> {profile.student?.programme || "—"}</div>
-                    <div className="modal-info"><strong>Register No:</strong> {profile.student?.university_reg_no || "—"}</div>
-
-                    {/* Education - all text black */}
-                    {getArray("educations").length > 0 && (
-                      <>
-                        <h3 className="modal-section-title">Education</h3>
-                        {getArray("educations").map((edu, idx) => (
-                          <div key={idx} className="education-item">
-                            <div style={{ fontWeight: 600, fontSize: "1.08rem", color: "#000000" }}>
-                              {edu.degree || "Degree"}
-                            </div>
-                            <div style={{ color: "#000000" }}>
-                              {edu.institution || "—"}
-                            </div>
-                            <div style={{ color: "#000000", marginTop: "0.3rem" }}>
-                              {edu.year_from ? `${edu.year_from} – ` : ""}
-                              {edu.year_to || "Present"}
-                              {edu.cgpa && ` • CGPA: ${edu.cgpa}`}
-                            </div>
-                          </div>
-                        ))}
-                      </>
-                    )}
-
-                    {/* Skills */}
-                    {profile.skills?.length > 0 && (
-                      <>
-                        <h3 className="modal-section-title">Skills</h3>
-                        <div style={{ display: "flex", flexWrap: "wrap", gap: "0.6rem" }}>
-                          {profile.skills.map((skill, i) => (
-                            <span key={i} className="skill-tag">{skill}</span>
-                          ))}
+                    <div className="profile-header">
+                      <div className="profile-name">{profile.student?.name}</div>
+                      <div className="profile-badges">
+                        <div className="profile-badge-item">
+                           <i className="far fa-envelope"></i>
+                           {profile.student?.email}
                         </div>
-                      </>
-                    )}
+                        <div className="profile-badge-item">
+                           <i className="fas fa-phone-alt"></i>
+                           {profile.student?.phone || "No phone listed"}
+                        </div>
+                        <div className="profile-badge-item">
+                           <i className="fas fa-id-card"></i>
+                           Reg: {profile.student?.university_reg_no || "N/A"}
+                        </div>
+                      </div>
+                    </div>
 
-                    {/* Internships */}
-                    {getArray("internships").length > 0 && (
-                      <>
-                        <h3 className="modal-section-title">Internships</h3>
-                        {getArray("internships").map((intern, idx) => (
-                          <div key={idx} className="internship-item">
-                            <div style={{ fontWeight: 700, fontSize: "1.08rem", color: "#000000" }}>
-                              {intern.company_name || "Company Name"}
-                              {intern.domain && ` — ${intern.domain}`}
-                            </div>
-                            {intern.duration && (
-                              <div style={{ color: "#475569", margin: "0.3rem 0" }}>
-                                {intern.duration}
+                    <div className="modal-body">
+                      {/* Career Essentials */}
+                      <div className="profile-section">
+                        <div className="section-title-alt">Academic Context</div>
+                        <div className="grid-detail">
+                           <div className="detail-card">
+                              <div className="detail-card-label">Department</div>
+                              <div className="detail-card-value">{profile.student?.department || "N/A"}</div>
+                           </div>
+                           <div className="detail-card">
+                              <div className="detail-card-label">Programme</div>
+                              <div className="detail-card-value">{profile.student?.programme || "N/A"}</div>
+                           </div>
+                        </div>
+                      </div>
+
+                      {/* Technical Stack */}
+                      {profile.skills?.length > 0 && (
+                        <div className="profile-section">
+                           <div className="section-title-alt">Core Competencies</div>
+                           <div className="skill-tags">
+                              {profile.skills.map((skill, index) => (
+                                <span key={index} className="skill-tag-pill">{skill}</span>
+                              ))}
+                           </div>
+                        </div>
+                      )}
+
+                      {/* Professional History */}
+                      {getArray("internships").length > 0 && (
+                        <div className="profile-section">
+                           <div className="section-title-alt">Experience</div>
+                           {getArray("internships").map((exp, idx) => (
+                              <div key={idx} className="timeline-item">
+                                 <div className="timeline-title">{exp.company_name}</div>
+                                 <div className="timeline-subtitle">{exp.domain}</div>
+                                 <div className="timeline-meta">{exp.duration}</div>
+                                 {exp.description && <div className="timeline-desc">{exp.description}</div>}
                               </div>
-                            )}
-                            {intern.description && (
-                              <p className="internship-description">
-                                {intern.description}
-                              </p>
-                            )}
-                          </div>
-                        ))}
-                      </>
-                    )}
+                           ))}
+                        </div>
+                      )}
 
-                    {/* Projects */}
-                    {getArray("projects").length > 0 && (
-                      <>
-                        <h3 className="modal-section-title">Projects</h3>
-                        {getArray("projects").map((proj, idx) => (
-                          <div key={idx} className="project-item">
-                            <div style={{ fontWeight: 700, fontSize: "1.08rem", color: "#000000" }}>
-                              {proj.title || "Project Title"}
-                            </div>
-                            {proj.technologies && (
-                              <div style={{ color: "#4f46e5", margin: "0.4rem 0" }}>
-                                Technologies: {proj.technologies}
+                      {/* Project Portfolio */}
+                      {getArray("projects").length > 0 && (
+                        <div className="profile-section">
+                           <div className="section-title-alt">Key Projects</div>
+                           {getArray("projects").map((proj, idx) => (
+                              <div key={idx} className="timeline-item" style={{ borderLeftColor: "#8b5cf6" }}>
+                                 <div className="timeline-title">{proj.title}</div>
+                                 {proj.technologies && <div className="timeline-meta">Tech: {proj.technologies}</div>}
+                                 {proj.description && <div className="timeline-desc">{proj.description}</div>}
+                                 <div style={{ marginTop: "12px", display: "flex", gap: "12px" }}>
+                                    {proj.github_link && (
+                                       <a href={proj.github_link} target="_blank" rel="noopener noreferrer" style={{ color: "#4f46e5", fontSize: "0.85rem", fontWeight: 700, textDecoration: "none" }}>
+                                          Source Code →
+                                       </a>
+                                    )}
+                                    {proj.live_link && (
+                                       <a href={proj.live_link} target="_blank" rel="noopener noreferrer" style={{ color: "#4f46e5", fontSize: "0.85rem", fontWeight: 700, textDecoration: "none" }}>
+                                          View Live →
+                                       </a>
+                                    )}
+                                 </div>
                               </div>
-                            )}
-                            {proj.description && (
-                              <p style={{ color: "#000000", margin: "0.6rem 0" }}>{proj.description}</p>
-                            )}
-                            <div style={{ marginTop: "0.6rem", display: "flex", gap: "1.5rem", flexWrap: "wrap" }}>
-                              {proj.github_link && (
-                                <a href={proj.github_link} target="_blank" rel="noopener noreferrer" className="social-link">
-                                  GitHub →
-                                </a>
-                              )}
-                              {proj.live_link && (
-                                <a href={proj.live_link} target="_blank" rel="noopener noreferrer" className="social-link">
-                                  Live Demo →
-                                </a>
-                              )}
-                            </div>
-                          </div>
-                        ))}
-                      </>
-                    )}
-
-                    {/* Certificates */}
-                    {getArray("certificates").length > 0 && (
-                      <>
-                        <h3 className="modal-section-title">Certificates</h3>
-                        {getArray("certificates").map((cert, idx) => (
-                          <div key={idx} className="certificate-item">
-                            <div style={{ fontWeight: 700, fontSize: "1.08rem", color: "#000000" }}>
-                              {cert.title || "Certificate Title"}
-                            </div>
-                            <div style={{ color: "#000000", margin: "0.3rem 0" }}>
-                              Issued by: <strong>{cert.issued_by || "—"}</strong>
-                            </div>
-                            <div style={{ color: "#475569", marginBottom: "0.6rem" }}>
-                              Year: <strong>{cert.year_obtained || "—"}</strong>
-                            </div>
-                            {cert.file && (
-                              <a
-                                href={cert.file}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                style={{
-                                  color: "#6366f1",
-                                  fontWeight: 600,
-                                  textDecoration: "none",
-                                }}
-                              >
-                                View Certificate →
-                              </a>
-                            )}
-                          </div>
-                        ))}
-                      </>
-                    )}
-
-                    {/* Social Links */}
-                    {profile.social_links && Object.values(profile.social_links).some(Boolean) && (
-                      <>
-                        <h3 className="modal-section-title">Social Links</h3>
-                        <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem" }}>
-                          {profile.social_links.github && (
-                            <a href={profile.social_links.github} target="_blank" rel="noopener noreferrer" className="social-link">
-                              <i className="bi bi-github"></i> GitHub
-                            </a>
-                          )}
-                          {profile.social_links.linkedin && (
-                            <a href={profile.social_links.linkedin} target="_blank" rel="noopener noreferrer" className="social-link">
-                              <i className="bi bi-linkedin"></i> LinkedIn
-                            </a>
-                          )}
-                          {profile.social_links.portfolio && (
-                            <a href={profile.social_links.portfolio} target="_blank" rel="noopener noreferrer" className="social-link">
-                              <i className="bi bi-globe"></i> Portfolio
-                            </a>
-                          )}
-                          {profile.social_links.twitter && (
-                            <a href={profile.social_links.twitter} target="_blank" rel="noopener noreferrer" className="social-link">
-                              <i className="bi bi-twitter-x"></i> Twitter
-                            </a>
-                          )}
+                           ))}
                         </div>
-                      </>
-                    )}
+                      )}
 
-                    {/* Resume */}
-                    {profile.resume ? (
-                      <>
-                        <h3 className="modal-section-title" style={{ marginTop: "2.5rem" }}>
-                          Resume
-                        </h3>
-                        <a
-                          href={profile.resume}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="resume-btn"
-                        >
-                          <i className="bi bi-file-earmark-pdf-fill"></i>
-                          View Resume
-                        </a>
-                      </>
-                    ) : (
-                      <>
-                        <h3 className="modal-section-title" style={{ marginTop: "2.5rem" }}>
-                          Resume
-                        </h3>
-                        <div
-                          style={{
-                            padding: "1.2rem",
-                            background: "rgba(226,232,240,0.7)",
-                            borderRadius: "0.8rem",
-                            color: "#64748b",
-                            fontStyle: "italic",
-                            textAlign: "center",
-                            border: "1px dashed #cbd5e1",
-                            width: "fit-content",
-                          }}
-                        >
-                          No resume uploaded
+                      {/* Accomplishments */}
+                      {getArray("certificates").length > 0 && (
+                        <div className="profile-section">
+                           <div className="section-title-alt">Credentials</div>
+                           <div className="grid-detail">
+                              {getArray("certificates").map((cert, idx) => (
+                                 <div key={idx} className="detail-card">
+                                    <div className="detail-card-label">{cert.issued_by} • {cert.year_obtained}</div>
+                                    <div className="detail-card-value" style={{ marginBottom: "8px" }}>{cert.title}</div>
+                                    {cert.file && (
+                                       <a href={cert.file} target="_blank" rel="noopener noreferrer" style={{ color: "#4f46e5", fontSize: "0.8rem", fontWeight: 700, textDecoration: "none" }}>
+                                          View Proof →
+                                       </a>
+                                    )}
+                                 </div>
+                              ))}
+                           </div>
                         </div>
-                      </>
-                    )}
+                      )}
+
+                      {/* Resume / Document */}
+                      <div className="profile-section">
+                         <div className="section-title-alt">Candidate Portfolio</div>
+                         <div className="resume-action-box">
+                            {profile.resume ? (
+                               <>
+                                  <div style={{ marginBottom: "1.5rem", color: "#475569" }}>The candidate has provided a detailed resume for review.</div>
+                                  <a href={profile.resume} target="_blank" rel="noopener noreferrer" className="btn-view-resume">
+                                     <i className="far fa-file-pdf"></i>
+                                     Download Full Resume
+                                  </a>
+                               </>
+                            ) : (
+                               <div style={{ color: "#64748b", fontStyle: "italic" }}>No digital resume attached to this application.</div>
+                            )}
+                         </div>
+                      </div>
+                    </div>
                   </>
                 ) : null}
               </div>
             </div>
           )}
+        </div>
+      </div>
         </div>
       </div>
     </>

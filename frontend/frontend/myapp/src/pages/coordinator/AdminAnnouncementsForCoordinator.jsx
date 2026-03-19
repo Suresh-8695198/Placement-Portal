@@ -104,6 +104,20 @@ export default function AdminAnnouncementsForCoordinator() {
           gap: 2rem;
         }
 
+        .header-flex {
+          display: flex;
+          align-items: center;
+          gap: 2rem;
+        }
+
+        .university-logo {
+          height: 100px;
+          width: auto;
+          object-fit: contain;
+          border-right: 2px solid var(--registry-ruby);
+          padding-right: 2rem;
+        }
+
         .header-title-group h1 {
           font-size: 2.4rem;
           font-weight: 800;
@@ -261,8 +275,17 @@ export default function AdminAnnouncementsForCoordinator() {
           .registry-container {
             padding: 2rem 1rem;
           }
+          .header-flex {
+            flex-direction: row;
+            align-items: center;
+            gap: 1.5rem;
+          }
+          .university-logo {
+            height: 70px;
+            padding-right: 1.5rem;
+          }
           .header-title-group h1 {
-            font-size: 2.25rem;
+            font-size: 1.8rem;
           }
         }
       `}</style>
@@ -275,9 +298,12 @@ export default function AdminAnnouncementsForCoordinator() {
         </nav>
 
         <header className="page-header">
-          <div className="header-title-group">
-            <h1>Official Announcements</h1>
-            <p>Formal communications from the Placement Administration Department.</p>
+          <div className="header-flex">
+            <img src="/Logo.png" alt="University Logo" className="university-logo" />
+            <div className="header-title-group">
+              <h1>Official Announcements</h1>
+              <p>Formal communications from the Placement Administration Department.</p>
+            </div>
           </div>
           <div className="header-stats">
             <div className="stat-item">
