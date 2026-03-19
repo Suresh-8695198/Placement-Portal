@@ -1503,3 +1503,179 @@ def delete_announcement(request, pk):
         return JsonResponse({"message": "Deleted"})
     except Announcement.DoesNotExist:
         raise Http404("Announcement not found")
+
+
+
+
+from django.db.models import Count
+from students.models import Student
+from companies.models import Company, Job
+from companies.models import JobApplication
+from django.http import JsonResponse
+from django.views.decorators.http import require_GET
+
+# For Students tab - Chart 1
+@require_GET
+def students_per_department(request):
+    data = (
+        Student.objects
+        .filter(is_active=True)
+        .values('department')
+        .annotate(count=Count('id'))
+        .order_by('-count')
+    )
+    return JsonResponse(list(data), safe=False)
+
+# For Students tab - Chart 2
+@require_GET
+def students_ug_pg_distribution(request):
+    data = (
+        Student.objects
+        .filter(is_active=True)
+        .values('ug_pg')
+        .annotate(count=Count('id'))
+    )
+    return JsonResponse(list(data), safe=False)
+
+# For Students tab - Chart 3 (batch trend)
+@require_GET
+def students_per_batch(request):
+    data = (
+        Student.objects
+        .filter(is_active=True)
+        .values('passed_out_year')
+        .annotate(count=Count('id'))
+        .order_by('passed_out_year')
+    )
+    return JsonResponse(list(data), safe=False)      
+
+
+
+from django.db.models import Count, Q
+from django.views.decorators.http import require_GET
+from django.http import JsonResponse
+from django.db.models.functions import TruncMonth
+from companies.models import Job
+
+@require_GET
+def jobs_per_company(request):
+    """
+    Returns number of jobs posted by each company
+    """
+    data = (
+        Job.objects
+        .values('company__name')
+        .annotate(count=Count('id'))
+        .order_by('-count')
+    )
+    # Format for frontend
+    formatted = [
+        {
+            "company": item['company__name'] or "Unknown Company",
+            "count": item['count']
+        }
+        for item in data
+    ]
+    return JsonResponse(formatted, safe=False)
+
+
+@require_GET
+def job_types_distribution(request):
+    """
+    Returns count of jobs by job_type (Full-time, Internship, etc.)
+    """
+    data = (
+        Job.objects
+        .values('job_type')
+        .annotate(count=Count('id'))
+    )
+    return JsonResponse(list(data), safe=False)
+
+@require_GET
+def monthly_jobs_trend(request):
+    """
+    Safe version: group by year-month string without TruncMonth
+    """
+    from django.db.models import Count
+    from django.utils import timezone
+
+    # Get all approved jobs
+    jobs = Job.objects.filter(is_approved=True)
+
+    # Manual grouping by year-month
+    trend = {}
+    for job in jobs:
+        if job.created_at:
+            key = job.created_at.strftime("%Y-%m")
+            trend[key] = trend.get(key, 0) + 1
+
+    # Convert to list sorted by month
+    formatted = [
+        {"month": month, "count": count}
+        for month, count in sorted(trend.items())
+    ]
+
+    return JsonResponse(formatted, safe=False)
+
+
+
+
+
+from django.db.models import Count
+from django.views.decorators.http import require_GET
+from django.http import JsonResponse
+from django.db.models.functions import TruncMonth
+from companies.models import Job
+
+@require_GET
+def jobs_by_type(request):
+    """
+    Jobs count grouped by job_type
+    """
+    data = (
+        Job.objects
+        .values('job_type')
+        .annotate(count=Count('id'))
+        .order_by('-count')
+    )
+    return JsonResponse(list(data), safe=False)
+
+
+@require_GET
+def jobs_by_location(request):
+    """
+    Jobs count grouped by location (top locations)
+    """
+    data = (
+        Job.objects
+        .values('location')
+        .annotate(count=Count('id'))
+        .order_by('-count')[:10]  # top 10 locations
+    )
+    formatted = [
+        {"location": item['location'] or "Remote/Unknown", "count": item['count']}
+        for item in data
+    ]
+    return JsonResponse(formatted, safe=False)
+
+@require_GET
+def monthly_jobs_posted_trend(request):
+    """
+    Safe version — no TruncMonth, manual grouping
+    """
+    jobs = Job.objects.filter(is_approved=True).order_by('created_at')
+
+    trend = {}
+    for job in jobs:
+        if job.created_at:
+            key = job.created_at.strftime("%Y-%m")
+            trend[key] = trend.get(key, 0) + 1
+
+    formatted = [
+        {"month": month, "count": count}
+        for month, count in sorted(trend.items())
+    ]
+
+    return JsonResponse(formatted, safe=False)
+
+

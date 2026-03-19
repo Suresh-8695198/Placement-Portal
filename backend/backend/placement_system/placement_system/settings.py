@@ -119,7 +119,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',  # keep this as 'mysql'
         'NAME': 'placement_system',                # your DB name
         'USER': 'root',                        # your MySQL username
-        'PASSWORD': '',
+        'PASSWORD': 'tiger',
         'HOST': 'localhost',
         'PORT': '3306',
     }

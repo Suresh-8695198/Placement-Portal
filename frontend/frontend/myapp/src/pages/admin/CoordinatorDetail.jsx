@@ -255,6 +255,20 @@ export default function CoordinatorDetail() {
             grid-template-columns: 1fr;
           }
         }
+
+
+        .prog-chip {
+  background: #faf5ff;           /* almost white with violet hint */
+  color: #c026d3;                /* close to your theme color */
+  padding: 0.45rem 1rem;
+  border-radius: 9999px;         /* more pill-like */
+  font-size: 0.85rem;
+  font-weight: 600;
+  border: 2px solid #d946ef;
+  box-shadow: 0 1px 3px rgba(217, 70, 239, 0.15);
+}
+
+
       `}</style>
 
       <div className="detail-container">
@@ -330,22 +344,22 @@ export default function CoordinatorDetail() {
                     </div>
 
                     <div className="spec-item" style={{gridColumn: 'span 2'}}>
-                      <span className="spec-label">Assigned Programmes</span>
-                      <div className="badge-list">
-                        {coordinator.programme ? (
-                          coordinator.programme.split(',').map((prog, idx) => (
-                            <span key={idx} className="prog-chip">
-                              <i className="fas fa-tag me-2" style={{fontSize: '0.7rem', opacity: 0.6}}></i>
-                              {prog.replace(/_/g, ' ')}
-                            </span>
-                          ))
-                        ) : (
-                          <span className="spec-value" style={{color: '#000000', fontSize: '0.95rem', fontWeight: 500, opacity: 0.7}}>
-                            No specific programmes assigned.
-                          </span>
-                        )}
-                      </div>
-                    </div>
+  <span className="spec-label">Assigned Programmes</span>
+  <div className="badge-list">
+    {coordinator.programmes?.length > 0 ? (
+      coordinator.programmes.map((prog, idx) => (
+        <span key={idx} className="prog-chip">
+          <i className="fas fa-tag me-2" style={{fontSize: '0.7rem', opacity: 0.6}}></i>
+          {prog.trim()}
+        </span>
+      ))
+    ) : (
+      <span style={{color: '#666', fontStyle: 'italic'}}>
+        No specific programmes assigned.
+      </span>
+    )}
+  </div>
+</div>
                   </div>
                 </div>
               </div>
