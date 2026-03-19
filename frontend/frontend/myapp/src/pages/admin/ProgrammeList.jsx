@@ -2,6 +2,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import AdminPageLayout from "../../components/admin/AdminPageLayout";
 import { useState, useEffect } from "react";
 import axios from "axios";
+import * as XLSX from 'xlsx';
 
 export default function ProgrammeList() {
   const location = useLocation();
@@ -61,6 +62,30 @@ export default function ProgrammeList() {
   useEffect(() => {
     setCurrentPage(1);
   }, [search, levelFilter, sortBy, itemsPerPage]);
+
+  const handleExport = () => {
+    if (filteredProgrammes.length === 0) {
+      alert("No data to export!");
+      return;
+    }
+
+    const exportData = filteredProgrammes.map(programme => {
+      const parentCoord = !coordinator && allCoordinators.find(c => c.programmes?.includes(programme));
+      const dept = coordinator?.department || parentCoord?.department || "General";
+      const isPG = programme.startsWith('MA') || programme.startsWith('MSc') || programme.startsWith('MCA') || programme.startsWith('MBA');
+      const level = isPG ? "PG" : "UG";
+      return {
+        "Programme": (programme || "").replace(/_/g, ' '),
+        "Department": dept || "N/A",
+        "Level": level
+      };
+    });
+
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Programmes");
+    XLSX.writeFile(workbook, `Programmes_Report_${new Date().toISOString().split('T')[0]}.xlsx`);
+  };
 
   if (loading) {
     return <AdminPageLayout title="Loading Programmes..."><div className="loading-state">Fetching data...</div></AdminPageLayout>;
@@ -580,9 +605,7 @@ export default function ProgrammeList() {
             </button>
           </div>
 
-          <button className="export-btn" onClick={() => {
-            alert("Generating programme report... (CSV Export Started)");
-          }}>
+          <button className="export-btn" onClick={handleExport}>
             <i className="fas fa-file-export"></i>
             Export
           </button>

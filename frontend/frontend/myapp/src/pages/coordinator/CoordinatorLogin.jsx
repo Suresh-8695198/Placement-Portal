@@ -238,11 +238,11 @@ export default function CoordinatorLogin() {
           )}
 
           <div className="input-wrapper">
-            <label className="form-label">Username</label>
+            <label className="form-label">Username or Email</label>
             <i className="fas fa-user input-icon"></i>
             <input
               className="form-control"
-              placeholder="Enter your username"
+              placeholder="Enter your username or email"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleLogin()}

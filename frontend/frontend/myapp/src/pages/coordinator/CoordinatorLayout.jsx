@@ -1,6 +1,4 @@
-
-
-
+// src/pages/coordinator/CoordinatorLayout.jsx
 import React from "react";
 import { Outlet } from "react-router-dom";
 import CoordinatorSidebar from "../../components/coordinator/CoordinatorSidebar";
@@ -14,15 +12,13 @@ export default function CoordinatorLayout() {
           height: 100vh;
           width: 100vw;
           display: flex;
-          overflow: hidden;
-          background: #ffffff;
+          background: #f8fafc;
         }
 
-        .coordinator-sidebar {
+        .coordinator-sidebar-space {
           flex-shrink: 0;
-          width: 260px;
-          background: #f8fafc;
-          border-right: 1px solid #e5e7eb;
+          width: 250px;
+          transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .coordinator-main {
@@ -30,50 +26,37 @@ export default function CoordinatorLayout() {
           display: flex;
           flex-direction: column;
           min-width: 0;
-        }
-
-        .coordinator-topbar-wrapper {
-          flex-shrink: 0;
-          background: #ffffff;
-          border-bottom: 1px solid #e5e7eb;
+          height: 100vh;
+          overflow: hidden;
         }
 
         .coordinator-content {
           flex: 1;
           overflow-y: auto;
-          padding: 20px;
-          background: #f1f5f9;
+          background: #f8fafc;
         }
 
         /* Mobile adjustments */
         @media (max-width: 992px) {
-          .coordinator-sidebar {
+          .coordinator-sidebar-space {
             width: 80px;
           }
         }
 
         @media (max-width: 576px) {
-          .coordinator-sidebar {
-            width: 70px;
-          }
-
-          .coordinator-content {
-            padding: 16px;
+          .coordinator-sidebar-space {
+            width: 0;
           }
         }
       `}</style>
 
       <div className="coordinator-layout">
-        {/* Sidebar */}
-        <div className="coordinator-sidebar">
+        <div className="coordinator-sidebar-space">
           <CoordinatorSidebar />
         </div>
 
-        {/* Main Section */}
         <div className="coordinator-main">
-          <div className="coordinator-topbar-wrapper">
-            <CoordinatorTopBar username="Test User" department="" />
-          </div>
+          <CoordinatorTopBar />
 
           <div className="coordinator-content">
             <Outlet />

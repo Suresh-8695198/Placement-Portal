@@ -161,8 +161,16 @@ from companies.models import Job
 def coordinator_login(request):
     try:
         data = json.loads(request.body)
-        username = data.get("username")
+        username = data.get("username", "").strip()
         password = data.get("password")
+
+        # If the user entered an email instead of a username, look up the actual username
+        if "@" in username:
+            try:
+                user_obj = User.objects.get(email=username)
+                username = user_obj.username
+            except User.DoesNotExist:
+                return JsonResponse({"error": "Invalid credentials"}, status=401)
 
         user = authenticate(username=username, password=password)
 

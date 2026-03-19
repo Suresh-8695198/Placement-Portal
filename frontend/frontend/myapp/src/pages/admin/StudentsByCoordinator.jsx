@@ -23,9 +23,18 @@ export default function StudentsByCoordinator() {
   const [selectedBatch, setSelectedBatch] = useState(null);
   const [batchSearch, setBatchSearch] = useState("");
 
+  // New Search Filters
+  const [phoneSearch, setPhoneSearch] = useState("");
+  const [emailSearch, setEmailSearch] = useState("");
+  const [selectedGender, setSelectedGender] = useState("all");
+
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  // Batch Pagination
+  const [batchCurrentPage, setBatchCurrentPage] = useState(1);
+  const batchItemsPerPage = 8;
 
   // Load batch years first
   useEffect(() => {
@@ -61,6 +70,9 @@ export default function StudentsByCoordinator() {
     setError("");
     setRegNoSearch("");
     setNameSearch("");
+    setPhoneSearch("");
+    setEmailSearch("");
+    setSelectedGender("all");
     setSelectedProgramme("all");
     setSelectedLevel("all");
 
@@ -84,12 +96,15 @@ export default function StudentsByCoordinator() {
     return students.filter((student) => {
       const matchesRegNo = (student.university_reg_no || "").toLowerCase().includes(regNoSearch.toLowerCase().trim());
       const matchesName = (student.name || "").toLowerCase().includes(nameSearch.toLowerCase().trim());
+      const matchesPhone = (student.phone || "").toLowerCase().includes(phoneSearch.toLowerCase().trim());
+      const matchesEmail = (student.email || "").toLowerCase().includes(emailSearch.toLowerCase().trim());
+      const matchesGender = selectedGender === "all" || student.gender === selectedGender;
       const matchesProgramme = selectedProgramme === "all" || student.programme === selectedProgramme;
       const matchesLevel = selectedLevel === "all" || student.ug_pg === selectedLevel;
       
-      return matchesRegNo && matchesName && matchesProgramme && matchesLevel;
+      return matchesRegNo && matchesName && matchesPhone && matchesEmail && matchesGender && matchesProgramme && matchesLevel;
     });
-  }, [students, regNoSearch, nameSearch, selectedProgramme, selectedLevel]);
+  }, [students, regNoSearch, nameSearch, phoneSearch, emailSearch, selectedGender, selectedProgramme, selectedLevel]);
 
   // Derived Values for UI
   const programmes = useMemo(() => {
@@ -100,7 +115,11 @@ export default function StudentsByCoordinator() {
   // Reset pagination on filter change
   useEffect(() => {
     setCurrentPage(1);
-  }, [regNoSearch, nameSearch, selectedProgramme, selectedLevel, itemsPerPage]);
+  }, [regNoSearch, nameSearch, phoneSearch, emailSearch, selectedGender, selectedProgramme, selectedLevel, itemsPerPage]);
+
+  useEffect(() => {
+    setBatchCurrentPage(1);
+  }, [batchSearch]);
 
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -110,9 +129,16 @@ export default function StudentsByCoordinator() {
   
   const totalPages = itemsPerPage === 'all' ? 1 : Math.ceil(filteredStudents.length / itemsPerPage);
 
-  // Filtered batches for selection grid
-  const filteredBatches = batchYears.filter((year) =>
-    year.toString().toLowerCase().includes(batchSearch.toLowerCase())
+  const filteredBatches = useMemo(() => {
+    return batchYears.filter((year) =>
+      year.toString().toLowerCase().includes(batchSearch.toLowerCase())
+    );
+  }, [batchYears, batchSearch]);
+
+  const totalBatchPages = Math.ceil(filteredBatches.length / batchItemsPerPage);
+  const currentBatches = filteredBatches.slice(
+    (batchCurrentPage - 1) * batchItemsPerPage,
+    batchCurrentPage * batchItemsPerPage
   );
 
   return (
@@ -552,6 +578,80 @@ export default function StudentsByCoordinator() {
 
         .filter-group input:focus, .filter-group select:focus {
           border-color: #0369a1;
+          box-shadow: 0 0 0 3px rgba(3, 105, 161, 0.1);
+        }
+
+        /* Premium Empty State */
+        .premium-empty-state {
+          text-align: center;
+          padding: 4rem 2rem;
+          background: #ffffff;
+          border: 1.5px solid #e2e8f0;
+          border-radius: 1.5rem;
+          margin: 2rem 0;
+          animation: fadeIn 0.6s ease-out;
+        }
+
+        .empty-icon-wrapper {
+          width: 100px;
+          height: 100px;
+          background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin: 0 auto 1.5rem;
+          color: #0369a1;
+          font-size: 2.5rem;
+          box-shadow: 0 10px 20px rgba(3, 105, 161, 0.05);
+        }
+
+        .premium-empty-state h3 {
+          font-family: 'Outfit', sans-serif;
+          font-size: 1.5rem;
+          font-weight: 800;
+          color: #0f172a;
+          margin-bottom: 0.5rem;
+        }
+
+        .premium-empty-state p {
+          color: #64748b;
+          max-width: 400px;
+          margin: 0 auto 2rem;
+          line-height: 1.6;
+        }
+
+        .empty-action-btn {
+          background: #0369a1;
+          color: #ffffff;
+          border: none;
+          padding: 0.8rem 2rem;
+          border-radius: 0.75rem;
+          font-weight: 700;
+          font-size: 0.9rem;
+          cursor: pointer;
+          transition: all 0.2s;
+          display: inline-flex;
+          align-items: center;
+          gap: 0.75rem;
+        }
+
+        .empty-action-btn:hover {
+          background: #075985;
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(3, 105, 161, 0.2);
+        }
+
+        /* Multi-column filter layout */
+        .filter-grid-premium {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+          gap: 1.25rem;
+          background: #ffffff;
+          border: 1.5px solid #000000;
+          padding: 1.5rem;
+          border-radius: 1rem;
+          margin-bottom: 2rem;
         }
       `}</style>
 
@@ -611,12 +711,12 @@ export default function StudentsByCoordinator() {
         </div>
 
         {selectedBatch && students.length > 0 && (
-          <div className="premium-filter-panel">
+          <div className="filter-grid-premium">
             <div className="filter-group">
               <label>Reg No.</label>
               <input 
                 type="text" 
-                placeholder="Filter by Reg No..." 
+                placeholder="Ex: 211501..." 
                 value={regNoSearch}
                 onChange={(e) => setRegNoSearch(e.target.value)}
               />
@@ -628,6 +728,24 @@ export default function StudentsByCoordinator() {
                 placeholder="Search name..." 
                 value={nameSearch}
                 onChange={(e) => setNameSearch(e.target.value)}
+              />
+            </div>
+            <div className="filter-group">
+              <label>Phone Number</label>
+              <input 
+                type="text" 
+                placeholder="Search phone..." 
+                value={phoneSearch}
+                onChange={(e) => setPhoneSearch(e.target.value)}
+              />
+            </div>
+            <div className="filter-group">
+              <label>Email Address</label>
+              <input 
+                type="text" 
+                placeholder="Search email..." 
+                value={emailSearch}
+                onChange={(e) => setEmailSearch(e.target.value)}
               />
             </div>
             <div className="filter-group">
@@ -653,6 +771,17 @@ export default function StudentsByCoordinator() {
                 <option value="PG">Postgraduate (PG)</option>
               </select>
             </div>
+            <div className="filter-group">
+              <label>Gender</label>
+              <select 
+                value={selectedGender}
+                onChange={(e) => setSelectedGender(e.target.value)}
+              >
+                <option value="all">All Genders</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+              </select>
+            </div>
           </div>
         )}
 
@@ -662,9 +791,16 @@ export default function StudentsByCoordinator() {
           <div className="loading-p">Sychronizing Registry...</div>
         ) : !selectedBatch ? (
           batchYears.length === 0 ? (
-            <div className="empty-p">
-              <i className="fas fa-layer-group" style={{fontSize: '3rem', opacity: 0.1, marginBottom: '1rem', display: 'block'}}></i>
-              No batches found.
+            <div className="premium-empty-state">
+              <div className="empty-icon-wrapper">
+                <i className="fas fa-layer-group"></i>
+              </div>
+              <h3>No Batches Found</h3>
+              <p>We couldn't find any academic batches for this coordinator. Please ensure students are registered under this department.</p>
+              <button className="empty-action-btn" onClick={() => navigate("/admin/students")}>
+                <i className="fas fa-arrow-left"></i>
+                Return to Registry
+              </button>
             </div>
           ) : (
             <div className="batch-view-p">
@@ -675,7 +811,7 @@ export default function StudentsByCoordinator() {
               </div>
               
               <div className="batch-list-p">
-                {filteredBatches.map((year) => (
+                {currentBatches.map((year) => (
                   <div key={year} className="batch-row-p" onClick={() => loadStudentsByBatch(year)}>
                     <div className="batch-info">
                       <h3>
@@ -695,12 +831,61 @@ export default function StudentsByCoordinator() {
                   </div>
                 ))}
               </div>
+
+              {totalBatchPages > 1 && (
+                <div className="pagination-toolbar" style={{marginTop: '2rem'}}>
+                  <div className="show-entries">
+                    <span>Showing {currentBatches.length} of {filteredBatches.length} Batches</span>
+                  </div>
+                  <div className="pagination-wrap">
+                    <button 
+                      className={`pagination-btn ${batchCurrentPage === 1 ? 'disabled' : ''}`}
+                      onClick={(e) => { e.stopPropagation(); setBatchCurrentPage(batchCurrentPage - 1); }}
+                    >
+                      <i className="fas fa-chevron-left"></i>
+                    </button>
+                    {[...Array(totalBatchPages)].map((_, i) => (
+                      <button 
+                        key={i + 1}
+                        className={`pagination-btn ${batchCurrentPage === i + 1 ? 'active' : ''}`}
+                        onClick={(e) => { e.stopPropagation(); setBatchCurrentPage(i + 1); }}
+                      >
+                        {i + 1}
+                      </button>
+                    ))}
+                    <button 
+                      className={`pagination-btn ${batchCurrentPage === totalBatchPages ? 'disabled' : ''}`}
+                      onClick={(e) => { e.stopPropagation(); setBatchCurrentPage(batchCurrentPage + 1); }}
+                    >
+                      <i className="fas fa-chevron-right"></i>
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )
         ) : (
           <div className="table-card">
             {filteredStudents.length === 0 ? (
-              <div className="empty-p" style={{border: 'none'}}>No matching students for {selectedBatch}.</div>
+              <div className="premium-empty-state">
+                <div className="empty-icon-wrapper">
+                  <i className="fas fa-user-slash"></i>
+                </div>
+                <h3>No Matching Students</h3>
+                <p>We couldn't find any students matching your current filter criteria for Academic Batch {selectedBatch}.</p>
+                <button className="empty-action-btn" onClick={() => {
+                  setRegNoSearch("");
+                  setNameSearch("");
+                  setPhoneSearch("");
+                  setEmailSearch("");
+                  setSelectedGender("all");
+                  setSelectedProgramme("all");
+                  setSelectedLevel("all");
+                }}>
+                  <i className="fas fa-sync-alt"></i>
+                  Reset All Filters
+                </button>
+              </div>
             ) : (
               <>
                 <div style={{overflowX: 'auto'}}>

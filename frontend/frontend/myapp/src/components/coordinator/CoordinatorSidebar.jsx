@@ -5,240 +5,188 @@ import { NavLink, useLocation } from "react-router-dom";
 export default function CoordinatorSidebar() {
   const location = useLocation();
 
-  // Optional: if you have sub-routes under any item, you can use similar logic
-  const isActiveSection = (basePath) => location.pathname.startsWith(basePath);
-
   return (
     <>
-      <link
-        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-        rel="stylesheet"
-      />
-      <link
-        rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
-      />
+      <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
 
       <style>{`
         .coordinator-sidebar-wrapper {
-          width: 260px;
+          width: 250px;
           height: 100vh;
-          background: #ffffff;
-          border-radius: 0 !important;
-          box-shadow: 
-            0 10px 40px rgba(0,0,0,0.08),
-            0 4px 20px rgba(0,0,0,0.06);
-          border-right: 1px solid rgba(229,231,235,0.9);
-          transition: width 0.38s ease;
-          overflow: hidden;
+          background: #1e1b4b;
+          border-right: none;
           position: fixed;
           top: 0;
           left: 0;
           z-index: 1000;
+          font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          display: flex;
+          flex-direction: column;
+          box-shadow: 10px 0 30px rgba(0,0,0,0.1);
         }
 
         @media (max-width: 992px) {
-          .coordinator-sidebar-wrapper {
-            width: 80px;
-          }
-          .coordinator-sidebar-title,
-          .section-label {
-            display: none !important;
-          }
-          .section-link {
-            justify-content: center !important;
-            padding: 1.2rem 0 !important;
-          }
+          .coordinator-sidebar-wrapper { width: 80px; }
+          .sidebar-brand-name, .section-label { display: none !important; }
+          .section-link { justify-content: center !important; padding: 1rem 0 !important; }
+          .sidebar-header { padding: 1.5rem 0.5rem !important; }
         }
 
-        .coordinator-sidebar-inner {
-          height: 100%;
-          padding: 2.2rem 1.4rem;
+        .sidebar-header {
+          padding: 2.5rem 1.25rem;
           display: flex;
           flex-direction: column;
+          align-items: center;
+          text-align: center;
+          gap: 12px;
         }
 
-        .coordinator-sidebar-title {
-          font-size: 2.05rem;
+        .sidebar-logo-icon {
+          width: 72px;
+          height: 72px;
+          background: rgba(255,255,255,0.05);
+          border: 1px solid rgba(255,255,255,0.1);
+          padding: 12px;
+          border-radius: 20px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: transform 0.3s;
+        }
+        .sidebar-logo-icon:hover { transform: scale(1.05); }
+
+        .sidebar-logo-icon img { width: 100%; height: 100%; object-fit: contain; }
+
+        .sidebar-brand-name {
+          font-family: 'Outfit', sans-serif;
+          font-size: 1.05rem;
           font-weight: 800;
-          letter-spacing: -0.5px;
-          margin-bottom: 2.6rem;
-          text-align: center;
-          background: linear-gradient(90deg, #7c3aed, #c084fc, #a78bfa);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          text-shadow: 0 2px 6px rgba(124,58,237,0.25);
+          margin-top: 0.5rem;
+          color: #ffffff;
+          letter-spacing: 0.5px;
+          text-transform: uppercase;
+          opacity: 0.9;
+        }
+
+        .sidebar-nav {
+          padding: 0 1rem;
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          gap: 0.25rem; /* Reduced Gap */
+          overflow-y: auto;
         }
 
         .section-link {
           display: flex;
           align-items: center;
           gap: 1rem;
-          padding: 1rem 1.3rem;
-          color: #374151;               /* gray-700 */
-          font-size: 1.04rem;
-          font-weight: 500;
+          padding: 0.8rem 1.2rem;
+          color: rgba(255, 255, 255, 0.6);
+          font-size: 0.85rem;
+          font-weight: 700;
           text-decoration: none;
-          border-radius: 1rem;
-          transition: all 0.32s ease;
-          margin-bottom: 0.5rem;
+          border-radius: 12px;
+          transition: all 0.2s;
         }
 
         .section-link:hover {
-          background: rgba(124,58,237,0.08);   /* light violet tint */
-          color: #7c3aed;                      /* violet-600 */
-          transform: translateX(6px);
+          color: #ffffff;
+          background: rgba(255, 255, 255, 0.05);
         }
 
         .section-link.active {
-          background: linear-gradient(135deg, #7c3aed, #c084fc, #a78bfa);
-          color: white;
-          font-weight: 700;
-          box-shadow: 0 8px 24px rgba(124,58,237,0.28);
-          transform: scale(1.03);
+          background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+          color: #ffffff;
+          box-shadow: 0 8px 20px rgba(124, 58, 237, 0.25);
         }
 
-        .section-link .nav-icon {
-          font-size: 1.4rem;
-          min-width: 36px;
-          text-align: center;
-          color: #9ca3af;               /* gray-400 */
-          transition: all 0.32s ease;
-        }
+        .section-link .nav-icon { font-size: 1.15rem; width: 24px; text-align: center; }
 
-        .section-link:hover .nav-icon,
-        .section-link.active .nav-icon {
-          color: white;
-          transform: scale(1.15);
-        }
-
-        .sidebar-footer {
-          margin-top: auto;
-          padding-top: 1.8rem;
-        }
+        .logout-btn-container { padding: 1.5rem 1rem 2rem; }
 
         .logout-btn {
           width: 100%;
           display: flex;
           align-items: center;
-          gap: 1rem;
-          padding: 1rem 1.3rem;
-          color: white;
-          font-size: 1.04rem;
-          font-weight: 600;
-          background: linear-gradient(135deg, #ef4444, #f87171);
-          border: none;
-          border-radius: 1rem;
+          gap: 0.75rem;
+          padding: 0.85rem;
+          color: rgba(255,255,255,0.7);
+          font-size: 0.85rem;
+          font-weight: 800;
+          background: rgba(255,255,255,0.05);
+          border: 1px solid rgba(255,255,255,0.1);
+          border-radius: 12px;
           cursor: pointer;
-          transition: all 0.35s cubic-bezier(0.34,1.56,0.64,1);
-          box-shadow: 0 5px 18px rgba(239,68,68,0.25);
-          position: relative;
-          overflow: hidden;
+          transition: all 0.2s;
+          text-transform: uppercase;
+          justify-content: center;
         }
 
         .logout-btn:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 12px 28px rgba(239,68,68,0.4);
-        }
-
-        .logout-btn::before {
-          content: '';
-          position: absolute;
-          top: -50%;
-          left: -100%;
-          width: 200%;
-          height: 200%;
-          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent);
-          transition: left 0.6s;
-        }
-
-        .logout-btn:hover::before {
-          left: 100%;
-        }
-
-        .coordinator-sidebar-wrapper {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-        .coordinator-sidebar-wrapper::-webkit-scrollbar {
-          display: none;
+          background: #ef4444;
+          color: white;
+          border-color: #ef4444;
+          box-shadow: 0 8px 20px rgba(239, 68, 68, 0.2);
         }
       `}</style>
 
       <div className="coordinator-sidebar-wrapper">
-        <div className="coordinator-sidebar-inner">
-          <h3 className="coordinator-sidebar-title">Coordinator</h3>
+        <div className="sidebar-header">
+          <div className="sidebar-logo-icon">
+            <img src="/Logo.png" alt="Portal Logo" onError={(e) => {
+              e.target.src = "https://tse1.mm.bing.net/th?id=OIP.E0dRErE6Z8l9R5jZkZp9XQHaHa&pid=Api"; // Fallback
+            }} />
+          </div>
+          <h3 className="sidebar-brand-name">Coordinator User</h3>
+        </div>
 
-          <NavLink
-            to="/coordinator/dashboard"
-            className={({ isActive }) => `section-link ${isActive ? "active" : ""}`}
-          >
-            <i className="fas fa-tachometer-alt nav-icon"></i>
+        <div className="sidebar-nav">
+          <NavLink to="/coordinator/dashboard" className={({ isActive }) => `section-link ${isActive ? "active" : ""}`}>
+            <i className="fas fa-chart-line nav-icon"></i>
             <span className="section-label">Dashboard</span>
           </NavLink>
 
-          <NavLink
-            to="/coordinator/students"
-            className={({ isActive }) => `section-link ${isActive ? "active" : ""}`}
-          >
-            <i className="fas fa-users nav-icon"></i>
+          <NavLink to="/coordinator/students" className={({ isActive }) => `section-link ${isActive ? "active" : ""}`}>
+            <i className="fas fa-user-graduate nav-icon"></i>
             <span className="section-label">Students</span>
           </NavLink>
 
-          <NavLink
-            to="/coordinator/upload"
-            className={({ isActive }) => `section-link ${isActive ? "active" : ""}`}
-          >
-            <i className="fas fa-file-upload nav-icon"></i>
-            <span className="section-label">Upload Excel</span>
+          <NavLink to="/coordinator/upload" className={({ isActive }) => `section-link ${isActive ? "active" : ""}`}>
+            <i className="fas fa-file-excel nav-icon"></i>
+            <span className="section-label">Upload Data</span>
           </NavLink>
 
-          <NavLink
-            to="/coordinator/jobs"
-            className={({ isActive }) => `section-link ${isActive ? "active" : ""}`}
-          >
+          <NavLink to="/coordinator/jobs" className={({ isActive }) => `section-link ${isActive ? "active" : ""}`}>
             <i className="fas fa-briefcase nav-icon"></i>
-            <span className="section-label">Jobs</span>
+            <span className="section-label">Job Listings</span>
           </NavLink>
 
-          <NavLink
-            to="/coordinator/selected-students-report"
-            className={({ isActive }) => `section-link ${isActive ? "active" : ""}`}
-          >
-            <i className="fas fa-chart-bar nav-icon"></i>
-            <span className="section-label">Reports</span>
+          <NavLink to="/coordinator/selected-students-report" className={({ isActive }) => `section-link ${isActive ? "active" : ""}`}>
+            <i className="fas fa-file-invoice nav-icon"></i>
+            <span className="section-label">Placement Reports</span>
           </NavLink>
-          <NavLink
-  to="/coordinator/announcements"
-  className={({ isActive }) => `section-link ${isActive ? "active" : ""}`}
->
-  <i className="fas fa-bullhorn nav-icon"></i>
-  <span className="section-label">Announcements</span>
-</NavLink>
 
-<NavLink
-  to="/coordinator/admin-announcements"
-  className={({ isActive }) => `section-link ${isActive ? "active" : ""}`}
->
-  <i className="fas fa-bullhorn nav-icon"></i>
-  <span className="section-label">Admin Announcements</span>
-</NavLink>
+          <NavLink to="/coordinator/announcements" className={({ isActive }) => `section-link ${isActive ? "active" : ""}`}>
+            <i className="fas fa-bullhorn nav-icon"></i>
+            <span className="section-label">My Announcements</span>
+          </NavLink>
 
-          <div className="sidebar-footer">
-            <button
-              className="logout-btn"
-              onClick={() => {
-                // Adjust logout logic as needed for coordinator
-                localStorage.clear();
-                window.location.href = "/coordinator/login"; // or wherever your coordinator login is
-              }}
-            >
-              <i className="fas fa-sign-out-alt"></i>
-              <span>Logout</span>
-            </button>
-          </div>
+          <NavLink to="/coordinator/admin-announcements" className={({ isActive }) => `section-link ${isActive ? "active" : ""}`}>
+            <i className="fas fa-newspaper nav-icon"></i>
+            <span className="section-label">Admin Feed</span>
+          </NavLink>
+        </div>
+
+        <div className="logout-btn-container">
+          <button className="logout-btn" onClick={() => (window.location.href = "/coordinator/login")}>
+            <i className="fas fa-sign-out-alt"></i>
+            <span className="section-label">Logout</span>
+          </button>
         </div>
       </div>
     </>
   );
-}
+}

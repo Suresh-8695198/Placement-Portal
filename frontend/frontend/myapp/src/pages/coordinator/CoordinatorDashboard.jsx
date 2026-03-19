@@ -1,30 +1,34 @@
-
-
-
-
-
-
-
-// src/pages/coordinator/CoordinatorDashboard.jsx  (or wherever this component lives)
+// src/pages/coordinator/CoordinatorDashboard.jsx
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import {
   BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip,
-  CartesianGrid, ResponsiveContainer, PieChart, Pie, Cell, Legend,
+  CartesianGrid, ResponsiveContainer, PieChart, Pie, Cell, Legend, AreaChart, Area
 } from "recharts";
 
 export default function CoordinatorDashboard() {
   const [coordinatorName, setCoordinatorName] = useState("");
   const [department, setDepartment] = useState("");
-  const [stats, setStats] = useState([]);
+  const [stats, setStats] = useState({
+    totalStudents: 0,
+    activeJobs: 0,
+    allJobs: 0,
+    placedStudents: 0,
+    approvedJobs: 0,
+    pendingJobs: 0
+  });
+  const [recentStudents, setRecentStudents] = useState([
+    { name: "Bessie Cooper", batch: "2021-25", dept: "CSE", status: "Placed", price: "$5447.00" },
+    { name: "Courtney Henry", batch: "2022-26", dept: "IT", status: "Pending", price: "$7445.00" },
+    { name: "Esther Howard", batch: "2021-25", dept: "ECE", status: "Placed", price: "$7451.00" },
+    { name: "Eleanor Pena", batch: "2023-27", dept: "MECH", status: "Pending", price: "$5430.00" },
+  ]);
   const [yearData, setYearData] = useState([]);
-  const [deptPlacement, setDeptPlacement] = useState({ total: 0, placed: 0 });
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState(null);
 
   const navigate = useNavigate();
-
   const API_BASE = "http://127.0.0.1:8000/coordinator";
 
   useEffect(() => {
@@ -55,51 +59,43 @@ export default function CoordinatorDashboard() {
         axios.get(`${API_BASE}/year-wise-placement-trend/`, { params: { department: dept }, withCredentials: true }),
       ]);
 
-      // Stats cards
       const statsData = statsRes.data;
-      setStats([
-        { title: "Total Students", value: statsData.total_students || 0, icon: "fa-users", color: "#7c3aed" },
-        { title: "Active Jobs", value: statsData.active_jobs || 0, icon: "fa-briefcase", color: "#10b981" },
-        { title: "All Jobs", value: statsData.all_jobs || 0, icon: "fa-list-ul", color: "#ec4899" },
-      ]);
-
-      // Pie data
       const pieData = pieRes.data;
-      setDeptPlacement({
-        total: pieData.total_students || 0,
-        placed: pieData.placed_students || 0,
+
+      setStats({
+        totalStudents: statsData.total_students || 0,
+        activeJobs: statsData.active_jobs || 0,
+        allJobs: statsData.all_jobs || 0,
+        placedStudents: pieData.placed_students || 0,
+        approvedJobs: statsData.approved_jobs || 0,
+        pendingJobs: statsData.pending_jobs || 0
       });
 
-      // Line chart data
       setYearData(yearRes.data || []);
 
     } catch (error) {
       console.error("Dashboard fetch error:", error);
-      setFetchError(
-        error.response?.data?.error ||
-        error.message ||
-        "Failed to load dashboard data."
-      );
+      setFetchError(error.response?.data?.error || error.message || "Failed to load dashboard data.");
     } finally {
       setLoading(false);
     }
   };
 
   const pieChartData = [
-    { name: "Placed", value: deptPlacement.placed },
-    { name: "Not Placed", value: deptPlacement.total - deptPlacement.placed },
+    { name: "Placed", value: stats.placedStudents, color: "#22d3ee" },
+    { name: "In Process", value: stats.approvedJobs, color: "#3b82f6" },
+    { name: "Unplaced", value: Math.max(0, stats.totalStudents - stats.placedStudents - stats.approvedJobs), color: "#a5b4fc" },
+    { name: "Pending", value: stats.pendingJobs, color: "#2dd4bf" },
   ];
-
-  const COLORS = ["#10b981", "#ef4444"];
 
   if (loading) {
     return (
-      <div className="page-wrapper">
-        <div className="glass-card text-center py-5">
-          <div className="spinner-border text-primary" role="status" style={{ width: "3rem", height: "3rem" }}>
+      <div className="page-wrapper h-100 d-flex align-items-center justify-content-center">
+        <div className="text-center">
+          <div className="spinner-border text-primary" role="status" style={{ width: "3.5rem", height: "3.5rem" }}>
             <span className="visually-hidden">Loading...</span>
           </div>
-          <p className="mt-3 text-muted fs-5">Loading dashboard...</p>
+          <p className="mt-3 text-muted fs-5 fw-medium">Preparing Your Workspace...</p>
         </div>
       </div>
     );
@@ -107,209 +103,343 @@ export default function CoordinatorDashboard() {
 
   return (
     <>
-      <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
-      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+      <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 
       <style>{`
-        body {
-          background: linear-gradient(135deg, #6b46c1, #9f7aea);
-          min-height: 100vh;
-          font-family: 'Segoe UI', system-ui, sans-serif;
-          color: #2d3748;
-        }
-
+        body { background-color: #f7f9fc; }
         .page-wrapper {
-          padding: 2.5rem 1.5rem;
-          max-width: 1400px;
-          margin: auto;
-        }
-
-        .header {
-          text-align: center;
-          color: white;
-          margin-bottom: 3.5rem;
-        }
-
-        .welcome-title {
-          font-size: 2.8rem;
-          font-weight: 700;
-          color: #7c3aed;
-          background: linear-gradient(90deg, #7c3aed, #ec4899);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-        }
-
-        .dept-badge {
-          background: linear-gradient(135deg, #7c3aed, #c084fc);
-          padding: 0.7rem 1.8rem;
-          border-radius: 50px;
-          font-weight: 600;
-          color: white;
-          font-size: 1.1rem;
-          display: inline-block;
-          margin-top: 0.8rem;
-        }
-
-        .glass-card {
-          background: rgba(255,255,255,0.94);
-          border-radius: 1.5rem;
           padding: 2rem;
-          box-shadow: 0 20px 50px rgba(0,0,0,0.18);
-          backdrop-filter: blur(12px);
-          border: 1px solid rgba(255,255,255,0.3);
-          transition: transform 0.3s ease, box-shadow 0.3s ease;
+          max-width: 1550px;
+          margin: 0 auto;
+          font-family: 'Plus Jakarta Sans', sans-serif;
         }
 
-        .glass-card:hover {
-          transform: translateY(-6px);
-          box-shadow: 0 28px 60px rgba(124,58,237,0.22);
-        }
-
-        .stat-card {
-          background: linear-gradient(135deg, #ffffff, #f8f5ff);
-          border-radius: 1.2rem;
-          padding: 1.8rem;
-          text-align: center;
-          box-shadow: 0 8px 25px rgba(0,0,0,0.08);
-          transition: all 0.3s ease;
-        }
-
-        .stat-card:hover {
-          transform: translateY(-8px);
-          box-shadow: 0 16px 40px rgba(124,58,237,0.18);
-        }
-
-        .stat-icon {
-          font-size: 2.8rem;
-          margin-bottom: 1rem;
-        }
-
-        .stat-value {
-          font-size: 2.4rem;
-          font-weight: 700;
-          color: #4f46e5;
-        }
-
-        .stat-title {
-          font-size: 1.1rem;
-          color: #6b7280;
-          margin-top: 0.5rem;
-        }
-
-        .chart-title {
-          text-align: center;
-          font-size: 1.6rem;
-          font-weight: 700;
-          background: linear-gradient(90deg, #7c3aed, #ec4899);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          margin-bottom: 1.8rem;
-        }
-
-        .error-alert {
-          background: rgba(239,68,68,0.15);
-          border: 1px solid #ef4444;
-          color: #991b1b;
-          border-radius: 1rem;
-          padding: 1.2rem;
-          text-align: center;
+        /* ─── Hero & Stats Banner ─────────────────────────────────── */
+        .top-banner-grid {
+          display: grid;
+          grid-template-columns: 2fr 1fr 1fr 1fr;
+          grid-auto-rows: 1fr;
+          gap: 1.25rem;
           margin-bottom: 2rem;
         }
 
+        .hero-banner {
+          background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+          border-radius: 1.25rem;
+          padding: 1.25rem 1.5rem;
+          color: white;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          position: relative;
+          overflow: hidden;
+          box-shadow: 0 12px 24px -10px rgba(124, 58, 237, 0.2);
+          min-height: 170px;
+        }
+
+        .hero-title {
+          font-family: 'Outfit', sans-serif;
+          font-size: 1.35rem;
+          font-weight: 800;
+          margin-bottom: 1rem;
+          line-height: 1.1;
+          max-width: 65%;
+          z-index: 2;
+        }
+
+        .hero-btn {
+          background: white;
+          color: #7c3aed;
+          padding: 0.55rem 1.2rem;
+          border-radius: 10px;
+          border: none;
+          font-weight: 800;
+          font-size: 0.75rem;
+          width: fit-content;
+          transition: all 0.3s;
+          z-index: 2;
+        }
+
+        .hero-image-overlay {
+          position: absolute;
+          right: -5px;
+          bottom: -5px;
+          width: 130px;
+          height: 130px;
+          opacity: 0.8;
+          z-index: 1;
+        }
+
+        .stat-square {
+          border-radius: 1.25rem;
+          padding: 1.25rem;
+          color: white;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          box-shadow: 0 8px 20px rgba(0,0,0,0.04);
+          position: relative;
+          overflow: hidden;
+          min-height: 170px;
+        }
+
+        .stat-square-pink { background: linear-gradient(135deg, #ec4899 0%, #db2777 100%); }
+        .stat-square-teal { background: linear-gradient(135deg, #2dd4bf 0%, #0d9488 100%); }
+        .stat-square-orange { background: linear-gradient(135deg, #fb923c 0%, #f97316 100%); }
+
+        .stat-square .icon-box {
+          width: 36px;
+          height: 36px;
+          background: rgba(255,255,255,0.2);
+          border-radius: 10px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-bottom: 0.75rem;
+          font-size: 0.95rem;
+        }
+
+        .stat-square .label { font-size: 0.8rem; font-weight: 700; opacity: 0.9; margin-bottom: 0.15rem; }
+        .stat-square .value { font-family: 'Sora', sans-serif; font-size: 1.65rem; font-weight: 800; margin-bottom: 0.2rem; line-height: 1; }
+        .stat-square .trend { font-size: 0.65rem; font-weight: 700; display: flex; align-items: center; gap: 4px; }
+
+        /* ─── Analytics Grids ─────────────────────────────────────── */
+        .analytics-grid {
+          display: grid;
+          grid-template-columns: 1fr 1.5fr;
+          gap: 1.5rem;
+          margin-bottom: 2rem;
+        }
+
+        .chart-container-card {
+          background: white;
+          border-radius: 2.5rem;
+          padding: 2.5rem;
+          box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);
+        }
+
+        .card-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 2rem;
+        }
+
+        .card-title { font-family: 'Outfit', sans-serif; font-size: 1.4rem; font-weight: 700; color: #1e293b; margin: 0; }
+        
+        .date-dropdown {
+          background: #f8fafc;
+          border: 1px solid #e2e8f0;
+          padding: 0.5rem 1rem;
+          border-radius: 12px;
+          font-size: 0.85rem;
+          font-weight: 600;
+          color: #64748b;
+        }
+
+        .donut-wrapper {
+          position: relative;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+        }
+
+        .donut-center-text {
+          position: absolute;
+          text-align: center;
+        }
+
+        /* ─── Table Section ────────────────────────────────────────── */
+        .report-grid {
+          display: grid;
+          grid-template-columns: 2fr 1fr;
+          gap: 1.5rem;
+        }
+
+        .table-card { background: white; border-radius: 2.5rem; padding: 2.5rem; }
+        
+        .modern-table { width: 100%; border-collapse: separate; border-spacing: 0 0.75rem; }
+        .modern-table th { padding: 0 1rem; font-size: 0.85rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 1px; border: none; }
+        .modern-table td { padding: 1.25rem 1rem; vertical-align: middle; background: transparent; border-bottom: 1px solid #f1f5f9; }
+
+        .user-cell { display: flex; align-items: center; gap: 1rem; }
+        .avatar { width: 44px; height: 44px; border-radius: 12px; object-fit: cover; }
+        .user-name { font-weight: 700; color: #1e293b; font-size: 1rem; }
+
+        .status-tag { padding: 0.4rem 1.2rem; border-radius: 2rem; font-size: 0.8rem; font-weight: 700; }
+        .status-placed { background: #dcfce7; color: #15803d; }
+        .status-pending { background: #fff7ed; color: #c2410c; }
+
+        .region-card { background: white; border-radius: 2.5rem; padding: 2.5rem; display: flex; flex-direction: column; align-items: center; }
+        .map-placeholder {
+          width: 100%;
+          height: 250px;
+          background: url("https://tse3.mm.bing.net/th?id=OIP.y-mFwE6xHCHzD2z6nF_NngHaE8&pid=Api");
+          background-size: contain;
+          background-repeat: no-repeat;
+          background-position: center;
+          margin-top: 1.5rem;
+          opacity: 0.6;
+        }
+
+        @media (max-width: 1400px) {
+          .top-banner-grid { grid-template-columns: 2fr 1fr 1fr; }
+          .stat-square:last-child { display: none; }
+        }
+
+        @media (max-width: 1200px) {
+          .analytics-grid, .report-grid { grid-template-columns: 1fr; }
+        }
+
         @media (max-width: 768px) {
-          .welcome-title { font-size: 2.2rem; }
-          .stat-value { font-size: 2rem; }
+          .top-banner-grid { grid-template-columns: 1fr; }
         }
       `}</style>
 
       <div className="page-wrapper">
-        <div className="header">
-          <h1 className="welcome-title">
-            Welcome, {coordinatorName || "Coordinator"}!
-          </h1>
-          <div className="dept-badge">
-            <i className="fas fa-building me-2"></i>
-            {department} Department
+        <div className="top-banner-grid">
+          <div className="hero-banner">
+            <h1 className="hero-title">Accelerate Your Department's Placement Success.</h1>
+            <button className="hero-btn" onClick={() => navigate("/coordinator/students")}>Explore Student List</button>
+            <img 
+              className="hero-image-overlay" 
+              src="https://static.vecteezy.com/system/resources/previews/022/484/513/original/golden-trophy-3d-render-icon-illustration-png.png" 
+              alt="Placement Success Trophy" 
+              onError={(e) => {
+                e.target.src = "https://cdn-icons-png.flaticon.com/512/3112/3112946.png"; // Trophy flat fallback
+              }}
+            />
+          </div>
+
+          <div className="stat-square stat-square-pink">
+            <div className="icon-box"><i className="fas fa-users"></i></div>
+            <div className="label">Total Students</div>
+            <div className="value">{stats.totalStudents}</div>
+            <div className="trend"><i className="fas fa-arrow-up"></i> +8.2% Since last year</div>
+          </div>
+
+          <div className="stat-square stat-square-teal">
+            <div className="icon-box"><i className="fas fa-briefcase"></i></div>
+            <div className="label">Active Jobs</div>
+            <div className="value">{stats.activeJobs}</div>
+            <div className="trend"><i className="fas fa-check-circle"></i> On pace</div>
+          </div>
+
+          <div className="stat-square stat-square-orange">
+            <div className="icon-box"><i className="fas fa-award"></i></div>
+            <div className="label">Placed Today</div>
+            <div className="value">{stats.placedStudents}</div>
+            <div className="trend"><i className="fas fa-chart-line"></i> +2.2% This month</div>
           </div>
         </div>
 
-        {fetchError && (
-          <div className="error-alert">
-            <i className="fas fa-exclamation-circle me-2"></i>
-            {fetchError}
-          </div>
-        )}
-
-        {/* Stats Cards */}
-        <div className="row g-4 mb-5">
-          {stats.map((stat, i) => (
-            <div key={i} className="col-md-4">
-              <div className="stat-card">
-                <i className={`fas ${stat.icon} stat-icon`} style={{ color: stat.color }}></i>
-                <div className="stat-value">{stat.value}</div>
-                <div className="stat-title">{stat.title}</div>
-              </div>
+        <div className="analytics-grid">
+          <div className="chart-container-card">
+            <div className="card-header">
+              <h3 className="card-title">Placement Distribution</h3>
+              <select className="date-dropdown"><option>Current Year</option></select>
             </div>
-          ))}
-        </div>
-
-        <div className="row g-4">
-          {/* Pie Chart */}
-          <div className="col-lg-6">
-            <div className="glass-card">
-              <h3 className="chart-title">Department Placement Overview</h3>
-              <ResponsiveContainer width="100%" height={380}>
+            <div className="donut-wrapper">
+              <ResponsiveContainer width="100%" height={260}>
                 <PieChart>
                   <Pie
                     data={pieChartData}
                     cx="50%"
                     cy="50%"
-                    innerRadius={80}
-                    outerRadius={130}
+                    innerRadius={75}
+                    outerRadius={105}
                     dataKey="value"
-                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                    labelLine={true}
+                    paddingAngle={8}
+                    stroke="none"
                   >
-                    {pieChartData.map((_, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index]} />
-                    ))}
+                    {pieChartData.map((entry, index) => <Cell key={index} fill={entry.color} />)}
                   </Pie>
-                  <Tooltip formatter={(val) => `${val} students`} />
-                  <Legend verticalAlign="bottom" height={36} />
+                  <Tooltip contentStyle={{ borderRadius: '15px', border: 'none', boxShadow: '0 10px 15px rgba(0,0,0,0.1)' }} />
                 </PieChart>
               </ResponsiveContainer>
+              <div className="donut-center-text">
+                <div style={{ color: '#64748b', fontSize: '0.85rem', fontWeight: 700 }}>Total</div>
+                <div style={{ color: '#1e293b', fontSize: '1.4rem', fontWeight: 800 }}>{stats.totalStudents}</div>
+              </div>
             </div>
           </div>
 
-          {/* Line Chart */}
-          <div className="col-lg-6">
-            <div className="glass-card">
-              <h3 className="chart-title">Year-wise Placed Students Trend</h3>
-              <ResponsiveContainer width="100%" height={380}>
-                {yearData.length === 0 ? (
-                  <div className="d-flex align-items-center justify-content-center h-100 text-muted fst-italic">
-                    No placement trend data available yet
-                  </div>
-                ) : (
-                  <LineChart data={yearData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                    <XAxis dataKey="year" stroke="#6b7280" />
-                    <YAxis stroke="#6b7280" />
-                    <Tooltip
-                      contentStyle={{ background: "rgba(255,255,255,0.95)", borderRadius: "12px", border: "none", boxShadow: "0 4px 20px rgba(0,0,0,0.15)" }}
-                      formatter={(val) => [`${val} students placed`, ""]}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="placed_students"
-                      stroke="#10b981"
-                      strokeWidth={4}
-                      dot={{ r: 6, strokeWidth: 2 }}
-                      activeDot={{ r: 10, stroke: "#10b981", strokeWidth: 3 }}
-                    />
-                  </LineChart>
-                )}
-              </ResponsiveContainer>
+          <div className="chart-container-card">
+            <div className="card-header">
+              <h3 className="card-title">Placement Trend</h3>
+              <select className="date-dropdown"><option>Monthly</option></select>
+            </div>
+            <ResponsiveContainer width="100%" height={320}>
+              <BarChart data={yearData.length > 0 ? yearData : [
+                { year: 'Jan', placed_students: 45 }, { year: 'Feb', placed_students: 52 },
+                { year: 'Mar', placed_students: 38 }, { year: 'Apr', placed_students: 85 },
+                { year: 'May', placed_students: 48 }, { year: 'Jun', placed_students: 62 },
+                { year: 'Jul', placed_students: 55 },
+              ]}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                <XAxis dataKey="year" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 11, fontWeight: 700 }} dy={10} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 11 }} />
+                <Tooltip cursor={{ fill: '#f8fafc' }} contentStyle={{ borderRadius: '12px', border: 'none' }} />
+                <Bar dataKey="placed_students" radius={[6, 6, 0, 0]} barSize={35}>
+                  {(yearData.length > 0 ? yearData : []).map((entry, index) => (
+                    <Cell key={index} fill={index === 3 ? '#6d28d9' : '#e2e8f0'} />
+                  ))}
+                  {yearData.length === 0 && [0,1,2,3,4,5,6].map(i => <Cell key={i} fill={i === 3 ? '#6d28d9' : '#e2e8f0'} />)}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        <div className="report-grid">
+          <div className="table-card">
+            <div className="card-header">
+              <h3 className="card-title">Recent Student Activity</h3>
+            </div>
+            <table className="modern-table">
+              <thead>
+                <tr>
+                  <th>Student Name</th>
+                  <th>Batch</th>
+                  <th>Department</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {recentStudents.map((s, i) => (
+                  <tr key={i}>
+                    <td>
+                      <div className="user-cell">
+                        <img className="avatar" src={`https://i.pravatar.cc/150?u=${s.name}`} alt="" />
+                        <span className="user-name">{s.name}</span>
+                      </div>
+                    </td>
+                    <td><span style={{ fontWeight: 600, color: '#64748b' }}>{s.batch}</span></td>
+                    <td><span style={{ fontWeight: 600, color: '#1e293b' }}>{s.dept}</span></td>
+                    <td>
+                      <span className={`status-tag ${s.status === 'Placed' ? 'status-placed' : 'status-pending'}`}>
+                        {s.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="region-card">
+            <div className="card-header w-100">
+              <h3 className="card-title">Placement Reach</h3>
+            </div>
+            <div className="map-placeholder"></div>
+            <div className="mt-4 w-100">
+              <div className="d-flex justify-content-between mb-2">
+                <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#64748b' }}>International Success</span>
+                <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#1e293b' }}>12%</span>
+              </div>
+              <div className="progress" style={{ height: '8px', borderRadius: '10px' }}>
+                <div className="progress-bar" style={{ width: '12%', background: '#7c3aed' }}></div>
+              </div>
             </div>
           </div>
         </div>

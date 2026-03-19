@@ -1,201 +1,167 @@
-
 // src/components/coordinator/CoordinatorTopBar.jsx
-import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React from "react";
 
-export default function CoordinatorTopBar({
-  username = "Coordinator",
-  department = "",
-  onToggleSidebar
-}) {
-  const navigate = useNavigate();
-  const [displayName, setDisplayName] = useState("Coordinator");
-
-  useEffect(() => {
-    // Get from localStorage OR fallback to prop
-    const storedName =
-      localStorage.getItem("coordinatorName") ||
-      localStorage.getItem("coordinatorUsername") ||
-      username;
-
-    if (storedName && storedName.trim() !== "") {
-      const cleanedName = storedName
-        .replace(/\b\b/gi, "")   // remove TEST word
-        .replace(/\s+/g, " ")       // remove extra spaces
-        .trim();
-
-      // 🔥 Overwrite old value permanently
-      localStorage.setItem("coordinatorUsername", cleanedName);
-
-      setDisplayName(cleanedName || "Coordinator");
-    } else {
-      setDisplayName("Coordinator");
-    }
-  }, [username]); // runs if username prop changes
-
-  const handleLogout = () => {
-    localStorage.clear();
-    navigate("/coordinator/login", { replace: true });
-  };
+export default function CoordinatorTopBar() {
+  const username = localStorage.getItem("coordinatorUsername") || "Coordinator";
+  const department = localStorage.getItem("coordinatorDepartment") || "Global Dept";
 
   return (
     <>
-      <link
-        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-        rel="stylesheet"
-      />
-      <link
-        rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
-      />
-
+      <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+      
       <style>{`
-        .coordinator-topbar {
+        .topbar-wrapper {
+          height: 80px;
           background: #ffffff;
-          border-bottom: 1px solid rgba(229,231,235,0.9);
-          box-shadow: 0 4px 14px rgba(0,0,0,0.06);
-          padding: 0 24px;
-          height: 65px;
           display: flex;
           align-items: center;
           justify-content: space-between;
+          padding: 0 2.5rem;
+          border-bottom: 1px solid #f1f5f9;
+          font-family: 'Plus Jakarta Sans', sans-serif;
+          z-index: 900;
           position: sticky;
           top: 0;
-          left: 260px;
-          right: 0;
-          z-index: 1100;
-          color: #111827;
-          transition: left 0.3s ease;
         }
 
-        @media (max-width: 992px) {
-          .coordinator-topbar {
-            left: 0;
-          }
+        .search-container {
+          display: flex;
+          align-items: center;
+          background: #f8fafc;
+          border: 1px solid #e2e8f0;
+          padding: 0.6rem 1.25rem;
+          border-radius: 14px;
+          width: 380px;
+          gap: 12px;
+          transition: all 0.3s;
         }
 
-        .coordinator-left {
+        .search-container:focus-within {
+          border-color: #7c3aed;
+          background: #ffffff;
+          box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.05);
+        }
+
+        .search-input {
+          border: none;
+          background: transparent;
+          outline: none;
+          font-size: 0.9rem;
+          color: #1e293b;
+          width: 100%;
+          font-weight: 500;
+        }
+
+        .search-input::placeholder { color: #94a3b8; }
+
+        .user-profile-section {
+          display: flex;
+          align-items: center;
+          gap: 20px;
+        }
+
+        .notification-btn {
+          width: 44px;
+          height: 44px;
+          border-radius: 14px;
+          border: 1px solid #e2e8f0;
+          background: white;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: #64748b;
+          font-size: 1.15rem;
+          cursor: pointer;
+          transition: all 0.2s;
+          position: relative;
+        }
+
+        .notification-btn:hover {
+          background: #f8fafc;
+          color: #7c3aed;
+          border-color: #7c3aed;
+        }
+
+        .notif-dot {
+          position: absolute;
+          top: 10px;
+          right: 10px;
+          width: 8px;
+          height: 8px;
+          background: #ef4444;
+          border-radius: 50%;
+          border: 2px solid white;
+        }
+
+        .topbar-divider {
+          height: 28px;
+          width: 1px;
+          background: #e2e8f0;
+        }
+
+        .profile-info {
           display: flex;
           align-items: center;
           gap: 12px;
-          min-width: 0;
+          cursor: pointer;
+          padding: 6px 10px;
+          border-radius: 14px;
+          transition: all 0.2s;
         }
 
-        .coordinator-welcome {
-          font-size: 1.2rem;
-          font-weight: 600;
+        .profile-info:hover { background: #f8fafc; }
+
+        .avatar-circle {
+          width: 44px;
+          height: 44px;
+          border-radius: 12px;
+          background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
           display: flex;
           align-items: center;
-          gap: 8px;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-
-        .coordinator-welcome i {
-          font-size: 1.4rem;
-          color: #7c3aed;
-        }
-
-        .name {
-          font-weight: 700;
-          color: #7c3aed;
-        }
-
-        .department-badge {
-          font-size: 0.8rem;
-          font-weight: 600;
-          background: #ede9fe;
-          color: #6b21a8;
-          padding: 4px 10px;
-          border-radius: 999px;
-        }
-
-        .coordinator-logout-btn {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          padding: 8px 18px;
-          font-size: 0.9rem;
-          font-weight: 600;
+          justify-content: center;
           color: white;
-          background: #ef4444;
-          border: none;
-          border-radius: 30px;
-          cursor: pointer;
-          transition: 0.25s ease;
+          font-weight: 800;
+          font-family: 'Outfit', sans-serif;
+          box-shadow: 0 4px 12px rgba(124, 58, 237, 0.2);
         }
 
-        .coordinator-logout-btn:hover {
-          background: #dc2626;
-        }
+        .user-meta { display: flex; flex-direction: column; line-height: 1.2; }
+        .user-name { font-weight: 700; color: #1e293b; font-size: 0.95rem; }
+        .user-role { font-size: 0.75rem; color: #64748b; font-weight: 600; }
 
-        .menu-toggle-btn {
-          font-size: 1.4rem;
-          background: none;
-          border: none;
-          cursor: pointer;
-          color: #6b7280;
-        }
-
-        @media (min-width: 993px) {
-          .menu-toggle-btn {
-            display: none;
-          }
-        }
-
-        @media (max-width: 576px) {
-          .coordinator-topbar {
-            height: 55px;
-            padding: 0 14px;
-          }
-
-          .coordinator-welcome {
-            font-size: 0.95rem;
-          }
-
-          .department-badge {
-            display: none;
-          }
-
-          .coordinator-logout-btn {
-            padding: 6px 10px;
-            font-size: 0;
-            width: 36px;
-            height: 36px;
-            justify-content: center;
-          }
-
-          .coordinator-logout-btn span {
-            display: none;
-          }
-
-          .coordinator-logout-btn i {
-            font-size: 1rem;
-          }
+        @media (max-width: 768px) {
+          .search-container { display: none; }
+          .topbar-wrapper { padding: 0 1.5rem; }
+          .user-meta { display: none; }
         }
       `}</style>
 
-      <header className="coordinator-topbar">
-        <div className="coordinator-left">
-          <button className="menu-toggle-btn" onClick={onToggleSidebar}>
-            <i className="fas fa-bars"></i>
-          </button>
-
-          <div className="coordinator-welcome">
-            <i className="fas fa-user-graduate"></i>
-            Welcome, <span className="name">{displayName}</span>
-            {department && (
-              <span className="department-badge">{department}</span>
-            )}
-          </div>
+      <div className="topbar-wrapper">
+        <div className="search-container">
+          <i className="fas fa-search" style={{ color: '#94a3b8', fontSize: '0.9rem' }}></i>
+          <input type="text" className="search-input" placeholder="Search for stats, students, reports..." />
         </div>
 
-        <button className="coordinator-logout-btn" onClick={handleLogout}>
-          <span>Logout</span>
-          <i className="fas fa-sign-out-alt"></i>
-        </button>
-      </header>
+        <div className="user-profile-section">
+          <button className="notification-btn">
+            <i className="far fa-bell"></i>
+            <div className="notif-dot"></div>
+          </button>
+
+          <div className="topbar-divider"></div>
+
+          <div className="profile-info">
+            <div className="user-meta text-end">
+              <span className="user-name">{username}</span>
+              <span className="user-role">{department} Coordinator</span>
+            </div>
+            <div className="avatar-circle">
+              {username.charAt(0).toUpperCase()}
+            </div>
+            <i className="fas fa-chevron-down" style={{ fontSize: '0.7rem', color: '#94a3b8' }}></i>
+          </div>
+        </div>
+      </div>
     </>
   );
 }

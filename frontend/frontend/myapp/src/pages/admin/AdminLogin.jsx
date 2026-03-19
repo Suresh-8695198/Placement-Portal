@@ -47,6 +47,10 @@ const AdminLogin = () => {
   return (
     <>
       <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700&display=swap"
+        rel="stylesheet"
+      />
+      <link
         href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
         rel="stylesheet"
       />
@@ -56,365 +60,338 @@ const AdminLogin = () => {
       />
 
       <style>{`
-        body {
-          font-family: 'Poppins', 'Inter', system-ui, sans-serif;
-          background: linear-gradient(135deg, #a78bfa 0%, #f472b6 50%, #22d3ee 100%);
-          min-height: 100vh;
+        :root {
+          --primary: #040947;
+          --accent: #6366f1;
+          --bg-solid: #040947; 
+          --text-main: #1e293b;
+          --text-muted: #64748b;
+          --border-color: #e5e7eb;
+          --input-bg: #ffffff;
+        }
+
+        *, *::before, *::after {
+          box-sizing: border-box;
+        }
+
+        html, body {
           margin: 0;
-          overflow-x: hidden;
+          padding: 0;
+          overflow: hidden;
+          width: 100%;
+          height: 100%;
+          max-width: 100vw;
+        }
+
+        html::-webkit-scrollbar,
+        body::-webkit-scrollbar {
+          display: none;
+        }
+
+        body {
+          font-family: 'Inter', sans-serif;
+          background-color: var(--bg-solid);
+          background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Crect x='10' y='10' width='80' height='80' rx='20' fill='none' stroke='%23ffffff' stroke-opacity='0.10' stroke-width='1'/%3E%3Crect x='30' y='30' width='40' height='40' rx='10' fill='none' stroke='%23ffffff' stroke-opacity='0.06' stroke-width='1'/%3E%3C/svg%3E");
+          color: var(--text-main);
+          min-height: 100vh;
+        }
+
+        h1, h2, h3 {
+          font-family: 'Outfit', sans-serif;
         }
 
         .login-page {
           min-height: 100vh;
+          width: 100%;
+          max-width: 100vw;
           display: flex;
           align-items: center;
           justify-content: center;
-          padding: 1.5rem;
+          padding: 2rem 1rem;
+          overflow: hidden;
         }
 
         .login-wrapper {
           width: 100%;
-          max-width: 520px;           /* ← wider card */
-          background: rgba(255, 255, 255, 0.92);
-          border-radius: 1.5rem;
-          padding: 2rem 2.4rem;       /* ← slightly less padding = feels more compact */
-          box-shadow: 0 20px 60px rgba(0,0,0,0.18);
-          backdrop-filter: blur(10px);
-          border: 1px solid rgba(255,255,255,0.4);
+          max-width: 520px;
+          background: #ffffff;
+          padding: 3.5rem 2.5rem;
+          border-radius: 8px;
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          box-shadow: 0 25px 50px -12px rgba(4, 9, 71, 0.5);
         }
 
-        .logo-icon {
-          width: 80px;                /* ← slightly smaller logo */
-          height: 80px;
-          background: linear-gradient(135deg, #8b5cf6, #ec4899);
-          border-radius: 50%;
+        .header-section {
+          text-align: center;
+          margin-bottom: 2.5rem;
+        }
+
+        .logo-box {
+          width: 110px;
+          height: 110px;
           display: flex;
           align-items: center;
           justify-content: center;
-          margin: 0 auto 1rem;
-          color: white;
-          font-size: 2.4rem;          /* ← smaller icon size */
-          box-shadow: 0 10px 30px rgba(139,92,246,0.35);
+          margin: 0 auto 1.5rem;
         }
 
         .login-title {
-          font-size: 1.95rem;         /* ← slightly smaller title */
-          font-weight: 700;
-          text-align: center;
-          color: #ec4899;
-          margin-bottom: 0.4rem;
+          font-size: 1.85rem;
+          font-weight: 800;
+          color: #040947;
+          margin-bottom: 0.5rem;
+          letter-spacing: -0.02em;
         }
 
         .login-subtitle {
-          text-align: center;
-          color: #6b7280;
-          font-size: 1rem;
-          margin-bottom: 1.8rem;
+          color: var(--text-muted);
+          font-size: 0.95rem;
+        }
+
+        .form-group {
+          margin-bottom: 1.5rem;
         }
 
         .form-label {
           font-weight: 600;
-          color: #374151;
-          margin-bottom: 0.45rem;
+          color: var(--text-main);
+          font-size: 0.875rem;
+          margin-bottom: 0.5rem;
+          display: block;
+        }
+
+        .input-control {
+          width: 100%;
+          height: 48px;
+          padding: 0.75rem 1rem;
           font-size: 0.95rem;
+          border: 1px solid var(--border-color);
+          border-radius: 6px;
+          background-color: var(--input-bg);
+          transition: all 0.2s ease;
+          outline: none;
         }
 
-        .input-wrapper {
+        .input-control:focus {
+          border-color: var(--accent);
+          box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+        }
+
+        .password-field {
           position: relative;
-          margin-bottom: 1.3rem;
         }
 
-        .form-control {
-          height: 50px;               /* ← slightly shorter inputs */
-          padding: 0 3rem 0 3.1rem;
-          border: 1px solid #d1d5db;
-          border-radius: 1rem;
-          font-size: 0.98rem;
-          background: #f9fafb;
-          transition: all 0.25s;
-        }
-
-        .form-control:focus {
-          border-color: #a78bfa;
-          box-shadow: 0 0 0 4px rgba(167,139,250,0.25);
-          background: white;
-        }
-
-        .input-icon {
+        .eye-toggle {
           position: absolute;
-          left: 1.2rem;
+          right: 1rem;
           top: 50%;
-          transform: translateY(15%);
-          color: #9ca3af;
-          font-size: 1.3rem;
-          pointer-events: none;
-          transition: color 0.25s;
-        }
-
-        .input-wrapper:focus-within .input-icon {
-          color: #a78bfa;
-        }
-
-        .eye-btn {
-          position: absolute;
-          right: 1.2rem;
-          top: 50%;
-          transform: translateY(15%);
+          transform: translateY(-50%);
           background: none;
           border: none;
-          color: #9ca3af;
-          font-size: 1.3rem;
+          color: var(--text-muted);
           cursor: pointer;
+          display: flex;
+          align-items: center;
+          padding: 0.25rem;
         }
 
-        .eye-btn:hover { color: #4b5563; }
+        .eye-toggle:hover {
+          color: var(--text-main);
+        }
 
-        .forgot-link {
-          color: #a78bfa;
-          font-size: 0.94rem;
-          text-align: right;
+        .forgot-pass {
           display: block;
-          margin: -0.5rem 0 1.4rem;
-          cursor: pointer;
+          text-align: right;
+          font-size: 0.875rem;
+          color: var(--primary);
           text-decoration: none;
-          position: relative;
+          margin-top: -1rem;
+          margin-bottom: 1.5rem;
+          font-weight: 500;
         }
 
-        .forgot-link:hover {
-          color: #c084fc;
+        .forgot-pass:hover {
+          text-decoration: underline;
         }
 
-        .link-underline {
-          position: relative;
-          text-decoration: none;
-          color: #a78bfa;
-        }
-
-        .link-underline::after {
-          content: '';
-          position: absolute;
-          width: 0;
-          height: 2px;
-          bottom: -4px;
-          left: 0;
-          background: linear-gradient(90deg, #f472b6, #22d3ee);
-          transition: width 0.35s ease;
-        }
-
-        .link-underline:hover::after {
+        .btn-submit {
           width: 100%;
-        }
-
-        .btn-login {
-          width: 100%;
-          padding: 0.9rem;
-          font-size: 1.02rem;         /* ← slightly smaller button text */
-          font-weight: 600;
+          height: 48px;
+          background: var(--primary);
           color: white;
-          background: linear-gradient(90deg, #ec4899, #f97316);
           border: none;
-          border-radius: 3rem;
-          transition: all 0.35s;
-          box-shadow: 0 6px 20px rgba(236,72,153,0.3);
-          position: relative;
-          overflow: hidden;
+          border-radius: 6px;
+          font-weight: 600;
+          font-size: 1rem;
+          transition: all 0.2s ease;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.5rem;
         }
 
-        .btn-login:hover:not(:disabled) {
-          transform: translateY(-2px);
-          box-shadow: 0 12px 30px rgba(236,72,153,0.45);
+        .btn-submit:hover:not(:disabled) {
+          background: #0a1172;
+          transform: translateY(-1px);
         }
 
-        .btn-login::before {
-          content: '';
-          position: absolute;
-          top: 0; left: -120%;
-          width: 120%; height: 100%;
-          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent);
-          transition: left 0.6s;
-        }
-
-        .btn-login:hover::before {
-          left: 120%;
-        }
-
-        .btn-login:disabled {
+        .btn-submit:disabled {
           opacity: 0.7;
           cursor: not-allowed;
         }
 
-        .alert-custom {
-          background: #fee2e2;
+        .error-alert {
+          background-color: #fef2f2;
+          border: 1px solid #fee2e2;
           color: #991b1b;
-          border: 1px solid #fca5a5;
-          border-radius: 1rem;
-          padding: 0.9rem 1.3rem;
+          padding: 0.75rem 1rem;
+          border-radius: 6px;
           margin-bottom: 1.5rem;
+          font-size: 0.875rem;
           display: flex;
           align-items: center;
-          gap: 0.8rem;
-          font-size: 0.95rem;
+          gap: 0.75rem;
         }
 
-        .register-text {
+        .foot-info {
           text-align: center;
-          margin-top: 1.6rem;
-          font-size: 0.95rem;
-          color: #4b5563;
+          margin-top: 2rem;
+          font-size: 0.875rem;
+          color: var(--text-muted);
         }
 
-        .register-link {
-          color: #a78bfa;
+        .reg-link {
+          color: var(--primary);
           font-weight: 600;
+          text-decoration: none;
+          margin-left: 0.25rem;
           cursor: pointer;
         }
 
-        .register-link:hover {
-          color: #c084fc;
+        .reg-link:hover {
           text-decoration: underline;
         }
 
-        .toast-container {
+
+        .toast-box {
           position: fixed;
-          top: 1.5rem;
-          right: 1.5rem;
-          z-index: 1055;
-          min-width: 300px;
+          top: 2rem;
+          right: 2rem;
+          z-index: 1000;
+          background: #059669;
+          color: white;
+          padding: 1rem 1.5rem;
+          border-radius: 4px;
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+          animation: slideIn 0.3s ease-out;
         }
 
-        .security-badge {
-          text-align: center;
-          margin-top: 1.8rem;
-          font-size: 0.88rem;
-          color: #6b7280;
+        @keyframes slideIn {
+          from { transform: translateX(100%); opacity: 0; }
+          to { transform: translateX(0); opacity: 1; }
         }
 
-        .security-badge i {
-          color: #10b981;
-          margin-right: 0.4rem;
-        }
-
-        @media (max-width: 576px) {
+        @media (max-width: 480px) {
           .login-wrapper {
-            padding: 1.8rem 1.8rem;
-            max-width: 420px;
-          }
-          .login-title {
-            font-size: 1.8rem;
-          }
-          .logo-icon {
-            width: 70px;
-            height: 70px;
-            font-size: 2.2rem;
+            padding: 2rem 1.5rem;
           }
         }
       `}</style>
 
       <div className="login-page">
         <div className="login-wrapper">
-          <div className="logo-icon">
-            <i className="fas fa-shield-alt"></i>
+          <div className="header-section">
+            <div className="logo-box">
+              <img src="/Logo.png" alt="University Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+            </div>
+            <h1 className="login-title">Administrator Login</h1>
+            <p className="login-subtitle">Placement Portal Secure Gateway</p>
           </div>
 
-          <h1 className="login-title">Admin Portal</h1>
-          <p className="login-subtitle">Sign in to access your dashboard</p>
-
           {error && (
-            <div className="alert-custom">
-              <i className="fas fa-triangle-exclamation"></i>
-              {error}
+            <div className="error-alert">
+              <i className="fas fa-circle-exclamation"></i>
+              <span>{error}</span>
             </div>
           )}
 
           <form onSubmit={handleSubmit}>
-            <div className="input-wrapper">
+            <div className="form-group">
               <label className="form-label">Email Address</label>
               <input
                 type="email"
-                className="form-control"
+                className="input-control"
                 name="email"
-                placeholder="admin@example.com"
+                placeholder="admin@institution.edu"
                 value={formData.email}
                 onChange={handleChange}
                 required
               />
-              <i className="fas fa-envelope input-icon"></i>
             </div>
 
-            <div className="input-wrapper">
+            <div className="form-group">
               <label className="form-label">Password</label>
-              <input
-                type={showPassword ? "text" : "password"}
-                className="form-control"
-                name="password"
-                placeholder="••••••••"
-                value={formData.password}
-                onChange={handleChange}
-                required
-              />
-              <i className="fas fa-lock input-icon"></i>
-              <button
-                type="button"
-                className="eye-btn"
-                onClick={() => setShowPassword(!showPassword)}
-              >
-                <i className={`fas ${showPassword ? "fa-eye-slash" : "fa-eye"}`}></i>
-              </button>
+              <div className="password-field">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  className="input-control"
+                  name="password"
+                  placeholder="••••••••"
+                  value={formData.password}
+                  onChange={handleChange}
+                  required
+                />
+                <button
+                  type="button"
+                  className="eye-toggle"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  <i className={`fas ${showPassword ? "fa-eye-slash" : "fa-eye"}`}></i>
+                </button>
+              </div>
             </div>
 
             <span
-              className="forgot-link link-underline"
+              className="forgot-pass"
               onClick={() => navigate("/admin/forgot-password")}
+              style={{ cursor: "pointer" }}
             >
-              Forgot your password?
+              Forgot Access?
             </span>
 
-            <button type="submit" className="btn-login" disabled={isLoading}>
+            <button type="submit" className="btn-submit" disabled={isLoading}>
               {isLoading ? (
                 <>
-                  <span className="spinner-border spinner-border-sm me-2" role="status"></span>
-                  Signing in...
+                  <span className="spinner-border spinner-border-sm" role="status"></span>
+                  <span>Verifying Credentials...</span>
                 </>
               ) : (
-                "Sign In →"
+                <>
+                  <span>Authenticate</span>
+                  <i className="fas fa-arrow-right"></i>
+                </>
               )}
             </button>
           </form>
 
-          <div className="register-text">
-            Don't have an account?{" "}
-            <span
-              className="register-link link-underline"
-              onClick={() => navigate("/admin/register")}
-            >
-              Register now
+          <div className="foot-info">
+            New administrator?
+            <span className="reg-link" onClick={() => navigate("/admin/register")}>
+              Request Registration
             </span>
           </div>
 
-          <div className="security-badge">
-            <i className="fas fa-shield-check"></i>
-            Secured with end-to-end encryption
-          </div>
         </div>
 
-        {/* Success Toast */}
-        <div className="toast-container">
-          {showToast && (
-            <div className="toast align-items-center text-bg-success border-0 show" role="alert">
-              <div className="d-flex">
-                <div className="toast-body">
-                  <i className="fas fa-check-circle me-2"></i>
-                  Login successful — redirecting...
-                </div>
-                <button
-                  type="button"
-                  className="btn-close btn-close-white me-2 m-auto"
-                  onClick={() => setShowToast(false)}
-                ></button>
-              </div>
-            </div>
-          )}
-        </div>
+        {showToast && (
+          <div className="toast-box">
+            <i className="fas fa-circle-check"></i>
+            <span>Authentication successful. Redirecting to dashboard...</span>
+          </div>
+        )}
       </div>
     </>
   );
