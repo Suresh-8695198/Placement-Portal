@@ -559,15 +559,15 @@ export default function AdminJobs() {
         }
 
         .table th {
-          background: #f8fafc;
+          background: #4f46e5; /* Professional Indigo */
           text-align: left;
-          padding: 1rem 0.75rem; /* More compact padding */
+          padding: 1.25rem 0.75rem; 
           font-weight: 700;
-          color: #64748b;
+          color: #ffffff;
           font-size: 0.75rem;
           text-transform: uppercase;
-          letter-spacing: 0.05em;
-          border-bottom: 2px solid #e2e8f0;
+          letter-spacing: 0.08em;
+          border-bottom: none;
         }
 
         .table td {
