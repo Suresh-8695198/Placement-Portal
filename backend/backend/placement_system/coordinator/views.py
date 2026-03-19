@@ -888,11 +888,15 @@ from coordinator.models import DepartmentCoordinator
 
 @require_GET
 def students_by_coordinator(request, username):
-
+    from django.db.models import Q
+    from django.shortcuts import get_object_or_404
+    
+    # Flexibility: match both username or email
     coordinator = get_object_or_404(
-        DepartmentCoordinator,
-        user__username=username,
-        is_active=True
+        DepartmentCoordinator.objects.filter(
+            Q(user__username=username) | Q(user__email=username),
+            is_active=True
+        )
     )
 
     programme = request.GET.get("programme")

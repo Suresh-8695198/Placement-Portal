@@ -35,21 +35,19 @@ export default function CoordinatorSidebar() {
         }
 
         .sidebar-header {
-          padding: 2.5rem 1.25rem;
+          padding: 1.5rem 1.25rem;
           display: flex;
           flex-direction: column;
           align-items: center;
           text-align: center;
-          gap: 12px;
+          gap: 0px;
         }
 
         .sidebar-logo-icon {
-          width: 72px;
-          height: 72px;
-          background: rgba(255,255,255,0.05);
-          border: 1px solid rgba(255,255,255,0.1);
-          padding: 12px;
-          border-radius: 20px;
+          width: 90px;
+          height: 90px;
+          background: transparent;
+          border: none;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -61,13 +59,22 @@ export default function CoordinatorSidebar() {
 
         .sidebar-brand-name {
           font-family: 'Outfit', sans-serif;
-          font-size: 1.05rem;
+          font-size: 1.15rem;
           font-weight: 800;
-          margin-top: 0.5rem;
+          margin: 0;
+          margin-top: -8px; /* Move closer to logo */
           color: #ffffff;
           letter-spacing: 0.5px;
           text-transform: uppercase;
-          opacity: 0.9;
+        }
+
+        .sidebar-subtitle {
+          font-size: 0.7rem;
+          font-weight: 700;
+          color: rgba(255, 255, 255, 0.5);
+          text-transform: uppercase;
+          letter-spacing: 1.5px;
+          margin-top: 4px; /* Keep subtitle readable */
         }
 
         .sidebar-nav {
@@ -100,7 +107,6 @@ export default function CoordinatorSidebar() {
         .section-link.active {
           background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
           color: #ffffff;
-          box-shadow: 0 8px 20px rgba(124, 58, 237, 0.25);
         }
 
         .section-link .nav-icon { font-size: 1.15rem; width: 24px; text-align: center; }
@@ -140,7 +146,8 @@ export default function CoordinatorSidebar() {
               e.target.src = "https://tse1.mm.bing.net/th?id=OIP.E0dRErE6Z8l9R5jZkZp9XQHaHa&pid=Api"; // Fallback
             }} />
           </div>
-          <h3 className="sidebar-brand-name">Coordinator User</h3>
+          <h3 className="sidebar-brand-name">Coordinator</h3>
+          <span className="sidebar-subtitle">Placement Portal</span>
         </div>
 
         <div className="sidebar-nav">
@@ -189,4 +196,4 @@ export default function CoordinatorSidebar() {
       </div>
     </>
   );
-}
+}

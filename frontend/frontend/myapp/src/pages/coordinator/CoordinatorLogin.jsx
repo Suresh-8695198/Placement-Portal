@@ -31,9 +31,9 @@ export default function CoordinatorLogin() {
       const data = await res.json();
 
       if (res.ok) {
-        localStorage.setItem("coordinatorUsername", username);
+        localStorage.setItem("coordinatorUsername", data.username);
         localStorage.setItem("coordinatorDepartment", data.department || "");
-        localStorage.setItem("coordinatorId", username);
+        localStorage.setItem("coordinatorId", data.username);
 
         setMessage(`Welcome Coordinator (${data.department || "department"})`);
 
