@@ -188,12 +188,44 @@ export default function AdminJobs() {
   //                 APPROVE / REJECT
   // ────────────────────────────────────────────────
 
-  const handleApproveClick = (jobId) => {
-    setSelectedJobId(jobId);
-    setSelectedDepartments([]);
-    setSelectedProgrammes([]);
-    setSelectedYears([]);
-    setSelectAll(false);
+  const handleApproveClick = (job) => {
+    setSelectedJobId(job.id);
+    
+    // Normalization helper for both arrays and comma-separated strings
+    const normalizeData = (data) => {
+      if (Array.isArray(data)) return data.map(s => String(s).trim());
+      if (typeof data === 'string') {
+        return data.includes(',') 
+          ? data.split(',').map(s => s.trim()).filter(Boolean)
+          : [data.trim()].filter(Boolean);
+      }
+      return [];
+    };
+
+    const rawProgs = normalizeData(job.programmes);
+    const rawDeps = normalizeData(job.departments);
+    const rawYears = normalizeData(job.graduation_years);
+
+    // Intelligent Matching (Case-Insensitive)
+    const matchedProgs = programmes
+      .filter(p => rawProgs.some(rp => rp.toLowerCase() === p.name.trim().toLowerCase()))
+      .map(p => p.name);
+
+    const matchedDeps = departments.filter(d => 
+      rawDeps.some(rd => rd.toLowerCase() === d.trim().toLowerCase()) ||
+      programmes.some(p => matchedProgs.includes(p.name) && p.department.trim().toLowerCase() === d.trim().toLowerCase())
+    );
+
+    // Match Graduation Years (String-based comparison for numbers/strings)
+    const matchedYears = graduationYears.filter(y => 
+      rawYears.some(ry => String(ry).toLowerCase() === String(y).trim().toLowerCase())
+    );
+
+    setSelectedProgrammes(matchedProgs);
+    setSelectedDepartments(matchedDeps);
+    setSelectedYears(matchedYears.length > 0 ? matchedYears : graduationYears); 
+
+    setSelectAll(job.show_to_all_departments || false);
     setShowModal(true);
   };
 
@@ -542,7 +574,7 @@ export default function AdminJobs() {
         /* ─── Table Styling ────────────────────────────────────────── */
         .table-wrapper {
           background: #ffffff;
-          border-radius: 1rem;
+          border-radius: 0 !important; /* Sharp corners for a formal look */
           border: 1px solid #e2e8f0;
           overflow-x: auto;
           box-shadow: 0 1px 3px rgba(0,0,0,0.02);
@@ -552,56 +584,106 @@ export default function AdminJobs() {
 
         .table {
           width: 100%;
-          min-width: 1200px; /* Ensure all columns are visible with scroll if needed */
+          min-width: 1200px;
           border-collapse: collapse;
           border-spacing: 0;
           margin: 0;
+          border-radius: 0 !important;
         }
 
         .table th {
-          background: #4f46e5; /* Professional Indigo */
+          background-color: #1e1b4b !important; /* Forced Deep Navy Header */
           text-align: left;
           padding: 1.25rem 0.75rem; 
-          font-weight: 700;
-          color: #ffffff;
+          font-weight: 800;
+          color: #ffffff !important; /* Force high-contrast white */
           font-size: 0.75rem;
           text-transform: uppercase;
-          letter-spacing: 0.08em;
+          letter-spacing: 0.1em;
           border-bottom: none;
+          border-radius: 0 !important;
         }
 
         .table td {
-          padding: 1rem 0.75rem; /* More compact padding */
-          border-bottom: 1px solid #f1f5f9;
-          color: #000000;
+          padding: 1.1rem 0.75rem;
+          border-bottom: 1px solid #e2e8f0;
+          color: #1e1b4b !important; /* Premium Navy for text */
           font-size: 0.875rem;
           vertical-align: middle;
-          font-weight: 400;
-          white-space: nowrap; /* Prevent contents from wrapping awkwardly */
+          font-weight: 800 !important; /* Ultra Bold for all contents */
+          white-space: nowrap;
         }
 
         .table tr:last-child td { border-bottom: none; }
-        .table tbody tr:nth-child(even) { background-color: #fcfdfe; }
-        .table tbody tr:hover { background-color: #f1f5f9; }
+        .table tbody tr:hover td { background-color: #f1f5f9 !important; }
+
+        /* Row Specific Highlighting - Applied to cells for high specificity */
+        .table tbody tr.internship-row td {
+          background-color: #f5f3ff !important; /* Elegant Light Violet */
+          border-top: 1px solid #ede9fe;
+          border-bottom: 1px solid #ede9fe;
+        }
+        .table tbody tr.internship-row { border-left: 8px solid #8b5cf6 !important; }
+
+        .table tbody tr.full-time-row td {
+          background-color: #ecfdf5 !important; /* Elegant Light Emerald */
+          border-top: 1px solid #d1fae5;
+          border-bottom: 1px solid #d1fae5;
+        }
+        .table tbody tr.full-time-row { border-left: 8px solid #10b981 !important; }
+
+        .table tbody tr.part-time-row td {
+          background-color: #eff6ff !important; /* Elegant Light Blue */
+          border-top: 1px solid #dbeafe;
+          border-bottom: 1px solid #dbeafe;
+        }
+        .table tbody tr.part-time-row { border-left: 8px solid #3b82f6 !important; }
+
+        .table tbody tr.contract-row td {
+          background-color: #fffbeb !important; /* Elegant Light Amber */
+          border-top: 1px solid #fef3c7;
+          border-bottom: 1px solid #fef3c7;
+        }
+        .table tbody tr.contract-row { border-left: 8px solid #f59e0b !important; }
+
+        /* Generic Badge Styles */
+        .badge-type {
+          padding: 0.4rem 1rem;
+          font-weight: 900; /* Maximum bold for colored text */
+          font-size: 0.72rem;
+          text-transform: uppercase;
+          border-radius: 2rem;
+          display: inline-block;
+          letter-spacing: 0.08em;
+          border-width: 1.5px !important;
+        }
+
+        .badge-internship { background-color: #f3e8ff; color: #7e22ce; border: 1.5px solid #e9d5ff !important; }
+        .badge-full-time { background-color: #dcfce7; color: #15803d; border: 1.5px solid #bbf7d0 !important; }
+        .badge-part-time { background-color: #dbeafe; color: #1d4ed8; border: 1.5px solid #bfdbfe !important; }
+        .badge-contract { background-color: #fffbeb; color: #b45309; border: 1.5px solid #fde68a !important; }
 
         .job-title-cell {
-          font-weight: 600;
-          color: #0f172a;
+          font-weight: 900 !important;
+          color: #1e1b4b;
           line-height: 1.4;
         }
 
         .company-cell {
-          font-weight: 500;
-          color: #6366f1;
+          font-weight: 800 !important;
+          color: #4f46e5;
         }
 
         .meta-text {
-          color: #000000;
+          color: #1e1b4b;
           font-size: 0.81rem;
-          font-weight: 400;
+          font-weight: 800 !important;
           display: flex;
           align-items: center;
           gap: 0.4rem;
+        }
+        .meta-text.fw-600 {
+           font-weight: 800 !important;
         }
 
         .action-cell {
@@ -612,55 +694,41 @@ export default function AdminJobs() {
         }
 
         .btn-action {
-          padding: 0.5rem 0.85rem;
+          padding: 0.55rem 1.1rem;
           border-radius: 0.6rem;
-          font-weight: 600;
-          font-size: 0.8rem;
+          font-weight: 800; /* Ultra-bold */
+          font-size: 0.78rem;
           cursor: pointer;
           transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-          border: 1.5px solid transparent;
+          border: none;
           display: flex;
           align-items: center;
-          gap: 0.4rem;
+          gap: 0.5rem;
+          color: #ffffff !important; /* Force high-contrast white */
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
 
-        .btn-approve {
-          background: #f0fdf4;
-          color: #10b981;
-          border-color: #dcfce7;
-        }
-
-        .btn-approve:hover {
-          background: #10b981;
-          color: #ffffff;
-          border-color: #10b981;
-          transform: translateY(-1px);
-        }
-
-        .btn-reject {
-          background: #fef2f2;
-          color: #ef4444;
-          border-color: #fee2e2;
-        }
-
-        .btn-reject:hover {
-          background: #ef4444;
-          color: #ffffff;
-          border-color: #ef4444;
-          transform: translateY(-1px);
-        }
-
-        .btn-details {
-          background: #f8fafc;
-          color: #6366f1;
-          border-color: #e2e8f0;
-        }
-
+        .btn-details { background: #4f46e5 !important; }
         .btn-details:hover {
-          background: #6366f1;
-          color: #ffffff;
-          border-color: #6366f1;
-          transform: translateY(-1px);
+          background: #3730a3 !important;
+          transform: translateY(-2px);
+          box-shadow: 0 6px 12px rgba(79, 70, 229, 0.3);
+        }
+
+        .btn-approve { background: #10b981 !important; }
+        .btn-approve:hover {
+          background: #059669 !important;
+          transform: translateY(-2px);
+          box-shadow: 0 6px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-reject { background: #ef4444 !important; }
+        .btn-reject:hover {
+          background: #dc2626 !important;
+          transform: translateY(-2px);
+          box-shadow: 0 6px 12px rgba(239, 68, 68, 0.3);
         }
 
         /* ─── Detail Modal Styling ───────────────────────────────── */
@@ -1254,7 +1322,7 @@ export default function AdminJobs() {
                 </thead>
                 <tbody>
                   {paginatedJobs.map((job) => (
-                    <tr key={job.id}>
+                    <tr key={job.id} className={`${job.job_type?.toLowerCase().replace('_', '-')}-row`}>
                       <td data-label="Title" className="job-title-cell">
                         {job.title || "—"}
                       </td>
@@ -1269,11 +1337,13 @@ export default function AdminJobs() {
                         </div>
                       </td>
                       <td data-label="Type">
-                         <span className="badge bg-light text-dark border">{job.job_type || "—"}</span>
+                         <span className={`badge-type badge-${job.job_type?.toLowerCase().replace('_', '-')}`}>
+                           {job.job_type?.replace('_', ' ') || "—"}
+                         </span>
                       </td>
                       <td data-label="Salary">{job.salary_range || "—"}</td>
                       <td data-label="Departments">
-                        <div className="meta-text">
+                        <div className="meta-text fw-600">
                           {job.show_to_all_departments
                             ? "All Departments"
                             : Array.isArray(job.departments)
@@ -1282,15 +1352,15 @@ export default function AdminJobs() {
                         </div>
                       </td>
                       <td data-label="Programmes">
-                        <div className="meta-text">
+                        <div className="meta-text fw-600">
                           {Array.isArray(job.programmes)
                             ? job.programmes.join(", ")
                             : job.programmes || "—"}
                         </div>
                       </td>
                       <td data-label="Years">
-                        <div className="meta-text">
-                          <i className="fas fa-calendar-alt"></i>
+                        <div className="meta-text fw-600">
+                          <i className="fas fa-calendar-alt me-1 opacity-50"></i>
                           {Array.isArray(job.graduation_years)
                             ? job.graduation_years.join(", ")
                             : job.graduation_years || "—"}
@@ -1308,7 +1378,7 @@ export default function AdminJobs() {
                           {activeTab !== "approved" && (
                             <button
                               className="btn-action btn-approve"
-                              onClick={() => handleApproveClick(job.id)}
+                              onClick={() => handleApproveClick(job)}
                             >
                               <i className="fas fa-check"></i>
                               Approve
@@ -1434,9 +1504,9 @@ export default function AdminJobs() {
                                   }
                                 }}
                               />
-                              <label className="form-check-label" htmlFor={`prog-${p.name}`}>
+                              <label className="form-check-label fw-800 text-dark" htmlFor={`prog-${p.name}`}>
                                 {p.name} <br/>
-                                <small className="text-secondary fw-400">{p.department}</small>
+                                <small className="text-secondary fw-500">{p.department}</small>
                               </label>
                             </div>
                           ))}
@@ -1461,7 +1531,7 @@ export default function AdminJobs() {
                                   )
                                 }
                               />
-                              <label className="form-check-label" htmlFor={`year-${y}`}>
+                              <label className="form-check-label fw-800 text-dark" htmlFor={`year-${y}`}>
                                 Class of {y}
                               </label>
                             </div>
