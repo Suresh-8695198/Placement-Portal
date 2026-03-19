@@ -239,10 +239,10 @@ export default function AdminJobApplicants() {
         }
 
         .applicants-table th {
-          background: #4f46e5; /* Professional Indigo */
+          background: #1e1b4b; /* Premium Deep Indigo Header */
           padding: 1.25rem 1.5rem;
           font-size: 0.8rem;
-          font-weight: 700;
+          font-weight: 800;
           text-transform: uppercase;
           letter-spacing: 0.1em;
           color: #ffffff;
@@ -250,10 +250,11 @@ export default function AdminJobApplicants() {
         }
 
         .applicants-table td {
-          padding: 1rem 1.5rem;
+          padding: 1.1rem 1.5rem;
           font-size: 0.875rem;
           color: #1e293b;
           border-bottom: 1px solid #f1f5f9;
+          font-weight: 700; /* Bold contents for all rows */
         }
 
         /* Nth-row effects (Zebra striping) */
