@@ -50,10 +50,10 @@ const ForgotPassword = () => {
 
       <style>{`
         :root {
-          --primary-start: #6366f1;
-          --primary-end:   #8b5cf6;
-          --primary-glow:  rgba(99, 102, 241, 0.5);
-          --focus-ring:    rgba(99, 102, 241, 0.18);
+          --brand-primary: #1e3a8a;
+          --brand-accent:  #3b82f6;
+          --text-deep:     #0f172a;
+          --text-muted:    #64748b;
         }
 
         * {
@@ -63,10 +63,11 @@ const ForgotPassword = () => {
         }
 
         body {
-          background: linear-gradient(135deg, #0f172a, #1e3a8a, var(--primary-start));
+          background: #0f172a;
           min-height: 100vh;
-          font-family: 'Segoe UI', system-ui, sans-serif;
+          font-family: 'Outfit', 'Segoe UI', system-ui, sans-serif;
           overflow-x: hidden;
+          color: #f8fafc;
         }
 
         .page {
@@ -76,83 +77,70 @@ const ForgotPassword = () => {
           justify-content: center;
           padding: 1.5rem;
           position: relative;
+          background: radial-gradient(circle at 0% 0%, #1e293b 0%, #0f172a 100%);
           overflow: hidden;
         }
 
-        .floating-shapes {
+        /* --- Modern Aura Background --- */
+        .aura-container {
           position: absolute;
           inset: 0;
+          z-index: 0;
+          overflow: hidden;
           pointer-events: none;
+        }
+
+        .aura-blob {
+          position: absolute;
+          width: 800px;
+          height: 800px;
+          background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%);
+          filter: blur(80px);
+          border-radius: 50%;
+          animation: drift 25s ease-in-out infinite alternate;
+        }
+
+        .blob-1 { top: -10%; left: -10%; background: radial-gradient(circle, rgba(79, 70, 229, 0.12) 0%, transparent 70%); }
+        .blob-2 { bottom: -20%; right: -10%; background: radial-gradient(circle, rgba(139, 92, 246, 0.1) 0%, transparent 70%); animation-delay: -5s; }
+
+        @keyframes drift {
+          from { transform: translate(0, 0) scale(1); }
+          to { transform: translate(100px, 50px) scale(1.1); }
+        }
+
+        .mesh-grid {
+          position: absolute;
+          inset: 0;
+          background-image: 
+            radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+            linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+          background-size: 40px 40px;
+          opacity: 0.8;
           z-index: 0;
         }
 
-        .star {
+        .svg-pattern-overlay {
           position: absolute;
-          width: 0;
-          height: 0;
-          border-left: 28px solid transparent;
-          border-right: 28px solid transparent;
-          border-bottom: 56px solid rgba(255, 255, 255, 0.13);
-          transform-origin: center;
-          animation: floatStar 22s ease-in-out infinite;
-          filter: blur(1px);
-        }
-
-        .star::before,
-        .star::after {
-          content: "";
-          position: absolute;
-          top: 0;
-          left: -28px;
-          width: 0;
-          height: 0;
-          border-left: 28px solid transparent;
-          border-right: 28px solid transparent;
-          border-bottom: 56px solid rgba(255, 255, 255, 0.13);
-        }
-
-        .star::before { transform: rotate(72deg); }
-        .star::after  { transform: rotate(-72deg); }
-
-        .star.small {
-          border-left: 18px solid transparent;
-          border-right: 18px solid transparent;
-          border-bottom: 36px solid rgba(255, 255, 255, 0.11);
-        }
-
-        .star.small::before,
-        .star.small::after {
-          border-left: 18px solid transparent;
-          border-right: 18px solid transparent;
-          border-bottom: 36px solid rgba(255, 255, 255, 0.11);
-        }
-
-        .star:nth-child(1)  { top: 10%; left: 8%;  animation-delay: 0s;   transform: rotate(18deg) scale(0.9); }
-        .star:nth-child(2)  { top: 18%; right: 12%; animation-delay: -3s;  transform: rotate(-22deg) scale(1.05); }
-        .star:nth-child(3)  { top: 32%; left: 15%;  animation-delay: -6s;  transform: rotate(35deg) scale(0.75); }
-        .star:nth-child(4)  { bottom: 22%; left: 10%; animation-delay: -9s; transform: rotate(-15deg) scale(0.95); }
-        .star:nth-child(5)  { bottom: 15%; right: 14%; animation-delay: -12s; transform: rotate(28deg) scale(0.85); }
-        .star:nth-child(6)  { top: 45%; right: 18%; animation-delay: -15s; transform: rotate(-30deg) scale(1.1); }
-        .star:nth-child(7)  { bottom: 35%; left: 20%; animation-delay: -18s; transform: rotate(40deg) scale(0.7); }
-        .star:nth-child(8)  { top: 55%; left: 25%; animation-delay: -21s; transform: rotate(10deg) scale(0.9); }
-
-        @keyframes floatStar {
-          0%, 100% { transform: translateY(0) rotate(var(--rot, 0deg)); }
-          50%      { transform: translateY(-110px) rotate(calc(var(--rot, 0deg) + 14deg)); }
+          inset: 0;
+          opacity: 0.22;
+          z-index: 1;
+          background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cpath d='M0 0l100 100M100 0L0 100' stroke='%23ffffff' stroke-width='0.6' stroke-opacity='0.4'/%3E%3Ccircle cx='50' cy='50' r='1.8' fill='%23ffffff' fill-opacity='0.5'/%3E%3C/g%3E%3C/svg%3E");
+          background-size: 90px 90px;
+          pointer-events: none;
         }
 
         .forgot-wrapper {
           position: relative;
-          z-index: 1;
+          z-index: 10;
           width: 100%;
           max-width: 480px;
-          background: rgba(255, 255, 255, 0.93);
-          border-radius: 1.6rem;
-          padding: 2.2rem 2.5rem;
-          box-shadow: 0 20px 60px rgba(0,0,0,0.24);
-          backdrop-filter: blur(16px);
-          border: 1px solid rgba(255,255,255,0.3);
-          animation: slideUp 0.8s ease-out;
+          background: #ffffff;
+          border-radius: 4px;
+          padding: 3.5rem 2.5rem;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+          border: 1px solid #e2e8f0;
+          animation: slideUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
 
         @keyframes slideUp {
@@ -160,150 +148,115 @@ const ForgotPassword = () => {
           to   { opacity: 1; transform: translateY(0); }
         }
 
-        .logo-section {
-          text-align: center;
-          margin-bottom: 1.8rem;
-        }
+        .logo-section { text-align: center; margin-bottom: 2.22rem; }
 
         .logo-icon {
-          width: 80px;
-          height: 80px;
-          background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
-          border-radius: 50%;
+          width: 100px;
+          height: 100px;
+          background: transparent;
+          margin: 0 auto 1.25rem;
           display: flex;
           align-items: center;
           justify-content: center;
-          margin: 0 auto 1rem;
-          box-shadow: 0 12px 30px var(--primary-glow);
-          animation: pulseLogo 2.6s ease-in-out infinite;
         }
 
-        @keyframes pulseLogo {
-          0%, 100% { transform: scale(1); }
-          50%      { transform: scale(1.08); }
+        .logo-icon img {
+          max-width: 100%;
+          max-height: 100%;
+          object-fit: contain;
         }
 
-        .logo-icon i {
-          font-size: 2.1rem;
-          color: white;
+        .forgot-title { 
+          font-size: 1.8rem; 
+          font-weight: 700; 
+          color: #1e293b; 
+          margin-bottom: 0.5rem; 
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
         }
+        .forgot-subtitle { color: #64748b; font-size: 0.95rem; font-weight: 500; }
 
-        .forgot-title {
-          font-size: 2rem;
-          font-weight: 700;
-          color: #1e293b;
-          margin-bottom: 0.3rem;
-        }
+        .form-label { font-weight: 600; color: #1e293b; margin-bottom: 0.5rem; font-size: 0.95rem; display: block; }
 
-        .forgot-subtitle {
-          color: #475569;
-          font-size: 1rem;
-        }
-
-        .form-label {
-          font-weight: 600;
-          color: #1e293b;
-          margin-bottom: 0.5rem;
-          font-size: 0.95rem;
-          display: block;
-        }
-
-        .input-wrapper {
-          position: relative;
-          margin-bottom: 1.4rem;
-        }
+        .input-wrapper { position: relative; margin-bottom: 1.8rem; }
 
         .form-control {
           height: 52px;
           padding: 0 3rem 0 3.1rem;
-          border: 1px solid #d1d5db;
-          border-radius: 1rem;
-          font-size: 0.98rem;
-          background: #f8fafc;
-          transition: all 0.25s ease;
+          border: 1px solid #cbd5e1;
+          border-radius: 4px;
+          font-size: 0.95rem;
+          background: #ffffff;
+          transition: all 0.2s ease;
         }
 
         .form-control:focus {
-          border-color: var(--primary-start);
+          border-color: var(--brand-primary);
           background: white;
-          box-shadow: 0 0 0 4px var(--focus-ring);
+          box-shadow: 0 0 0 4px rgba(30, 58, 138, 0.1);
         }
 
         .input-icon {
           position: absolute;
           left: 1.2rem;
           top: 50%;
-          transform: translateY(15%);
+          transform: translateY(-50%);
           color: #64748b;
-          font-size: 1.3rem;
+          font-size: 1.25rem;
           pointer-events: none;
-          transition: color 0.25s;
-        }
-
-        .input-wrapper:focus-within .input-icon {
-          color: var(--primary-start);
         }
 
         .btn-send {
           width: 100%;
           padding: 0.9rem;
           font-size: 1.05rem;
-          font-weight: 600;
+          font-weight: 700;
           color: white;
-          background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
+          background: #1e3a8a;
           border: none;
-          border-radius: 1.1rem;
-          transition: all 0.35s ease;
-          box-shadow: 0 6px 20px var(--primary-glow);
+          border-radius: 4px;
+          transition: all 0.2s ease;
+          box-shadow: none;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
         }
 
         .btn-send:hover:not(:disabled) {
-          transform: translateY(-3px);
-          box-shadow: 0 14px 35px var(--primary-glow);
+          background: #1e40af;
+          box-shadow: 0 4px 12px rgba(30, 58, 138, 0.2);
         }
 
-        .btn-send:disabled {
-          opacity: 0.7;
-          cursor: not-allowed;
-        }
+        .btn-send:disabled { opacity: 0.7; cursor: not-allowed; }
 
         .alert-custom {
           background: #fee2e2;
           color: #991b1b;
           border: 1px solid #fca5a5;
-          border-radius: 1rem;
-          padding: 1.1rem 1.3rem;
+          border-radius: 4px;
+          padding: 1rem 1.2rem;
           margin-bottom: 1.5rem;
           display: flex;
           align-items: center;
           gap: 0.8rem;
-          font-size: 0.96rem;
-          animation: shake 0.45s ease-in-out;
-        }
-
-        @keyframes shake {
-          0%, 100% { transform: translateX(0); }
-          20%, 60% { transform: translateX(-7px); }
-          40%, 80% { transform: translateX(7px); }
+          font-size: 0.94rem;
         }
 
         .back-link {
           text-align: center;
           margin-top: 1.8rem;
-          font-size: 0.97rem;
+          font-size: 0.95rem;
           color: #475569;
+          font-weight: 500;
         }
 
         .back-link span {
-          color: var(--primary-start);
-          font-weight: 600;
+          color: #1e3a8a;
+          font-weight: 700;
           cursor: pointer;
+          margin-left: 4px;
         }
 
-        .back-link span:hover {
-          text-decoration: underline;
-          color: #4f46e5;
-        }
+        .back-link span:hover { text-decoration: underline; color: #1e40af; }
 
         @media (max-width: 576px) {
           .forgot-wrapper {
@@ -361,24 +314,22 @@ const ForgotPassword = () => {
       `}</style>
 
       <div className="page">
-        <div className="floating-shapes">
-          <div className="star"></div>
-          <div className="star"></div>
-          <div className="star"></div>
-          <div className="star small"></div>
-          <div className="star"></div>
-          <div className="star"></div>
-          <div className="star small"></div>
-          <div className="star"></div>
+        <div className="aura-container">
+          <div className="mesh-grid"></div>
+          <div className="svg-pattern-overlay"></div>
+          <div className="aura-blob blob-1"></div>
+          <div className="aura-blob blob-2"></div>
         </div>
 
         <div className="forgot-wrapper">
           <div className="logo-section">
             <div className="logo-icon">
-              <i className="fas fa-key"></i>
+              <img src="/Logo.png" alt="University Logo" onError={(e) => {
+                e.target.src = "https://tse1.mm.bing.net/th?id=OIP.E0dRErE6Z8l9R5jZkZp9XQHaHa&pid=Api";
+              }} />
             </div>
             <h1 className="forgot-title">Forgot Password</h1>
-            <p className="forgot-subtitle">We'll send an OTP to your email</p>
+            <p className="forgot-subtitle">Secured Account Recovery</p>
           </div>
 
           {error && (
