@@ -106,34 +106,17 @@ class Skill(models.Model):
 
 
 
-from cloudinary.models import CloudinaryField
-
 class StudentProfile(models.Model):
     student = models.OneToOneField(Student, on_delete=models.CASCADE)
     about = models.TextField(blank=True)
-    profile_image = CloudinaryField('image', blank=True, null=True)
+    profile_image = models.ImageField(upload_to='student_profiles/', blank=True, null=True)
 
 
 
 
-# class Certificate(models.Model):
-#     student = models.ForeignKey(Student, on_delete=models.CASCADE)
-#     title = models.CharField(max_length=100)
-#     certificate_file = CloudinaryField(
-#         'certificates',
-#         resource_type='auto',           # ← most important change
-#         # optional: allowed_formats=['jpg', 'jpeg', 'png', 'pdf']
-#         blank=True,
-#         null=True
-#     )
-
-#     def __str__(self):
-#         return self.title
 
 
 
-from django.db import models
-from cloudinary.models import CloudinaryField
 
 class Certificate(models.Model):
     student = models.ForeignKey(Student, on_delete=models.CASCADE)
@@ -142,9 +125,8 @@ class Certificate(models.Model):
     issued_by = models.CharField(max_length=150, blank=True, null=True)
     year_obtained = models.PositiveIntegerField(blank=True, null=True)
 
-    certificate_file = CloudinaryField(
-        'certificates',
-        resource_type='auto',
+    certificate_file = models.FileField(
+        upload_to='certificates/',
         blank=True,
         null=True
     )
@@ -156,10 +138,10 @@ class Certificate(models.Model):
 
 class Resume(models.Model):
     student = models.OneToOneField(Student, on_delete=models.CASCADE)
-    resume_file = CloudinaryField(
-        'resume',
-        resource_type='raw',     # 🔥 THIS IS THE FIX
-        folder='resumes'         # optional but recommended
+    resume_file = models.FileField(
+        upload_to='resumes/',
+        blank=True,
+        null=True
     )
 
 

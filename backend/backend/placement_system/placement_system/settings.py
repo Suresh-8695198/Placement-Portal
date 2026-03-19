@@ -21,8 +21,6 @@ DatabaseFeatures.can_return_columns_from_insert = property(lambda self: False)
 DatabaseFeatures.can_return_rows_from_bulk_insert = property(lambda self: False)
 
 from pathlib import Path
-import cloudinary
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -54,30 +52,11 @@ INSTALLED_APPS = [
     'admin_app', 
     'companies',
     'coordinator',
-    "cloudinary",
-    "cloudinary_storage",
 ]
 
-import cloudinary
-
-# Cloudinary global configuration
-cloudinary.config(
-    cloud_name="dkx5gxcks",   # your cloud name
-    api_key="232779729617156",
-    api_secret="hVEAhdo-dJUBYiyZ5WWw5IxeOic",
-    secure=True
-)
-
-CLOUDINARY_STORAGE = {
-    "CLOUD_NAME": "dkx5gxcks",
-    "API_KEY": "232779729617156",
-    "API_SECRET": "hVEAhdo-dJUBYiyZ5WWw5IxeOic",
-    "RESOURCE_TYPE": "raw",   # 🔥 THIS FIXES DOC/DOCX
-}
-
-# DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
-
-DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.RawMediaCloudinaryStorage'
+# Media files configuration (Local Storage)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',

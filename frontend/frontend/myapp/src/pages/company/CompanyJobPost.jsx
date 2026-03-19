@@ -30,6 +30,9 @@ export default function CompanyJobPost() {
   const [loadingJobs, setLoadingJobs] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [filterType, setFilterType] = useState("all");
+  const [sortBy, setSortBy] = useState("newest");
 
   const companyEmail = localStorage.getItem("companyEmail");
 
@@ -53,15 +56,12 @@ export default function CompanyJobPost() {
   }, [message]);
 
   useEffect(() => {
-    if (!searchTerm.trim()) {
-      setFilteredJobs(jobs);
-      return;
-    }
+    let result = [...jobs];
 
-    const term = searchTerm.toLowerCase().trim();
-
-    const filtered = jobs.filter((job) => {
-      return (
+    // Search Term Filter
+    if (searchTerm.trim()) {
+      const term = searchTerm.toLowerCase().trim();
+      result = result.filter((job) => (
         (job.title || "").toLowerCase().includes(term) ||
         (job.location || "").toLowerCase().includes(term) ||
         (job.job_type || "").toLowerCase().includes(term) ||
@@ -69,11 +69,30 @@ export default function CompanyJobPost() {
         (Array.isArray(job.skills) && job.skills.some((s) => s.toLowerCase().includes(term))) ||
         (Array.isArray(job.departments) && job.departments.some((d) => d.toLowerCase().includes(term))) ||
         (Array.isArray(job.programmes) && job.programmes.some((p) => p.toLowerCase().includes(term)))
-      );
+      ));
+    }
+
+    // Status Filter
+    if (filterStatus !== "all") {
+      const isActive = filterStatus === "active";
+      result = result.filter(job => job.is_active === isActive);
+    }
+
+    // Job Type Filter
+    if (filterType !== "all") {
+      result = result.filter(job => job.job_type === filterType);
+    }
+
+    // Sorting
+    result.sort((a, b) => {
+      if (sortBy === "newest") return new Date(b.created_at || 0) - new Date(a.created_at || 0);
+      if (sortBy === "oldest") return new Date(a.created_at || 0) - new Date(b.created_at || 0);
+      if (sortBy === "title") return (a.title || "").localeCompare(b.title || "");
+      return 0;
     });
 
-    setFilteredJobs(filtered);
-  }, [searchTerm, jobs]);
+    setFilteredJobs(result);
+  }, [searchTerm, filterStatus, filterType, sortBy, jobs]);
 
   const fetchCompanyJobs = async () => {
     try {
@@ -183,6 +202,23 @@ export default function CompanyJobPost() {
     }
   };
 
+  const handleToggleStatus = async (job, currentStatus) => {
+    try {
+      // Create payload with all required fields or just the toggle if backend supports partial
+      const payload = {
+        title: job.title,
+        is_active: !currentStatus
+      };
+      await axios.patch(`${API_BASE}/companies/jobs/${job.id}/edit/?email=${companyEmail}`, payload);
+      setMessage(`Job status updated to ${!currentStatus ? "Active" : "Closed"}`);
+      setMessageType("success");
+      fetchCompanyJobs();
+    } catch (err) {
+      setMessage("Failed to update status");
+      setMessageType("error");
+    }
+  };
+
   return (
     <>
 
@@ -202,6 +238,39 @@ export default function CompanyJobPost() {
           background: var(--bg-main);
           color: var(--text-main);
         }
+
+        .stats-row {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 1.5rem;
+          margin-bottom: 2.5rem;
+        }
+
+        .stat-card {
+          background: #ffffff;
+          padding: 1.5rem;
+          border-radius: 16px;
+          border: 1px solid var(--border-color);
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+        }
+
+        .stat-icon {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 1.5rem;
+        }
+
+        .icon-total { color: #2563eb; }
+        .icon-active { color: #16a34a; }
+        .icon-closed { color: #dc2626; }
+        .icon-apps { color: #9333ea; }
+
+        .stat-info { display: flex; flex-direction: column; }
+        .stat-value { font-size: 1.5rem; font-weight: 700; color: var(--text-main); line-height: 1.2; }
+        .stat-label { font-size: 0.85rem; color: var(--text-secondary); font-weight: 500; }
 
         .main-content-wrapper {
           max-width: 1100px;
@@ -315,21 +384,38 @@ export default function CompanyJobPost() {
           border-color: #cbd5e1;
         }
 
+        .controls-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          flex-wrap: wrap;
+          gap: 1rem;
+          margin-bottom: 2rem;
+        }
+
         .search-container {
           background: #ffffff;
           border-radius: 12px;
           border: 1px solid var(--border-color);
-          padding: 0.5rem 1rem;
+          padding: 0.25rem 1rem;
           display: flex;
           align-items: center;
           gap: 12px;
+          flex: 1;
+          min-width: 300px;
           max-width: 450px;
-          margin-bottom: 2rem;
           box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+          transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .search-container:focus-within {
+          border-color: var(--primary-brand);
+          box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
         }
 
         .search-container i {
           color: var(--text-secondary);
+          font-size: 0.9rem;
         }
 
         .search-input {
@@ -337,8 +423,39 @@ export default function CompanyJobPost() {
           outline: none;
           width: 100%;
           font-size: 0.95rem;
-          padding: 0.4rem 0;
+          padding: 0.6rem 0;
           color: var(--text-main);
+          background: transparent;
+        }
+
+        .filters-group {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+
+        .filter-select {
+          padding: 0.6rem 2.5rem 0.6rem 0.75rem;
+          border-radius: 8px;
+          border: 1px solid var(--border-color);
+          font-size: 0.875rem;
+          font-weight: 600;
+          background-color: #ffffff;
+          cursor: pointer;
+          color: var(--text-main);
+          appearance: none;
+          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+          background-repeat: no-repeat;
+          background-position: right 0.75rem center;
+          background-size: 1rem;
+        }
+
+        .filter-label {
+          font-size: 0.8rem;
+          font-weight: 700;
+          color: var(--text-secondary);
+          text-transform: uppercase;
+          margin-right: 4px;
         }
 
         .jobs-grid {
@@ -448,18 +565,19 @@ export default function CompanyJobPost() {
         }
 
         .job-actions {
-          display: flex;
-          gap: 10px;
+          display: grid;
+          grid-template-columns: 1.2fr 0.8fr 1fr 42px;
+          gap: 8px;
           padding-top: 1.25rem;
           border-top: 1px solid var(--border-color);
           margin-top: auto;
+          align-items: center;
         }
 
         .action-btn {
-          flex: 1;
-          padding: 0.6rem;
-          border-radius: 8px;
-          font-size: 0.9rem;
+          height: 40px;
+          border-radius: 10px;
+          font-size: 0.85rem;
           font-weight: 600;
           cursor: pointer;
           transition: all 0.2s ease;
@@ -467,12 +585,24 @@ export default function CompanyJobPost() {
           align-items: center;
           justify-content: center;
           gap: 6px;
+          white-space: nowrap;
+          border: 1px solid transparent;
+        }
+
+        .btn-view-apps {
+          background: #fdf4ff;
+          color: #7e22ce;
+          border-color: #f5d0fe;
+        }
+
+        .btn-view-apps:hover {
+          background: #fae8ff;
         }
 
         .btn-edit-action {
           background: #f5f3ff;
           color: #5b21b6;
-          border: 1px solid #ddd6fe;
+          border-color: #ddd6fe;
         }
 
         .btn-edit-action:hover {
@@ -482,7 +612,10 @@ export default function CompanyJobPost() {
         .btn-delete-action {
           background: #fff1f2;
           color: #9f1239;
-          border: 1px solid #fecdd3;
+          border-color: #fecdd3;
+          padding: 0;
+          width: 42px;
+          flex: none;
         }
 
         .btn-delete-action:hover {
@@ -494,7 +627,7 @@ export default function CompanyJobPost() {
           inset: 0;
           background: rgba(15, 23, 42, 0.4);
           backdrop-filter: blur(4px);
-          z-index: 1000;
+          z-index: 2100;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -729,26 +862,89 @@ export default function CompanyJobPost() {
             </div>
           </div>
 
+          <div className="stats-row">
+            <div className="stat-card">
+              <div className="stat-icon icon-total"><i className="fas fa-briefcase"></i></div>
+              <div className="stat-info">
+                <span className="stat-value">{jobs.length}</span>
+                <span className="stat-label">Total Jobs</span>
+              </div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-icon icon-active"><i className="fas fa-check-circle"></i></div>
+              <div className="stat-info">
+                <span className="stat-value">{jobs.filter(j => j.is_active).length}</span>
+                <span className="stat-label">Active</span>
+              </div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-icon icon-closed"><i className="fas fa-times-circle"></i></div>
+              <div className="stat-info">
+                <span className="stat-value">{jobs.filter(j => !j.is_active).length}</span>
+                <span className="stat-label">Closed</span>
+              </div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-icon icon-apps"><i className="fas fa-users"></i></div>
+              <div className="stat-info">
+                <span className="stat-value">{jobs.reduce((acc, job) => acc + (job.applicants_count || 0), 0)}</span>
+                <span className="stat-label">Applicants</span>
+              </div>
+            </div>
+          </div>
+
           <div className="section-header">
             <h2 className="section-title">Your Job Postings</h2>
           </div>
 
-          <div className="search-container">
-            <i className="fas fa-search"></i>
-            <input
-              type="text"
-              className="search-input"
-              placeholder="Search by title, location, or skills..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-            {searchTerm && (
-              <i 
-                className="fas fa-times" 
-                style={{ cursor: "pointer", color: "#94a3b8" }} 
-                onClick={() => setSearchTerm("")}
-              ></i>
-            )}
+          <div className="controls-row">
+            <div className="search-container">
+              <i className="fas fa-search"></i>
+              <input
+                type="text"
+                className="search-input"
+                placeholder="Search by title, location, or skills..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+              {searchTerm && (
+                <i 
+                  className="fas fa-times" 
+                  style={{ cursor: "pointer", color: "#94a3b8" }} 
+                  onClick={() => setSearchTerm("")}
+                ></i>
+              )}
+            </div>
+
+            <div className="filters-group">
+              <div className="filter-item">
+                <span className="filter-label">Status</span>
+                <select className="filter-select" value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
+                  <option value="all">All Status</option>
+                  <option value="active">Active Only</option>
+                  <option value="closed">Closed Only</option>
+                </select>
+              </div>
+
+              <div className="filter-item">
+                <span className="filter-label">Type</span>
+                <select className="filter-select" value={filterType} onChange={(e) => setFilterType(e.target.value)}>
+                  <option value="all">All Types</option>
+                  <option value="full_time">Full Time</option>
+                  <option value="internship">Internship</option>
+                  <option value="part_time">Part Time</option>
+                </select>
+              </div>
+
+              <div className="filter-item">
+                <span className="filter-label">Sort</span>
+                <select className="filter-select" value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+                  <option value="newest">Newest First</option>
+                  <option value="oldest">Oldest First</option>
+                  <option value="title">Alphabetical</option>
+                </select>
+              </div>
+            </div>
           </div>
 
           {loadingJobs ? (
@@ -813,13 +1009,20 @@ export default function CompanyJobPost() {
                   )}
 
                   <div className="job-actions">
+                    <button onClick={() => window.location.href='/company/applicants'} className="action-btn btn-view-apps">
+                      <i className="fas fa-users"></i>
+                      Apps ({job.applicants_count || 0})
+                    </button>
                     <button onClick={() => handleEdit(job)} className="action-btn btn-edit-action">
                       <i className="far fa-edit"></i>
                       Edit
                     </button>
-                    <button onClick={() => handleDelete(job.id)} className="action-btn btn-delete-action">
+                    <button onClick={() => handleToggleStatus(job, job.is_active)} className="action-btn" style={{ background: job.is_active ? "#fef2f2" : "#f0fdf4", color: job.is_active ? "#991b1b" : "#166534", border: `1px solid ${job.is_active ? "#fecaca" : "#bbf7d0"}` }}>
+                      <i className={`fas fa-${job.is_active ? "ban" : "check"}`}></i>
+                      {job.is_active ? "Close" : "Open"}
+                    </button>
+                    <button onClick={() => handleDelete(job.id)} className="action-btn btn-delete-action" title="Delete">
                       <i className="far fa-trash-alt"></i>
-                      Delete
                     </button>
                   </div>
                 </div>

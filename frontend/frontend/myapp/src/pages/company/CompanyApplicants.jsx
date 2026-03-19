@@ -142,6 +142,12 @@ export default function CompanyApplicants() {
     return [];
   };
 
+  const formatFileUrl = (url) => {
+    if (!url) return "";
+    if (url.startsWith("http")) return url;
+    return `${API_BASE}${url}`;
+  };
+
   const clearSearch = () => {
     setSearchTerm("");
   };
@@ -180,7 +186,7 @@ export default function CompanyApplicants() {
 
         .section-title {
           font-size: 1.85rem;
-          font-weight: 800;
+          font-weight: 700; /* Reduced from 800 */
           color: var(--text-main);
           margin: 0;
           letter-spacing: -0.02em;
@@ -243,7 +249,7 @@ export default function CompanyApplicants() {
 
         .applicant-name {
           font-size: 1.2rem;
-          font-weight: 700;
+          font-weight: 600; /* Reduced from 700 */
           color: var(--text-main);
           margin: 0;
         }
@@ -272,7 +278,7 @@ export default function CompanyApplicants() {
         .status-badge {
           display: inline-block;
           font-size: 0.75rem;
-          font-weight: 700;
+          font-weight: 600; /* Reduced from 700 */
           text-transform: uppercase;
           padding: 0.2rem 0.6rem;
           border-radius: 999px;
@@ -297,7 +303,7 @@ export default function CompanyApplicants() {
           padding: 0.6rem;
           border-radius: 8px;
           font-size: 0.85rem;
-          font-weight: 600;
+          font-weight: 500; /* Reduced from 600 */
           border: 1px solid var(--border-color);
           cursor: pointer;
           transition: all 0.2s ease;
@@ -342,7 +348,7 @@ export default function CompanyApplicants() {
           inset: 0;
           background: rgba(15, 23, 42, 0.4);
           backdrop-filter: blur(4px);
-          z-index: 2000;
+          z-index: 2100;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -396,7 +402,7 @@ export default function CompanyApplicants() {
 
         .profile-name {
           font-size: 2.2rem;
-          font-weight: 800;
+          font-weight: 700; /* Reduced from 800 */
           color: #0f172a;
           letter-spacing: -0.02em;
         }
@@ -425,7 +431,7 @@ export default function CompanyApplicants() {
 
         .section-title-alt {
           font-size: 1.1rem;
-          font-weight: 700;
+          font-weight: 600; /* Reduced from 700 */
           text-transform: uppercase;
           letter-spacing: 0.05em;
           color: var(--primary-brand);
@@ -465,7 +471,7 @@ export default function CompanyApplicants() {
 
         .detail-card-value {
           font-size: 1rem;
-          font-weight: 600;
+          font-weight: 500; /* Reduced from 600 */
           color: #0f172a;
         }
 
@@ -565,7 +571,7 @@ export default function CompanyApplicants() {
           color: #ffffff;
           padding: 1rem 2.5rem;
           border-radius: 12px;
-          font-weight: 700;
+          font-weight: 600; /* Reduced from 700 */
           text-decoration: none;
           display: inline-flex;
           align-items: center;
@@ -775,12 +781,12 @@ export default function CompanyApplicants() {
                                  {proj.description && <div className="timeline-desc">{proj.description}</div>}
                                  <div style={{ marginTop: "12px", display: "flex", gap: "12px" }}>
                                     {proj.github_link && (
-                                       <a href={proj.github_link} target="_blank" rel="noopener noreferrer" style={{ color: "#4f46e5", fontSize: "0.85rem", fontWeight: 700, textDecoration: "none" }}>
+                                       <a href={proj.github_link} target="_blank" rel="noopener noreferrer" style={{ color: "#4f46e5", fontSize: "0.85rem", fontWeight: 600, textDecoration: "none" }}>
                                           Source Code →
                                        </a>
                                     )}
                                     {proj.live_link && (
-                                       <a href={proj.live_link} target="_blank" rel="noopener noreferrer" style={{ color: "#4f46e5", fontSize: "0.85rem", fontWeight: 700, textDecoration: "none" }}>
+                                       <a href={proj.live_link} target="_blank" rel="noopener noreferrer" style={{ color: "#4f46e5", fontSize: "0.85rem", fontWeight: 600, textDecoration: "none" }}>
                                           View Live →
                                        </a>
                                     )}
@@ -800,7 +806,7 @@ export default function CompanyApplicants() {
                                     <div className="detail-card-label">{cert.issued_by} • {cert.year_obtained}</div>
                                     <div className="detail-card-value" style={{ marginBottom: "8px" }}>{cert.title}</div>
                                     {cert.file && (
-                                       <a href={cert.file} target="_blank" rel="noopener noreferrer" style={{ color: "#4f46e5", fontSize: "0.8rem", fontWeight: 700, textDecoration: "none" }}>
+                                       <a href={formatFileUrl(cert.file)} target="_blank" rel="noopener noreferrer" style={{ color: "#4f46e5", fontSize: "0.8rem", fontWeight: 700, textDecoration: "none" }}>
                                           View Proof →
                                        </a>
                                     )}

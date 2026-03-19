@@ -18,14 +18,14 @@ export default function CompanyDashboard() {
         rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
       />
+      <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 
       <style>{`
         :root {
-          --bg-main: #f8fafc;
-          --card-bg: #ffffff;
-          --primary-brand: #4f46e5;
+          --bg-main: #ffffff; /* Premium starting point */
+          --bg-soft: #f8fafc;
           --text-main: #0f172a;
-          --text-muted: #64748b;
+          --border-light: #f1f5f9;
         }
 
         * { margin:0; padding:0; box-sizing:border-box; }
@@ -33,7 +33,7 @@ export default function CompanyDashboard() {
         body {
           background-color: var(--bg-main);
           color: var(--text-main);
-          font-family: 'Inter', -apple-system, sans-serif;
+          font-family: 'Outfit', sans-serif;
           overflow: hidden;
         }
 
@@ -59,55 +59,30 @@ export default function CompanyDashboard() {
 
         .topbar-wrapper {
           flex-shrink: 0;
-          border-bottom: 1px solid #e2e8f0;
+          border-bottom: 1px solid var(--border-light);
           background: #ffffff;
         }
 
         .content-wrapper {
           flex: 1;
           overflow-y: auto;
-          padding: 2.5rem;
+          background: var(--bg-main);
           scroll-behavior: smooth;
-        }
-
-        /* Standardized Content Card */
-        .content-wrapper > * {
-          background: #ffffff;
-          border-radius: 20px;
-          padding: 2.5rem;
-          box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-          border: 1px solid #e2e8f0;
-          animation: slideUp 0.5s ease-out;
-        }
-
-        @keyframes slideUp {
-          from { opacity: 0; transform: translateY(15px); }
-          to   { opacity: 1; transform: translateY(0); }
         }
 
         /* Custom Scrollbar */
         .content-wrapper::-webkit-scrollbar {
-          width: 8px;
+          width: 6px;
         }
         .content-wrapper::-webkit-scrollbar-track {
           background: transparent;
         }
         .content-wrapper::-webkit-scrollbar-thumb {
-          background: #cbd5e1;
+          background: #e2e8f0;
           border-radius: 10px;
         }
         .content-wrapper::-webkit-scrollbar-thumb:hover {
-          background: #94a3b8;
-        }
-
-        @media (max-width: 992px) {
-          .content-wrapper { padding: 1.5rem; }
-          .content-wrapper > * { padding: 1.8rem; border-radius: 16px; }
-        }
-
-        @media (max-width: 576px) {
-          .content-wrapper { padding: 1rem; }
-          .content-wrapper > * { padding: 1.2rem; border-radius: 12px; }
+          background: #cbd5e1;
         }
       `}</style>
 

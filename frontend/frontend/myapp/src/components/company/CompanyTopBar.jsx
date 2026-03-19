@@ -23,16 +23,18 @@ export default function CompanyTopBar() {
     <>
       <style>{`
         .topbar-area {
-          background: #ffffff;
-          padding: 1rem 2.5rem;
+          background: rgba(255, 255, 255, 0.85);
+          backdrop-filter: blur(8px);
+          padding: 0 2.5rem;
           display: flex;
           align-items: center;
           justify-content: space-between;
           height: 72px;
-          border-bottom: 1px solid #e2e8f0;
+          border-bottom: 1px solid rgba(0, 0, 0, 0.05);
           position: sticky;
           top: 0;
-          z-index: 1001;
+          z-index: 1000;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
         }
 
         .welcome-text {

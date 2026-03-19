@@ -1,6 +1,7 @@
 
 
 
+
 // CompanyProfile.jsx
 import React, { useEffect, useState } from "react";
 
@@ -64,6 +65,12 @@ export default function CompanyProfile() {
   const getInitials = (name) => {
     if (!name?.trim()) return "?";
     return name.trim().split(/\s+/).map((w) => w[0]).join("").slice(0, 2).toUpperCase();
+  };
+
+  const formatFileUrl = (url) => {
+    if (!url) return "";
+    if (url.startsWith("http")) return url;
+    return `${API_BASE}${url}`;
   };
 
 
@@ -177,7 +184,7 @@ export default function CompanyProfile() {
   if (loading) {
     return (
       <div className="d-flex justify-content-center align-items-center min-vh-100">
-        <div className="spinner-border text-primary" role="status" style={{ width: "3rem", height: "3rem" }}>
+        <div className="spinner-border text-primary" role="status" style={{ width: "2rem", height: "2rem" }}>
           <span className="visually-hidden">Loading...</span>
         </div>
       </div>
@@ -186,8 +193,8 @@ export default function CompanyProfile() {
 
   if (error) {
     return (
-      <div className="container my-5">
-        <div className="alert alert-danger text-center" role="alert">
+      <div className="container py-5">
+        <div className="alert alert-danger shadow-sm border-0 text-center" role="alert" style={{ borderRadius: '12px' }}>
           {error}
         </div>
       </div>
@@ -200,319 +207,314 @@ export default function CompanyProfile() {
 
   return (
     <>
-
       <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
         :root {
-          --bg-main: #f8fafc;
-          --card-bg: #ffffff;
-          --primary-brand: #4f46e5;
-          --text-main: #0f172a;
-          --text-secondary: #64748b;
-          --border-color: #e2e8f0;
-          --font-family: 'Inter', system-ui, -apple-system, sans-serif;
+          --brand-primary: #1e3a8a; /* Deep Navy Blue */
+          --brand-accent: #3b82f6; /* Professional Blue */
+          --text-deep: #0f172a;
+          --text-muted: #64748b;
+          --bg-surface: #ffffff;
+          --bg-soft: #f8fafc;
+          --border-light: #f1f5f9;
+          --border-main: #e2e8f0;
+          --font-main: 'Outfit', -apple-system, blinkmacsystemfont, sans-serif;
         }
 
-        .profile-container {
+        .profile-wrapper {
           min-height: 100vh;
-          font-family: var(--font-family);
-          color: var(--text-main);
+          background: var(--bg-surface);
+          font-family: var(--font-main);
+          color: var(--text-deep);
+          padding-top: 2rem;
+          padding-bottom: 4rem;
         }
 
-        .main-content-wrapper {
-          max-width: 1200px;
+        .container-premium {
+          max-width: 1000px;
           margin: 0 auto;
+          padding: 0 1.5rem;
         }
 
-        /* Profile Header Component */
-        .profile-header-card {
-          background: #ffffff;
-          border-radius: 24px;
-          padding: 3rem;
-          margin-bottom: 2rem;
-          border: 1px solid var(--border-color);
-          box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        /* Hero Header */
+        .profile-hero {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 2.5rem 0;
+          border-bottom: 1px solid var(--border-light);
+          margin-bottom: 3rem;
         }
 
-        .avatar-container {
-          position: relative;
-          width: 160px;
-          height: 160px;
+        .hero-info {
+          display: flex;
+          align-items: center;
+          gap: 2.5rem;
         }
 
-        .avatar-circle {
-          width: 160px;
-          height: 160px;
-          border-radius: 40px; /* Squircle look */
-          background: #f1f5f9;
+        .hero-logo-container {
+          width: 120px;
+          height: 120px;
+          border-radius: 20px;
+          background: var(--bg-soft);
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 3.5rem;
-          font-weight: 700;
-          color: var(--primary-brand);
-          border: 4px solid #ffffff;
-          box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+          border: 1px solid var(--border-main);
           overflow: hidden;
+          font-size: 2.5rem;
+          font-weight: 700;
+          color: var(--brand-primary);
         }
 
-        .avatar-circle img {
+        .hero-logo-container img {
           width: 100%;
           height: 100%;
           object-fit: cover;
         }
 
-        .company-name {
-          font-size: 2.25rem;
-          font-weight: 800;
-          color: #0f172a;
-          letter-spacing: -0.025em;
+        .hero-text h1 {
+          font-size: 1.75rem;
+          font-weight: 600; /* Reduced from 700 */
           margin-bottom: 0.5rem;
+          color: var(--text-deep);
+          letter-spacing: -0.02em;
         }
 
-        .company-industry {
-          font-size: 1.1rem;
-          color: var(--text-secondary);
-          display: flex;
+        .hero-badge {
+          display: inline-flex;
           align-items: center;
-          gap: 8px;
+          gap: 6px;
+          font-size: 0.875rem;
+          font-weight: 500;
+          color: var(--brand-accent);
+          background: #eff6ff;
+          padding: 4px 12px;
+          border-radius: 100px;
         }
 
-        .btn-edit {
-          background: var(--primary-brand);
+        .btn-premium-edit {
+          padding: 0.6rem 1.25rem;
+          border-radius: 10px;
+          background: var(--brand-primary);
           color: white;
-          padding: 0.75rem 1.5rem;
-          border-radius: 12px;
-          font-weight: 600;
           border: none;
-          transition: all 0.2s ease;
+          font-weight: 500; /* Reduced from 600 */
+          font-size: 0.9rem;
+          transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
           display: flex;
           align-items: center;
           gap: 8px;
         }
 
-        .btn-edit:hover {
-          background: #4338ca;
-          transform: translateY(-1px);
-          box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
+        .btn-premium-edit:hover {
+          background: #1e40af;
+          transform: translateY(-2px);
+          box-shadow: 0 10px 15px -3px rgba(30, 58, 138, 0.15);
         }
 
-        /* Detail Cards */
-        .section-grid {
+        /* Stats & Details */
+        .specs-grid {
           display: grid;
           grid-template-columns: repeat(3, 1fr);
-          gap: 1.5rem;
-          margin-bottom: 2rem;
+          gap: 2rem;
+          margin-bottom: 4rem;
         }
 
-        .detail-card {
-          background: #ffffff;
-          border-radius: 20px;
-          padding: 1.75rem;
-          border: 1px solid var(--border-color);
-          transition: all 0.2s ease;
+        .spec-item {
+          display: flex;
+          flex-direction: column;
+          gap: 0.4rem;
         }
 
-        .detail-card:hover {
-          border-color: var(--primary-brand);
-          background: #fafbff;
-        }
-
-        .detail-label {
-          font-size: 0.85rem;
-          font-weight: 600;
-          color: var(--text-secondary);
+        .spec-label {
+          font-size: 0.75rem;
+          font-weight: 500; /* Reduced from 600 */
           text-transform: uppercase;
           letter-spacing: 0.05em;
-          margin-bottom: 0.75rem;
-          display: block;
+          color: var(--text-muted);
         }
 
-        .detail-value {
+        .spec-value {
+          font-size: 1rem;
+          font-weight: 500;
+          color: var(--text-deep);
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .spec-icon {
+          color: var(--brand-accent);
           font-size: 1.1rem;
-          font-weight: 600;
-          color: #1e293b;
-          display: flex;
-          align-items: center;
-          gap: 10px;
         }
 
-        .detail-icon {
-          color: var(--primary-brand);
-          font-size: 1.25rem;
+        /* Content Blocks */
+        .info-section {
+          margin-bottom: 4rem;
         }
 
-        /* Sections */
-        .content-section {
-          background: #ffffff;
-          border-radius: 24px;
-          padding: 2.5rem;
-          margin-bottom: 2rem;
-          border: 1px solid var(--border-color);
-        }
-
-        .section-title {
-          font-size: 1.5rem;
-          font-weight: 700;
-          color: #0f172a;
+        .section-header {
+          font-size: 0.8rem;
+          font-weight: 600; /* Reduced from 700 */
+          text-transform: uppercase;
+          color: var(--text-muted);
+          border-bottom: 1px solid var(--border-light);
+          padding-bottom: 0.75rem;
           margin-bottom: 1.5rem;
-          display: flex;
-          align-items: center;
-          gap: 12px;
+          letter-spacing: 0.1em;
         }
 
-        .section-title::after {
-          content: '';
-          flex: 1;
-          height: 1px;
-          background: var(--border-color);
-        }
-
-        .about-text {
+        .about-content {
           font-size: 1.05rem;
-          line-height: 1.75;
+          line-height: 1.8;
           color: #334155;
+          max-width: 800px;
           white-space: pre-wrap;
         }
 
-        /* Social Links */
-        .social-pill {
-          display: inline-flex;
-          align-items: center;
-          gap: 10px;
+        /* Presence Links */
+        .presence-links {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 1rem;
+        }
+
+        .link-pill {
           padding: 0.6rem 1.25rem;
-          background: #f1f5f9;
-          border-radius: 100px;
-          color: #475569;
+          border-radius: 12px;
+          border: 1px solid var(--border-main);
+          color: var(--text-deep);
           text-decoration: none;
           font-weight: 600;
-          font-size: 0.95rem;
+          font-size: 0.9rem;
+          display: flex;
+          align-items: center;
+          gap: 10px;
           transition: all 0.2s ease;
-          border: 1px solid transparent;
+          background: var(--bg-surface);
         }
 
-        .social-pill:hover {
-          background: #e2e8f0;
-          color: #0f172a;
+        .link-pill:hover {
+          border-color: var(--brand-primary);
+          background: var(--bg-soft);
+          color: var(--brand-primary);
           transform: translateY(-2px);
-          border-color: #cbd5e1;
         }
 
-        /* Modal Redesign */
+        /* Modal Overrides */
         .modal-overlay {
           position: fixed;
-          inset: 0;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
           background: rgba(15, 23, 42, 0.4);
           backdrop-filter: blur(8px);
-          z-index: 2000;
+          z-index: 9999;
           display: flex;
           align-items: center;
           justify-content: center;
           padding: 2rem;
         }
 
-        .modal-content {
-          background: #ffffff;
+        .modal-glass {
+          background: rgba(15, 23, 42, 0.4);
+          backdrop-filter: blur(4px);
+        }
+
+        .premium-modal {
+          background: #ffffff !important;
           border-radius: 24px;
-          width: 100%;
-          max-width: 850px;
-          max-height: 90vh;
+          border: 1px solid var(--border-main);
+          box-shadow: 0 40px 60px -15px rgba(0, 0, 0, 0.25);
+          overflow: hidden;
+          color: var(--text-deep);
+        }
+
+        .modal-header-refined {
+          padding: 1.5rem 2rem;
+          border-bottom: 1px solid var(--border-light);
+          background: #ffffff;
+        }
+
+        .modal-body-refined {
+          padding: 2.5rem 2rem;
+          background: #ffffff;
           overflow-y: auto;
-          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-          border: 1px solid var(--border-color);
-          animation: modalAppear 0.3s ease-out;
+          max-height: calc(90vh - 140px); /* Ensure body scrolls if content is large */
         }
 
-        @keyframes modalAppear {
-          from { opacity: 0; transform: scale(0.95) translateY(10px); }
-          to { opacity: 1; transform: scale(1) translateY(0); }
+        .modal-footer-refined {
+          padding: 1.25rem 2rem;
+          background: var(--bg-soft);
+          border-top: 1px solid var(--border-light);
         }
 
-        .modal-header {
-          padding: 1.5rem 2rem;
-          border-bottom: 1px solid var(--border-color);
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
+        .form-group-refined {
+          margin-bottom: 1.5rem;
         }
 
-        .modal-title {
-          font-size: 1.25rem;
-          font-weight: 700;
-          color: #0f172a;
-        }
-
-        .modal-body {
-          padding: 2rem;
-        }
-
-        .modal-footer {
-          padding: 1.5rem 2rem;
-          border-top: 1px solid var(--border-color);
-          background: #f8fafc;
-          display: flex;
-          justify-content: flex-end;
-          gap: 12px;
-          border-radius: 0 0 24px 24px;
-        }
-
-        .form-label {
+        .label-refined {
+          display: block;
+          font-size: 0.85rem;
           font-weight: 600;
-          font-size: 0.9rem;
-          color: #334155;
           margin-bottom: 0.5rem;
+          color: var(--text-deep);
         }
 
-        .form-control {
-          background: #fcfdfe;
-          border: 1px solid #d1d5db;
+        .input-refined {
+          width: 100%;
+          padding: 0.75rem 1rem;
           border-radius: 12px;
-          padding: 0.6rem 1rem;
+          border: 1px solid #d1d5db; /* Stronger border for visibility */
           font-size: 0.95rem;
           transition: all 0.2s ease;
+          background: #ffffff; /* Explicit white background */
+          color: #1e293b;
         }
 
-        .form-control:focus {
-          border-color: var(--primary-brand);
-          box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        .input-refined:focus {
+          border-color: var(--brand-accent);
+          outline: none;
+          box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12);
           background: #ffffff;
         }
 
-        /* Success Alert */
-        .toast-success {
-          background: #ecfdf5;
-          color: #065f46;
-          border: 1px solid #10b981;
-          border-radius: 12px;
-          padding: 1rem 1.5rem;
-          font-weight: 600;
-          display: flex;
-          align-items: center;
-          gap: 10px;
+        /* Toast */
+        .toast-premium {
           position: fixed;
           bottom: 2rem;
           right: 2rem;
-          z-index: 3000;
-          box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-          animation: slideInRight 0.3s ease-out;
+          background: var(--text-deep);
+          color: white;
+          padding: 1rem 1.5rem;
+          border-radius: 12px;
+          font-weight: 500;
+          font-size: 0.9rem;
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+          z-index: 9999;
+          animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        @keyframes slideInRight {
-          from { transform: translateX(100%); opacity: 0; }
-          to { transform: translateX(0); opacity: 1; }
+        @keyframes slideUp {
+          from { transform: translateY(100%); opacity: 0; }
+          to { transform: translateY(0); opacity: 1; }
         }
 
-        @media (max-width: 992px) {
-          .section-grid { grid-template-columns: repeat(2, 1fr); }
-          .profile-header-card { padding: 2rem; }
+        @media (max-width: 768px) {
+          .specs-grid { grid-template-columns: repeat(2, 1fr); gap: 1.5rem; }
+          .profile-hero { flex-direction: column; text-align: center; gap: 1.5rem; }
+          .hero-info { flex-direction: column; gap: 1rem; }
+          .hero-logo-container { width: 100px; height: 100px; }
         }
 
-        @media (max-width: 640px) {
-          .section-grid { grid-template-columns: 1fr; }
-          .profile-header-card { text-align: center; }
-          .avatar-container { margin: 0 auto 1.5rem; }
-          .company-name { font-size: 1.75rem; }
-          .company-industry { justify-content: center; }
-          .btn-edit { width: 100%; justify-content: center; margin-top: 1.5rem; }
+        @media (max-width: 480px) {
+          .specs-grid { grid-template-columns: 1fr; }
         }
       `}</style>
 
@@ -521,146 +523,137 @@ export default function CompanyProfile() {
         href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
       />
 
-      <div className="profile-container">
-        <div className="main-content-wrapper">
-          {/* HEADER SECTION */}
-          <div className="profile-header-card">
-            <div className="row align-items-center">
-              <div className="col-auto">
-                <div className="avatar-container">
-                  <div className="avatar-circle">
-                    {company.logo ? (
-                      <img
-                        src={company.logo}
-                        alt="Company Logo"
-                        onError={(e) => (e.target.style.display = "none")}
-                      />
-                    ) : (
-                      initials
-                    )}
-                  </div>
-                </div>
+      <div className="profile-wrapper">
+        <div className="container-premium">
+          
+          {/* HERO SECTION - REPLACES THE HEADER CARD */}
+          <header className="profile-hero">
+            <div className="hero-info">
+              <div className="hero-logo-container">
+                {company.logo ? (
+                  <img
+                    src={formatFileUrl(company.logo)}
+                    alt="Company Logo"
+                    onError={(e) => (e.target.style.display = "none")}
+                  />
+                ) : (
+                  initials
+                )}
               </div>
-              <div className="col ms-2">
-                <h1 className="company-name">{company.name || "Company Name"}</h1>
-                <div className="company-industry">
-                  <i className="bi bi-patch-check-fill text-primary"></i>
+              <div className="hero-text">
+                <h1>{company.name || "Company Name"}</h1>
+                <div className="hero-badge">
+                  <i className="bi bi-patch-check-fill"></i>
                   {company.industry || "Industry not specified"}
                 </div>
               </div>
-              <div className="col-auto">
-                <button className="btn-edit" onClick={openEditModal}>
-                  <i className="bi bi-pencil-square"></i>
-                  Edit Profile
-                </button>
-              </div>
             </div>
-          </div>
+            <div className="hero-actions">
+              <button className="btn-premium-edit" onClick={openEditModal}>
+                <i className="bi bi-pencil-square"></i>
+                Update Profile
+              </button>
+            </div>
+          </header>
 
-          {/* KEY STATS/INFO GRID */}
-          <div className="section-grid">
-            <div className="detail-card">
-              <span className="detail-label">Office Email</span>
-              <div className="detail-value">
-                <i className="bi bi-envelope detail-icon"></i>
+          {/* SPECS GRID - REPLACES THE SEPARATE DETAIL CARDS */}
+          <section className="specs-grid">
+            <div className="spec-item">
+              <span className="spec-label">Office Email</span>
+              <div className="spec-value">
+                <i className="bi bi-envelope spec-icon"></i>
                 {company.email}
               </div>
             </div>
-            <div className="detail-card">
-              <span className="detail-label">Contact No.</span>
-              <div className="detail-value">
-                <i className="bi bi-telephone detail-icon"></i>
+            <div className="spec-item">
+              <span className="spec-label">Direct Contact</span>
+              <div className="spec-value">
+                <i className="bi bi-telephone spec-icon"></i>
                 {company.contact || "N/A"}
               </div>
             </div>
-            <div className="detail-card">
-              <span className="detail-label">Location</span>
-              <div className="detail-value">
-                <i className="bi bi-geo-alt detail-icon"></i>
+            <div className="spec-item">
+              <span className="spec-label">Headquarters</span>
+              <div className="spec-value">
+                <i className="bi bi-geo-alt spec-icon"></i>
                 {company.location || "N/A"}
               </div>
             </div>
-            <div className="detail-card">
-              <span className="detail-label">Company Type</span>
-              <div className="detail-value">
-                <i className="bi bi-building detail-icon"></i>
+            <div className="spec-item">
+              <span className="spec-label">Organization</span>
+              <div className="spec-value">
+                <i className="bi bi-building spec-icon"></i>
                 {company.company_type || "N/A"}
               </div>
             </div>
-            <div className="detail-card">
-              <span className="detail-label">Workforce</span>
-              <div className="detail-value">
-                <i className="bi bi-people detail-icon"></i>
+            <div className="spec-item">
+              <span className="spec-label">Team Size</span>
+              <div className="spec-value">
+                <i className="bi bi-people spec-icon"></i>
                 {company.employee_count || "N/A"}
               </div>
             </div>
-            <div className="detail-card">
-              <span className="detail-label">Founded In</span>
-              <div className="detail-value">
-                <i className="bi bi-calendar-event detail-icon"></i>
+            <div className="spec-item">
+              <span className="spec-label">Est. Year</span>
+              <div className="spec-value">
+                <i className="bi bi-calendar-event spec-icon"></i>
                 {company.founded_year || "N/A"}
               </div>
             </div>
-          </div>
+          </section>
 
-          {/* ABOUT SECTION */}
-          <div className="content-section">
-            <h2 className="section-title">
-              <i className="bi bi-info-circle"></i>
-              About the Company
-            </h2>
-            <p className="about-text">
-              {company.description || "No company description has been provided yet."}
+          {/* DESCRIPTION SECTION */}
+          <section className="info-section">
+            <h2 className="section-header">Company Overview</h2>
+            <p className="about-content">
+              {company.description || "Establish your company identity by adding a professional description."}
             </p>
-          </div>
+          </section>
 
-          {/* SOCIAL & WEB SECTION */}
-          <div className="content-section">
-            <h2 className="section-title">
-              <i className="bi bi-share"></i>
-              Presence & Website
-            </h2>
-            <div className="d-flex flex-wrap gap-3">
+          {/* PRESENCE SECTION */}
+          <section className="info-section">
+            <h2 className="section-header">Digital Presence</h2>
+            <div className="presence-links">
               {company.website && (
-                <a href={company.website} target="_blank" rel="noopener noreferrer" className="social-pill">
-                  <i className="bi bi-globe"></i>
-                  Website
+                <a href={company.website} target="_blank" rel="noopener noreferrer" className="link-pill">
+                  <i className="bi bi-globe text-primary"></i>
+                  Official Website
                 </a>
               )}
               {company.linkedin && (
-                <a href={company.linkedin} target="_blank" rel="noopener noreferrer" className="social-pill">
-                  <i className="bi bi-linkedin"></i>
-                  LinkedIn
+                <a href={company.linkedin} target="_blank" rel="noopener noreferrer" className="link-pill">
+                  <i className="bi bi-linkedin" style={{ color: '#0077b5'}}></i>
+                  LinkedIn Profile
                 </a>
               )}
               {company.twitter && (
-                <a href={company.twitter} target="_blank" rel="noopener noreferrer" className="social-pill">
+                <a href={company.twitter} target="_blank" rel="noopener noreferrer" className="link-pill">
                   <i className="bi bi-twitter-x"></i>
-                  Twitter/X
+                  Twitter / X
                 </a>
               )}
               {company.facebook && (
-                <a href={company.facebook} target="_blank" rel="noopener noreferrer" className="social-pill">
-                  <i className="bi bi-facebook"></i>
+                <a href={company.facebook} target="_blank" rel="noopener noreferrer" className="link-pill">
+                  <i className="bi bi-facebook" style={{ color: '#1877f2'}}></i>
                   Facebook
                 </a>
               )}
               {company.instagram && (
-                <a href={company.instagram} target="_blank" rel="noopener noreferrer" className="social-pill">
-                  <i className="bi bi-instagram"></i>
+                <a href={company.instagram} target="_blank" rel="noopener noreferrer" className="link-pill">
+                  <i className="bi bi-instagram" style={{ color: '#e4405f'}}></i>
                   Instagram
                 </a>
               )}
               {!company.website && !company.linkedin && !company.twitter && !company.facebook && !company.instagram && (
-                <span className="text-muted italic">No social or web links available.</span>
+                <span className="text-muted" style={{ fontSize: '0.9rem', fontStyle: 'italic' }}>No digital links configured.</span>
               )}
             </div>
-          </div>
+          </section>
 
           {/* Success/Error Message */}
           {saveMessage && (
-            <div className="toast-success">
-              <i className={`bi bi-${saveMessage.includes("Error") ? "exclamation-circle" : "check-circle-fill"}`}></i>
+            <div className="toast-premium">
+              <i className={`bi bi-${saveMessage.includes("Error") ? "exclamation-triangle" : "check-circle-fill"} ${saveMessage.includes("Error") ? "text-danger" : "text-success"}`}></i>
               {saveMessage}
             </div>
           )}
@@ -669,91 +662,120 @@ export default function CompanyProfile() {
 
       {/* ── Edit Modal ──────────────────────────────────────────────── */}
       {showEditModal && (
-        <div className="modal-overlay" onClick={closeEditModal}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2 className="modal-title">Edit Company Profile</h2>
-              <button className="btn-close" onClick={closeEditModal} style={{ border: 'none', background: 'none', fontSize: '1.5rem'}}>&times;</button>
+        <div className="modal-overlay modal-glass" onClick={closeEditModal}>
+          <div className="modal-content premium-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header-refined">
+              <div className="d-flex justify-content-between align-items-center">
+                <h2 className="m-0" style={{ fontSize: '1.25rem', fontWeight: 700 }}>Update Profile Details</h2>
+                <button className="btn-close" onClick={closeEditModal} style={{ opacity: 0.5 }}></button>
+              </div>
             </div>
 
-            <div className="modal-body">
+            <div className="modal-body-refined">
               <div className="row g-4">
-                <div className="col-md-6 text-center">
-                    <label className="form-label d-block text-start">Company Logo</label>
-                    <div className="d-flex align-items-center gap-3">
-                        <div style={{ width: 80, height: 80, borderRadius: 16, overflow: 'hidden', background: '#f8fafc', border: '1px solid #e2e8f0' }}>
-                             <img
-                                src={formData.logo instanceof File ? URL.createObjectURL(formData.logo) : formData.logo || "/placeholder-logo.png"}
-                                alt="Preview"
-                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                            />
-                        </div>
-                        <div className="flex-grow-1">
-                            <input type="file" className="form-control" name="logo" accept="image/*" onChange={handleInputChange} />
-                            {formData.logo && (
-                                <button type="button" className="btn btn-link text-danger btn-sm p-0 mt-1" onClick={handleRemoveLogo}>
-                                    Remove current logo
-                                </button>
-                            )}
-                        </div>
-                    </div>
+                <div className="col-12">
+                   <div className="d-flex align-items-center gap-4 p-3" style={{ background: 'var(--bg-soft)', borderRadius: '16px', border: '1px solid var(--border-light)' }}>
+                      <div style={{ width: 80, height: 80, borderRadius: '12px', overflow: 'hidden', border: '1px solid var(--border-main)', background: 'white' }}>
+                          <img
+                            src={formData.logo instanceof File ? URL.createObjectURL(formData.logo) : formatFileUrl(formData.logo) || "/placeholder-logo.png"}
+                            alt="Logo Preview"
+                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                          />
+                      </div>
+                      <div className="flex-grow-1">
+                          <label className="label-refined">Enterprise Logo</label>
+                          <input type="file" className="input-refined" name="logo" accept="image/*" onChange={handleInputChange} style={{ padding: '0.5rem' }} />
+                          {formData.logo && (
+                            <button type="button" className="btn btn-link text-danger btn-sm p-0 m-0 mt-2 text-decoration-none" onClick={handleRemoveLogo}>
+                               <i className="bi bi-trash3 me-1"></i> Remove Logo
+                            </button>
+                          )}
+                      </div>
+                   </div>
+                </div>
+                
+                <div className="col-md-6">
+                  <div className="form-group-refined">
+                    <label className="label-refined">Company Name</label>
+                    <input type="text" className="input-refined" name="name" value={formData.name || ""} onChange={handleInputChange} placeholder="e.g. Acme Corp" />
+                  </div>
                 </div>
                 <div className="col-md-6">
-                  <label className="form-label">Company Name</label>
-                  <input type="text" className="form-control" name="name" value={formData.name || ""} onChange={handleInputChange} />
+                   <div className="form-group-refined">
+                    <label className="label-refined">Primary Industry</label>
+                    <input type="text" className="input-refined" name="industry" value={formData.industry || ""} onChange={handleInputChange} placeholder="e.g. Technology" />
+                  </div>
+                </div>
+                <div className="col-md-12">
+                  <div className="form-group-refined">
+                    <label className="label-refined">Corporate Website</label>
+                    <input type="url" className="input-refined" name="website" value={formData.website || ""} onChange={handleInputChange} placeholder="https://www.example.com" />
+                  </div>
                 </div>
                 <div className="col-md-6">
-                  <label className="form-label">Industry</label>
-                  <input type="text" className="form-control" name="industry" value={formData.industry || ""} onChange={handleInputChange} />
+                  <div className="form-group-refined">
+                    <label className="label-refined">Contact Number</label>
+                    <input type="text" className="input-refined" name="contact" value={formData.contact || ""} onChange={handleInputChange} />
+                  </div>
                 </div>
                 <div className="col-md-6">
-                  <label className="form-label">Website URL</label>
-                  <input type="url" className="form-control" name="website" value={formData.website || ""} onChange={handleInputChange} />
-                </div>
-                <div className="col-md-6">
-                  <label className="form-label">Contact Number</label>
-                  <input type="text" className="form-control" name="contact" value={formData.contact || ""} onChange={handleInputChange} />
-                </div>
-                <div className="col-md-6">
-                  <label className="form-label">Location (City)</label>
-                  <input type="text" className="form-control" name="location" value={formData.location || ""} onChange={handleInputChange} />
+                  <div className="form-group-refined">
+                    <label className="label-refined">Global Headquarters</label>
+                    <input type="text" className="input-refined" name="location" value={formData.location || ""} onChange={handleInputChange} />
+                  </div>
                 </div>
                 <div className="col-md-4">
-                  <label className="form-label">State</label>
-                  <input type="text" className="form-control" name="state" value={formData.state || ""} onChange={handleInputChange} />
+                  <div className="form-group-refined">
+                    <label className="label-refined">State/Province</label>
+                    <input type="text" className="input-refined" name="state" value={formData.state || ""} onChange={handleInputChange} />
+                  </div>
                 </div>
                 <div className="col-md-4">
-                  <label className="form-label">Country</label>
-                  <input type="text" className="form-control" name="country" value={formData.country || ""} onChange={handleInputChange} />
+                  <div className="form-group-refined">
+                    <label className="label-refined">Country</label>
+                    <input type="text" className="input-refined" name="country" value={formData.country || ""} onChange={handleInputChange} />
+                  </div>
                 </div>
                 <div className="col-md-4">
-                  <label className="form-label">Founded Year</label>
-                  <input type="number" className="form-control" name="founded_year" value={formData.founded_year || ""} onChange={handleInputChange} />
+                  <div className="form-group-refined">
+                    <label className="label-refined">Year Founded</label>
+                    <input type="number" className="input-refined" name="founded_year" value={formData.founded_year || ""} onChange={handleInputChange} />
+                  </div>
                 </div>
                 <div className="col-md-6">
-                  <label className="form-label">Company Type</label>
-                  <input type="text" className="form-control" name="company_type" value={formData.company_type || ""} onChange={handleInputChange} />
+                  <div className="form-group-refined">
+                    <label className="label-refined">Entity Type</label>
+                    <input type="text" className="input-refined" name="company_type" value={formData.company_type || ""} onChange={handleInputChange} placeholder="e.g. Private Limited" />
+                  </div>
                 </div>
                 <div className="col-md-6">
-                  <label className="form-label">Employee Count</label>
-                  <input type="text" className="form-control" name="employee_count" value={formData.employee_count || ""} onChange={handleInputChange} />
+                   <div className="form-group-refined">
+                    <label className="label-refined">Headcount Range</label>
+                    <input type="text" className="input-refined" name="employee_count" value={formData.employee_count || ""} onChange={handleInputChange} placeholder="e.g. 500-1000" />
+                  </div>
                 </div>
                 <div className="col-12">
-                  <label className="form-label">LinkedIn Profile URL</label>
-                  <input type="url" className="form-control" name="linkedin" value={formData.linkedin || ""} onChange={handleInputChange} />
+                  <div className="form-group-refined">
+                    <label className="label-refined">LinkedIn Profile</label>
+                    <input type="url" className="input-refined" name="linkedin" value={formData.linkedin || ""} onChange={handleInputChange} />
+                  </div>
                 </div>
                 <div className="col-12">
-                  <label className="form-label">Company Description</label>
-                  <textarea className="form-control" rows="4" name="description" value={formData.description || ""} onChange={handleInputChange}></textarea>
+                  <div className="form-group-refined">
+                    <label className="label-refined">Professional Summary</label>
+                    <textarea className="input-refined" rows="4" name="description" value={formData.description || ""} onChange={handleInputChange}></textarea>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div className="modal-footer">
-              <button type="button" className="btn btn-light px-4" onClick={closeEditModal}>Cancel</button>
-              <button type="button" className="btn btn-primary px-5" onClick={handleSave} disabled={saveLoading}>
-                {saveLoading ? "Saving..." : "Save Changes"}
-              </button>
+            <div className="modal-footer-refined">
+              <div className="d-flex justify-content-end gap-3">
+                <button type="button" className="btn btn-link text-muted text-decoration-none fw-semibold" onClick={closeEditModal}>Discard</button>
+                <button type="button" className="btn-premium-edit" style={{ paddingLeft: '2.5rem', paddingRight: '2.5rem' }} onClick={handleSave} disabled={saveLoading}>
+                  {saveLoading ? "Syncing..." : "Publish Changes"}
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -761,17 +783,19 @@ export default function CompanyProfile() {
 
       {/* Remove Logo Confirmation Modal */}
       {showRemoveLogoModal && (
-        <div className="modal-overlay" style={{ zIndex: 3000 }}>
-          <div className="modal-content" style={{ maxWidth: 400 }}>
-            <div className="modal-body text-center p-5">
-              <i className="bi bi-exclamation-triangle-fill text-warning" style={{ fontSize: '3rem'}}></i>
-              <h3 className="mt-3 mb-2">Remove Logo?</h3>
-              <p className="text-muted">Are you sure you want to remove the company logo? This action cannot be undone.</p>
-              <div className="d-flex justify-content-center gap-3 mt-4">
-                <button className="btn btn-light px-4" onClick={() => setShowRemoveLogoModal(false)}>Cancel</button>
-                <button className="btn btn-danger px-4" onClick={confirmRemoveLogo} disabled={removingLogo}>
-                  {removingLogo ? "Removing..." : "Remove"}
+        <div className="modal-overlay modal-glass" style={{ zIndex: 10000 }}>
+          <div className="modal-content premium-modal" style={{ maxWidth: 400 }}>
+            <div className="modal-body-refined text-center p-5">
+              <div className="mx-auto mb-4 d-flex align-items-center justify-content-center" style={{ width: '64px', height: '64px', background: '#fef2f2', borderRadius: '50%' }}>
+                 <i className="bi bi-trash3 text-danger" style={{ fontSize: '1.5rem'}}></i>
+              </div>
+              <h3 className="mb-2" style={{ fontSize: '1.25rem', fontWeight: 700 }}>Remove Asset?</h3>
+              <p className="text-muted" style={{ fontSize: '0.9rem' }}>This will permanently delete the current logo from your profile visibility.</p>
+              <div className="d-flex flex-column gap-2 mt-4">
+                <button className="btn btn-danger py-2 fw-semibold" onClick={confirmRemoveLogo} disabled={removingLogo} style={{ borderRadius: '10px' }}>
+                  {removingLogo ? "Deleting..." : "Confirm Removal"}
                 </button>
+                <button className="btn btn-link text-muted text-decoration-none" onClick={() => setShowRemoveLogoModal(false)}>Keep it</button>
               </div>
             </div>
           </div>
@@ -779,4 +803,4 @@ export default function CompanyProfile() {
       )}
     </>
   );
-}
+}

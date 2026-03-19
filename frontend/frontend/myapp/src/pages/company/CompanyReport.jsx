@@ -173,7 +173,7 @@ export default function CompanyReport() {
 
         .section-title {
           font-size: 2.25rem;
-          font-weight: 850;
+          font-weight: 700; /* Reduced from 850 */
           color: var(--text-main);
           margin-bottom: 0.5rem;
           letter-spacing: -0.03em;
@@ -203,7 +203,7 @@ export default function CompanyReport() {
           padding: 0.6rem 1.5rem;
           border-radius: 10px;
           border: none;
-          font-weight: 700;
+          font-weight: 600; /* Reduced from 700 */
           font-size: 0.9rem;
           cursor: pointer;
           transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -282,7 +282,7 @@ export default function CompanyReport() {
 
         .candidate-name {
           font-size: 1.3rem;
-          font-weight: 800;
+          font-weight: 700; /* Reduced from 800 */
           color: var(--text-main);
           margin: 0;
           letter-spacing: -0.01em;
@@ -306,7 +306,7 @@ export default function CompanyReport() {
           align-items: center;
           gap: 6px;
           font-size: 0.75rem;
-          font-weight: 700;
+          font-weight: 600; /* Reduced from 700 */
           text-transform: uppercase;
           padding: 0.3rem 0.75rem;
           border-radius: 999px;
@@ -331,7 +331,7 @@ export default function CompanyReport() {
           padding: 0.65rem;
           border-radius: 10px;
           font-size: 0.85rem;
-          font-weight: 700;
+          font-weight: 600; /* Reduced from 700 */
           border: 1px solid var(--border-color);
           cursor: pointer;
           transition: all 0.2s ease;
@@ -442,7 +442,7 @@ export default function CompanyReport() {
 
         .profile-name-lg {
           font-size: 2.25rem;
-          font-weight: 850;
+          font-weight: 700; /* Reduced from 850 */
           color: #0f172a;
           letter-spacing: -0.03em;
           margin-bottom: 0.75rem;
@@ -472,7 +472,7 @@ export default function CompanyReport() {
 
         .canvas-section-title {
           font-size: 1rem;
-          font-weight: 750;
+          font-weight: 600; /* Reduced from 750 */
           text-transform: uppercase;
           letter-spacing: 0.05em;
           color: var(--primary-brand);
@@ -512,7 +512,7 @@ export default function CompanyReport() {
 
         .data-value {
           font-size: 1.05rem;
-          font-weight: 700;
+          font-weight: 600; /* Reduced from 700 */
           color: #0f172a;
         }
 
@@ -527,7 +527,7 @@ export default function CompanyReport() {
           border: 1px solid #e2e8f0;
           padding: 0.5rem 1rem;
           border-radius: 10px;
-          font-weight: 700;
+          font-weight: 600; /* Reduced from 700 */
           font-size: 0.875rem;
           color: #334155;
           box-shadow: 0 1px 2px rgba(0,0,0,0.04);
@@ -553,7 +553,7 @@ export default function CompanyReport() {
         }
 
         .entry-title {
-          font-weight: 800;
+          font-weight: 700; /* Reduced from 800 */
           font-size: 1.15rem;
           color: #0f172a;
           margin-bottom: 4px;
@@ -561,7 +561,7 @@ export default function CompanyReport() {
 
         .entry-org {
           color: var(--primary-brand);
-          font-weight: 700;
+          font-weight: 600; /* Reduced from 700 */
           font-size: 0.95rem;
           margin-bottom: 6px;
         }
@@ -583,7 +583,7 @@ export default function CompanyReport() {
           color: #ffffff;
           padding: 1.1rem 2.5rem;
           border-radius: 14px;
-          font-weight: 800;
+          font-weight: 700; /* Reduced from 800 */
           text-decoration: none;
           display: inline-flex;
           align-items: center;
@@ -652,11 +652,11 @@ export default function CompanyReport() {
           ) : filteredApplications.length === 0 ? (
             <div style={{ textAlign: "center", padding: "5rem 2rem", background: "#ffffff", borderRadius: "24px", border: "1px solid #e2e8f0" }}>
               <div style={{ fontSize: "3.5rem", marginBottom: "1.5rem" }}>📁</div>
-              <h2 style={{ fontSize: "1.5rem", fontWeight: 800, color: "#0f172a" }}>No Matching Records</h2>
+              <h2 style={{ fontSize: "1.5rem", fontWeight: 700, color: "#0f172a" }}>No Matching Records</h2>
               <p style={{ color: "#64748b" }}>We couldn't find any applications matching your current filters.</p>
               <button 
                 onClick={() => handleStatusChange("all")}
-                style={{ marginTop: "1rem", padding: "0.6rem 1.5rem", borderRadius: "10px", border: "1px solid #e2e8f0", background: "#f8fafc", fontWeight: 700, cursor: "pointer" }}
+                style={{ marginTop: "1rem", padding: "0.6rem 1.5rem", borderRadius: "10px", border: "1px solid #e2e8f0", background: "#f8fafc", fontWeight: 600, cursor: "pointer" }}
               >
                 Reset Filters
               </button>
@@ -826,12 +826,12 @@ export default function CompanyReport() {
                           {proj.description && <div className="entry-body">{proj.description}</div>}
                           <div style={{ marginTop: "12px", display: "flex", gap: "16px" }}>
                             {proj.github_link && (
-                              <a href={proj.github_link} target="_blank" rel="noopener noreferrer" style={{ color: "#4f46e5", fontWeight: 700, fontSize: "0.85rem", textDecoration: "none" }}>
+                              <a href={proj.github_link} target="_blank" rel="noopener noreferrer" style={{ color: "#4f46e5", fontWeight: 600, fontSize: "0.85rem", textDecoration: "none" }}>
                                 Codebase →
                               </a>
                             )}
                             {proj.live_link && (
-                              <a href={proj.live_link} target="_blank" rel="noopener noreferrer" style={{ color: "#4f46e5", fontWeight: 700, fontSize: "0.85rem", textDecoration: "none" }}>
+                              <a href={proj.live_link} target="_blank" rel="noopener noreferrer" style={{ color: "#4f46e5", fontWeight: 600, fontSize: "0.85rem", textDecoration: "none" }}>
                                 Live Preview →
                               </a>
                             )}
@@ -851,7 +851,7 @@ export default function CompanyReport() {
                             <div className="data-label">{cert.issued_by} • {cert.year_obtained}</div>
                             <div className="data-value" style={{ marginBottom: "10px" }}>{cert.title}</div>
                             {cert.file && (
-                              <a href={cert.file} target="_blank" rel="noopener noreferrer" style={{ color: "var(--primary-brand)", fontWeight: 700, fontSize: "0.8rem", textDecoration: "none" }}>
+                              <a href={cert.file} target="_blank" rel="noopener noreferrer" style={{ color: "var(--primary-brand)", fontWeight: 600, fontSize: "0.8rem", textDecoration: "none" }}>
                                 View Evidence →
                               </a>
                             )}
