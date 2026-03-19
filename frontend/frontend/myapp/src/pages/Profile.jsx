@@ -107,6 +107,12 @@ const Profile = () => {
     loadProfile();
   }, []);
 
+  const formatFileUrl = (url) => {
+    if (!url) return "";
+    if (url.startsWith("http")) return url;
+    return `http://localhost:8000${url}`;
+  };
+
   if (loading) return <p className="loading-text">Loading profile...</p>;
   if (!profile || !profile.student) return <p className="error-text">Profile not found</p>;
 
@@ -114,10 +120,7 @@ const Profile = () => {
   const displayName = studentName;
   const initials = getInitials(displayName);
 
-  let photoUrl = profile.profile_image;
-  if (photoUrl && photoUrl.startsWith("/")) {
-    photoUrl = `http://localhost:8000${photoUrl}`;
-  }
+  let photoUrl = formatFileUrl(profile.profile_image);
 
   const hasPhoto = !!(photoUrl && typeof photoUrl === 'string' && photoUrl.trim() !== '' && !imageError);
 
@@ -1191,10 +1194,10 @@ const Profile = () => {
                   </div>
                   {cert.certificate_file && (
                     <div style={{ marginTop: "1rem" }}>
-                      <a href={cert.certificate_file} target="_blank" rel="noreferrer">
+                      <a href={formatFileUrl(cert.certificate_file)} target="_blank" rel="noreferrer">
                         <div className="preview-container">
                           <img
-                            src={cert.certificate_file}
+                            src={formatFileUrl(cert.certificate_file)}
                             alt={cert.title}
                             style={{ width: "100%", height: "100%", objectFit: "cover" }}
                             onError={(e) => (e.target.style.display = "none")}
@@ -1238,7 +1241,7 @@ const Profile = () => {
           <h3 className="section-title">Resume</h3>
           {profile.resume ? (
             <>
-              <a href={profile.resume} target="_blank" rel="noreferrer">
+              <a href={formatFileUrl(profile.resume)} target="_blank" rel="noreferrer">
                 <div className="preview-container">
                   <div className="preview-pdf">
                     <i className="bi bi-file-earmark-pdf-fill" style={{ fontSize: "3.2rem" }}></i>
@@ -1250,7 +1253,7 @@ const Profile = () => {
               <div className="resume-actions">
                 <button
                   className="action-btn action-btn-primary"
-                  onClick={() => window.open(profile.resume, '_blank')}
+                  onClick={() => window.open(formatFileUrl(profile.resume), '_blank')}
                 >
                   <i className="bi bi-download me-2"></i> Download
                 </button>
