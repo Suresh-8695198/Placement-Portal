@@ -239,14 +239,14 @@ export default function AdminJobApplicants() {
         }
 
         .applicants-table th {
-          background: #f8fafc;
-          padding: 1rem 1.5rem;
-          font-size: 0.75rem;
+          background: #4f46e5; /* Professional Indigo */
+          padding: 1.25rem 1.5rem;
+          font-size: 0.8rem;
           font-weight: 700;
           text-transform: uppercase;
-          letter-spacing: 0.05em;
-          color: #64748b;
-          border-bottom: 1px solid #e2e8f0;
+          letter-spacing: 0.1em;
+          color: #ffffff;
+          border-bottom: none;
         }
 
         .applicants-table td {
