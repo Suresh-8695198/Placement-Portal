@@ -1,0 +1,17 @@
+admin_app_adminpasswordresetotp
+admin_app_adminuser
+admin_app_announcement
+auth_group
+auth_group_permissions
+auth_permission
+auth_user
+auth_user_groups
+auth_user_user_permissions
+companies_company
+companies_companypasswordresetotp
+companies_companyverificationrequest
+companies_job
+companies_jobapplication
+django_admin_log
+django_content_type
+django_migrations
