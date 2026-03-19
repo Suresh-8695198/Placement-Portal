@@ -107,9 +107,7 @@ def company_register(request):
     })
 
 
-@csrf_exempt
-@require_POST
-
+import uuid
 @csrf_exempt
 @require_POST
 def company_login(request):
