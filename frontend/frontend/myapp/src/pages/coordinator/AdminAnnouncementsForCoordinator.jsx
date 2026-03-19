@@ -22,12 +22,9 @@ export default function AdminAnnouncementsForCoordinator() {
 
   const formatDate = (dateString) => {
     if (!dateString) return "—";
-
     const date = new Date(dateString);
-
     return date.toLocaleDateString("en-IN", {
-      timeZone: "Asia/Kolkata",
-      day: "numeric",
+      day: "2-digit",
       month: "short",
       year: "numeric",
     });
@@ -36,7 +33,7 @@ export default function AdminAnnouncementsForCoordinator() {
   return (
     <>
       <link
-        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
         rel="stylesheet"
       />
       <link
@@ -46,225 +43,311 @@ export default function AdminAnnouncementsForCoordinator() {
 
       <style>{`
         :root {
-          --primary: #6b46c1;
-          --primary-light: #9f7aea;
-          --violet-bg: rgba(139,92,246,0.15);
-          --violet-border: rgba(139,92,246,0.35);
-          --text: #1e293b;
-          --text-light: #475569;
-          --card-bg: #ffffff;
-          --border: #e2e8f0;
+          --registry-ruby: #9d174d;
+          --registry-ruby-light: #fef2f2;
+          --registry-ruby-hover: #be123c;
+          --text-deep: #0f172a;
+          --text-muted: #64748b;
+          --surface-bg: #f8fafc;
+          --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+          --card-shadow-hover: 0 10px 15px -3px rgba(157, 23, 77, 0.1), 0 4px 6px -4px rgba(157, 23, 77, 0.1);
         }
 
-        .ann-page {
+        .registry-container {
+          font-family: 'Outfit', sans-serif;
           max-width: 1200px;
           margin: 0 auto;
-          padding: 4rem 1.5rem;
-          min-height: 100vh;
+          padding: 1.5rem 2.5rem;
           background: #ffffff;
+          min-height: 100vh;
+          position: relative;
         }
 
-        .header {
+        /* --- Institutional Seal Decor --- */
+        .registry-container::before {
+          content: "";
+          position: absolute;
+          top: 0;
+          right: 0;
+          width: 300px;
+          height: 300px;
+          background: radial-gradient(circle, #fdf2f8 0%, transparent 70%);
+          z-index: 0;
+          pointer-events: none;
+        }
+
+        /* --- Breadcrumb --- */
+        .breadcrumb {
+          position: relative;
+          z-index: 1;
           display: flex;
           align-items: center;
-          gap: 1.5rem;
-          margin-bottom: 3rem;
-          flex-wrap: wrap;
+          gap: 0.6rem;
+          color: var(--text-muted);
+          font-size: 0.7rem;
+          font-weight: 600;
+          margin-bottom: 1rem;
+          text-transform: uppercase;
+          letter-spacing: 0.1em;
         }
 
-        .avatar {
-          width: 90px;
-          height: 90px;
-          border-radius: 50%;
-          background: linear-gradient(135deg, var(--primary), var(--primary-light));
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 2.7rem;
-          color: white;
-          box-shadow: 0 10px 28px rgba(107,70,193,0.28);
-        }
-
-        .title {
-          font-size: 2.5rem;
-          font-weight: 800;
-          margin: 0;
-          background: linear-gradient(90deg, var(--primary), var(--primary-light));
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-        }
-
-        .subtitle {
-          margin-top: 6px;
-          color: var(--text-light);
-          font-size: 1.05rem;
-        }
-
-        .grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(480px, 1fr));
-          gap: 2rem;
-          margin-top: 1rem;
-        }
-
-        .card {
-          background: var(--card-bg);
-          border: 1px solid var(--border);
-          border-radius: 16px;
-          overflow: hidden;
-          box-shadow: 0 6px 18px rgba(0,0,0,0.06);
-          transition: all 0.25s ease;
-          display: flex;
-          flex-direction: column;
-        }
-
-        .card:hover {
-          transform: translateY(-4px);
-          box-shadow: 0 16px 40px rgba(107,70,193,0.18);
-        }
-
-        .card-header {
-          background: var(--violet-bg);
-          padding: 1.3rem 1.6rem;
-          border-bottom: 1px solid var(--violet-border);
+        /* --- Header Section --- */
+        .page-header {
+          position: relative;
+          z-index: 1;
+          border-bottom: 3px solid var(--registry-ruby);
+          padding-bottom: 2rem;
+          margin-bottom: 2.5rem;
           display: flex;
           justify-content: space-between;
+          align-items: flex-end;
+          gap: 2rem;
+        }
+
+        .header-flex {
+          display: flex;
           align-items: center;
-          flex-wrap: wrap;
+          gap: 2rem;
+        }
+
+        .university-logo {
+          height: 100px;
+          width: auto;
+          object-fit: contain;
+          border-right: 2px solid var(--registry-ruby);
+          padding-right: 2rem;
+        }
+
+        .header-title-group h1 {
+          font-size: 2.4rem;
+          font-weight: 800;
+          color: var(--text-deep);
+          margin: 0;
+          letter-spacing: -0.02em;
+          line-height: 1.1;
+        }
+
+        .header-title-group p {
+          color: var(--text-muted);
+          font-size: 0.95rem;
+          margin-top: 0.5rem;
+          font-weight: 400;
+          max-width: 600px;
+        }
+
+        .header-stats {
+          display: flex;
+          gap: 2rem;
+        }
+
+        .stat-item {
+          text-align: right;
+        }
+
+        .stat-value {
+          display: block;
+          font-size: 1.2rem;
+          font-weight: 700;
+          color: var(--registry-ruby);
+        }
+
+        .stat-label {
+          font-size: 0.65rem;
+          font-weight: 600;
+          color: var(--text-muted);
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+        }
+
+        /* --- Announcements Grid --- */
+        .announcements-grid {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 1.5rem;
+        }
+
+        .announcement-card {
+          background: #ffffff;
+          border: 1px solid var(--border-color);
+          border-left: 4px solid var(--registry-ruby);
+          padding: 2rem;
+          transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+          position: relative;
+          display: flex;
+          flex-direction: column;
           gap: 1rem;
         }
 
-        .card-title {
-          font-size: 1.35rem;
+        .announcement-card:hover {
+          background: var(--bg-main);
+          border-color: var(--registry-ruby-border);
+          transform: translateX(4px);
+        }
+
+        .card-top {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          gap: 1rem;
+        }
+
+        .announcement-title {
+          font-size: 1.25rem;
           font-weight: 700;
-          color: var(--primary);
+          color: var(--text-main);
           margin: 0;
-        }
-
-        .badge-important {
-          background: #fef3c7;
-          color: #92400e;
-          padding: 4px 10px;
-          border-radius: 20px;
-          font-size: 0.8rem;
-          font-weight: 600;
-        }
-
-        .card-body {
-          padding: 1.6rem;
-          color: var(--text);
-          line-height: 1.6;
+          line-height: 1.3;
           flex: 1;
         }
 
-        .message {
-          white-space: pre-wrap;
+        .important-tag {
+          background: var(--registry-ruby);
+          color: white;
+          padding: 0.3rem 0.6rem;
+          font-size: 0.62rem;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.08em;
+          border-radius: 4px;
+          flex-shrink: 0;
         }
 
-        .card-footer {
-          padding: 1rem 1.6rem;
-          background: #f8fafc;
-          border-top: 1px solid var(--border);
-          font-size: 0.9rem;
-          color: var(--text-light);
-          display: flex;
-          justify-content: space-between;
-          flex-wrap: wrap;
-          gap: 0.8rem;
-        }
-
-        .meta {
+        .announcement-meta {
           display: flex;
           align-items: center;
-          gap: 0.45rem;
+          gap: 1.25rem;
+          color: var(--text-muted);
+          font-size: 0.85rem;
+          font-weight: 500;
         }
 
-        .no-box {
-          background: #fff;
-          border: 1px solid var(--border);
-          border-radius: 16px;
-          padding: 4rem 2rem;
+        .meta-item {
+          display: flex;
+          align-items: center;
+          gap: 0.4rem;
+        }
+
+        .meta-item i {
+          color: var(--registry-ruby);
+          font-size: 1rem;
+        }
+
+        .announcement-body {
+          color: #334155;
+          font-size: 0.92rem;
+          line-height: 1.7;
+          white-space: pre-wrap;
+          margin-top: 0.5rem;
+        }
+
+        .no-data-state {
           text-align: center;
-          box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+          padding: 6rem 2rem;
+          background: var(--bg-main);
+          border: 2px dashed var(--border-color);
+          border-radius: 12px;
+          color: var(--text-muted);
         }
 
-        .no-title {
-          font-size: 2rem;
+        .no-data-state i {
+          font-size: 3rem;
+          margin-bottom: 1.5rem;
+          display: block;
+          color: var(--registry-ruby-border);
+        }
+
+        .no-data-state h3 {
           font-weight: 700;
-          color: var(--primary);
-          margin-bottom: 1rem;
+          color: var(--text-main);
+          margin-bottom: 0.5rem;
         }
 
         @media (max-width: 768px) {
-          .grid {
-            grid-template-columns: 1fr;
+          .page-header {
+            flex-direction: column;
+            align-items: flex-start;
             gap: 1.5rem;
           }
-
-          .ann-page {
-            padding: 3rem 1rem;
+          .header-stats {
+            width: 100%;
+            justify-content: space-between;
           }
-
-          .title {
-            font-size: 2.1rem;
+          .registry-container {
+            padding: 2rem 1rem;
           }
-
-          .avatar {
-            width: 70px;
+          .header-flex {
+            flex-direction: row;
+            align-items: center;
+            gap: 1.5rem;
+          }
+          .university-logo {
             height: 70px;
-            font-size: 2.1rem;
+            padding-right: 1.5rem;
+          }
+          .header-title-group h1 {
+            font-size: 1.8rem;
           }
         }
       `}</style>
 
-      <div className="ann-page">
-        <div className="header">
-          <div className="avatar">
-            <i className="bi bi-megaphone-fill"></i>
-          </div>
+      <div className="registry-container">
+        <nav className="breadcrumb">
+          <span>Coordinator</span>
+          <i className="bi bi-chevron-right"></i>
+          <span style={{ color: "var(--registry-ruby)", fontWeight: "700" }}>Admin Feed</span>
+        </nav>
 
-          <div>
-            <h1 className="title">Admin Announcements</h1>
-            <div className="subtitle">
-              Important updates posted by the placement administrator
+        <header className="page-header">
+          <div className="header-flex">
+            <img src="/Logo.png" alt="University Logo" className="university-logo" />
+            <div className="header-title-group">
+              <h1>Official Announcements</h1>
+              <p>Formal communications from the Placement Administration Department.</p>
             </div>
           </div>
-        </div>
+          <div className="header-stats">
+            <div className="stat-item">
+              <span className="stat-value">{announcements.length}</span>
+              <span className="stat-label">Total Postings</span>
+            </div>
+            <div className="stat-item">
+              <span className="stat-value">
+                {announcements.filter(a => a.important).length}
+              </span>
+              <span className="stat-label">Urgent Alerts</span>
+            </div>
+          </div>
+        </header>
 
         {announcements.length === 0 ? (
-          <div className="no-box">
-            <div className="no-title">No Announcements Yet</div>
-            <p style={{ color: "var(--text-light)" }}>
-              Admin announcements will appear here when available.
-            </p>
+          <div className="no-data-state">
+            <i className="bi bi-mailbox2"></i>
+            <h3>The bulletin is currently empty</h3>
+            <p>New official announcements will be posted here as they become available.</p>
           </div>
         ) : (
-          <div className="grid">
+          <div className="announcements-grid">
             {announcements.map((ann) => (
-              <div key={ann.id} className="card">
-                <div className="card-header">
-                  <h4 className="card-title">{ann.title}</h4>
-
+              <div key={ann.id} className="announcement-card">
+                <div className="card-top">
+                  <h2 className="announcement-title">{ann.title}</h2>
                   {ann.important && (
-                    <span className="badge-important">IMPORTANT</span>
+                    <span className="important-tag">Registry Priority</span>
                   )}
                 </div>
 
-                <div className="card-body">
-                  <div className="message">{ann.message}</div>
-                </div>
-
-                <div className="card-footer">
-                  <div className="meta">
-                    <i className="bi bi-person-fill"></i>
-                    {ann.created_by || "Admin"}
+                <div className="announcement-meta">
+                  <div className="meta-item">
+                    <i className="bi bi-shield-check"></i>
+                    <span>Authorized by {ann.created_by || "Admin Office"}</span>
                   </div>
-
-                  <div className="meta">
-                    <i className="bi bi-calendar-event"></i>
-                    {formatDate(ann.created_at)}
+                  <div className="meta-item">
+                    <i className="bi bi-calendar3"></i>
+                    <span>Published on {formatDate(ann.created_at)}</span>
                   </div>
                 </div>
+
+                <div className="announcement-body">{ann.message}</div>
               </div>
             ))}
           </div>
@@ -273,3 +356,4 @@ export default function AdminAnnouncementsForCoordinator() {
     </>
   );
 }
+

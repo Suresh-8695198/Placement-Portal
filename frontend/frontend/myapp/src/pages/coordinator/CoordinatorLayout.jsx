@@ -8,32 +8,43 @@ export default function CoordinatorLayout() {
   return (
     <>
       <style>{`
+        /* 2. Main Layout Container must be a perfect 100vh box */
         .coordinator-layout {
-          height: 100vh;
-          width: 100vw;
+          height: 100vh !important;
+          width: 100vw !important;
           display: flex;
           background: #f8fafc;
+          overflow: hidden !important;
+          position: fixed;
+          top: 0;
+          left: 0;
         }
 
         .coordinator-sidebar-space {
           flex-shrink: 0;
           width: 250px;
-          transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          height: 100vh;
+          overflow: hidden !important;
         }
 
+        /* 3. Main Area occupies the rest of the space */
         .coordinator-main {
           flex: 1;
           display: flex;
           flex-direction: column;
-          min-width: 0;
           height: 100vh;
-          overflow: hidden;
+          overflow: hidden !important;
+          position: relative;
         }
 
+        /* 4. ONLY this area should have a vertical scrollbar */
         .coordinator-content {
-          flex: 1;
-          overflow-y: auto;
+          height: calc(100vh - 80px); /* Adjust for 80px TopBar height */
+          overflow-y: auto !important;
+          overflow-x: hidden !important;
           background: #f8fafc;
+          width: 100%;
+          box-sizing: border-box;
         }
 
         /* Mobile adjustments */
@@ -51,9 +62,9 @@ export default function CoordinatorLayout() {
       `}</style>
 
       <div className="coordinator-layout">
-        <div className="coordinator-sidebar-space">
+        <aside className="coordinator-sidebar-space">
           <CoordinatorSidebar />
-        </div>
+        </aside>
 
         <div className="coordinator-main">
           <CoordinatorTopBar />

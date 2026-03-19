@@ -30,6 +30,9 @@ export default function CompanyJobPost() {
   const [loadingJobs, setLoadingJobs] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [filterType, setFilterType] = useState("all");
+  const [sortBy, setSortBy] = useState("newest");
 
   const companyEmail = localStorage.getItem("companyEmail");
 
@@ -53,15 +56,12 @@ export default function CompanyJobPost() {
   }, [message]);
 
   useEffect(() => {
-    if (!searchTerm.trim()) {
-      setFilteredJobs(jobs);
-      return;
-    }
+    let result = [...jobs];
 
-    const term = searchTerm.toLowerCase().trim();
-
-    const filtered = jobs.filter((job) => {
-      return (
+    // Search Term Filter
+    if (searchTerm.trim()) {
+      const term = searchTerm.toLowerCase().trim();
+      result = result.filter((job) => (
         (job.title || "").toLowerCase().includes(term) ||
         (job.location || "").toLowerCase().includes(term) ||
         (job.job_type || "").toLowerCase().includes(term) ||
@@ -69,11 +69,30 @@ export default function CompanyJobPost() {
         (Array.isArray(job.skills) && job.skills.some((s) => s.toLowerCase().includes(term))) ||
         (Array.isArray(job.departments) && job.departments.some((d) => d.toLowerCase().includes(term))) ||
         (Array.isArray(job.programmes) && job.programmes.some((p) => p.toLowerCase().includes(term)))
-      );
+      ));
+    }
+
+    // Status Filter
+    if (filterStatus !== "all") {
+      const isActive = filterStatus === "active";
+      result = result.filter(job => job.is_active === isActive);
+    }
+
+    // Job Type Filter
+    if (filterType !== "all") {
+      result = result.filter(job => job.job_type === filterType);
+    }
+
+    // Sorting
+    result.sort((a, b) => {
+      if (sortBy === "newest") return new Date(b.created_at || 0) - new Date(a.created_at || 0);
+      if (sortBy === "oldest") return new Date(a.created_at || 0) - new Date(b.created_at || 0);
+      if (sortBy === "title") return (a.title || "").localeCompare(b.title || "");
+      return 0;
     });
 
-    setFilteredJobs(filtered);
-  }, [searchTerm, jobs]);
+    setFilteredJobs(result);
+  }, [searchTerm, filterStatus, filterType, sortBy, jobs]);
 
   const fetchCompanyJobs = async () => {
     try {
@@ -183,379 +202,432 @@ export default function CompanyJobPost() {
     }
   };
 
+  const handleToggleStatus = async (job, currentStatus) => {
+    try {
+      // Create payload with all required fields or just the toggle if backend supports partial
+      const payload = {
+        title: job.title,
+        is_active: !currentStatus
+      };
+      await axios.patch(`${API_BASE}/companies/jobs/${job.id}/edit/?email=${companyEmail}`, payload);
+      setMessage(`Job status updated to ${!currentStatus ? "Active" : "Closed"}`);
+      setMessageType("success");
+      fetchCompanyJobs();
+    } catch (err) {
+      setMessage("Failed to update status");
+      setMessageType("error");
+    }
+  };
+
   return (
     <>
+
       <style>{`
         :root {
-          --primary-start: #6366f1;
-          --primary-end: #8b5cf6;
-          --primary-glow: rgba(99, 102, 241, 0.4);
-          --glass-bg: rgba(255, 255, 255, 0.94);
-          --glass-border: rgba(255,255,255,0.28);
-          --text-main: #1e293b;
-          --text-secondary: #475569;
+          --bg-main: #f8fafc;
+          --card-bg: #ffffff;
+          --primary-brand: #4f46e5;
+          --text-main: #0f172a;
+          --text-secondary: #64748b;
+          --border-color: #e2e8f0;
         }
 
         .jobpost-container {
           min-height: 100vh;
-          padding: 2rem 1rem;
-          background: linear-gradient(135deg, rgba(15,23,42,0.3), rgba(30,58,138,0.2));
-          backdrop-filter: blur(8px);
+          padding: 2.5rem 2rem;
+          background: var(--bg-main);
+          color: var(--text-main);
         }
 
+        .stats-row {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 1.5rem;
+          margin-bottom: 2.5rem;
+        }
+
+        .stat-card {
+          background: #ffffff;
+          padding: 1.5rem;
+          border-radius: 16px;
+          border: 1px solid var(--border-color);
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+        }
+
+        .stat-icon {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 1.5rem;
+        }
+
+        .icon-total { color: #2563eb; }
+        .icon-active { color: #16a34a; }
+        .icon-closed { color: #dc2626; }
+        .icon-apps { color: #9333ea; }
+
+        .stat-info { display: flex; flex-direction: column; }
+        .stat-value { font-size: 1.5rem; font-weight: 700; color: var(--text-main); line-height: 1.2; }
+        .stat-label { font-size: 0.85rem; color: var(--text-secondary); font-weight: 500; }
+
         .main-content-wrapper {
-          max-width: 1200px;
+          max-width: 1100px;
           margin: 0 auto;
         }
 
-        .section-card {
-          background: var(--glass-bg);
-          border-radius: 1.4rem;
-          padding: 2rem;
-          box-shadow: 
-            0 10px 40px rgba(0,0,0,0.18),
-            inset 0 0 24px rgba(255,255,255,0.3);
-          backdrop-filter: blur(16px);
-          border: 1px solid var(--glass-border);
-          margin-bottom: 3rem;
-          transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-
-        .section-card:hover {
-          transform: translateY(-5px);
-          box-shadow: 0 20px 50px rgba(99,102,241,0.25);
+        .section-header {
+          margin-bottom: 2rem;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
         }
 
         .section-title {
-          font-size: 2.1rem;
-          font-weight: 900;
-          margin-bottom: 1.8rem;
-          background: linear-gradient(90deg, var(--primary-start), var(--primary-end));
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
+          font-size: 1.85rem;
+          font-weight: 800;
+          color: var(--text-main);
+          letter-spacing: -0.02em;
         }
 
-        .search-wrapper {
-          position: relative;
-          max-width: 500px;
-          margin: 1.5rem auto 2.5rem;
+        .card {
+          background: var(--card-bg);
+          border: 1px solid var(--border-color);
+          border-radius: 16px;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.06);
+          overflow: hidden;
+          margin-bottom: 2.5rem;
         }
 
-        .search-input {
-          width: 100%;
-          padding: 0.95rem 1.4rem 0.95rem 1.4rem;
-          padding-right: 3.2rem;
-          border: 1px solid rgba(209,213,219,0.6);
-          border-radius: 9999px;
-          font-size: 1rem;
-          background: rgba(255,255,255,0.85);
-          transition: all 0.3s ease;
-        }
-
-        .search-input:focus {
-          outline: none;
-          border-color: var(--primary-start);
-          box-shadow: 0 0 0 4px var(--primary-glow);
-        }
-
-        .clear-btn {
-          position: absolute;
-          right: 1.1rem;
-          top: 50%;
-          transform: translateY(-50%);
-          background: none;
-          border: none;
-          font-size: 1.6rem;
-          color: #9ca3af;
-          cursor: pointer;
-          padding: 0;
-          line-height: 1;
-        }
-
-        .clear-btn:hover {
-          color: #ef4444;
+        .card-body {
+          padding: 2rem;
         }
 
         .form-grid {
           display: grid;
-          grid-template-columns: 1fr;
-          gap: 1.5rem 1.8rem;
-        }
-
-        .form-row {
-          display: grid;
-          grid-template-columns: 1fr;
+          grid-template-columns: repeat(2, 1fr);
           gap: 1.5rem;
         }
 
-        @media (min-width: 768px) {
-          .form-grid, .form-row {
-            grid-template-columns: 1fr 1fr;
-          }
-          .full-width {
-            grid-column: span 2;
-          }
+        .full-width {
+          grid-column: span 2;
+        }
+
+        .form-group {
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
         }
 
         .form-label {
-          display: block;
-          font-weight: 700;
-          color: var(--text-main);
-          margin-bottom: 0.6rem;
-          font-size: 0.98rem;
-        }
-
-        .form-input,
-        .form-textarea,
-        .form-select {
-          width: 100%;
-          padding: 0.9rem 1.2rem;
-          border: 1px solid rgba(209,213,219,0.6);
-          border-radius: 1rem;
-          font-size: 0.98rem;
-          background: rgba(255,255,255,0.8);
-          transition: all 0.3s ease;
+          font-size: 0.875rem;
+          font-weight: 600;
           color: var(--text-main);
         }
 
-        .form-input:focus,
-        .form-textarea:focus,
-        .form-select:focus {
+        .form-input, .form-select, .form-textarea {
+          padding: 0.75rem 1rem;
+          border: 1px solid var(--border-color);
+          border-radius: 10px;
+          font-size: 0.95rem;
+          background: #ffffff;
+          color: var(--text-main);
+          transition: all 0.2s ease;
+        }
+
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
           outline: none;
-          border-color: var(--primary-start);
-          box-shadow: 0 0 0 4px var(--primary-glow);
-          background: white;
-        }
-
-        .form-select {
-          appearance: none;
-          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%236366f1' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-          background-repeat: no-repeat;
-          background-position: right 1rem center;
-          background-size: 12px;
-          padding-right: 2.4rem;
-          cursor: pointer;
+          border-color: var(--primary-brand);
+          box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
         }
 
         .form-textarea {
-          min-height: 160px;
+          min-height: 120px;
           resize: vertical;
         }
 
-        .form-actions {
-          margin-top: 2.5rem;
-          display: flex;
-          flex-wrap: wrap;
-          gap: 1rem;
-          justify-content: center;
-        }
-
         .btn-primary {
-          background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
+          background: var(--primary-brand);
           color: white;
-          padding: 0.8rem 2rem;
-          border-radius: 1rem;
+          padding: 0.75rem 2rem;
+          border-radius: 10px;
           font-weight: 600;
+          font-size: 0.95rem;
           border: none;
           cursor: pointer;
-          transition: all 0.32s cubic-bezier(0.34, 1.56, 0.64, 1);
-          box-shadow: 0 5px 18px var(--primary-glow);
+          transition: all 0.2s ease;
+          display: flex;
+          align-items: center;
+          gap: 8px;
         }
 
         .btn-primary:hover {
-          transform: translateY(-3px);
-          box-shadow: 0 12px 28px var(--primary-glow);
+          background: #4338ca;
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
         }
 
         .btn-secondary {
-          background: rgba(107,114,128,0.12);
-          color: #4b5563;
-          padding: 0.8rem 2rem;
-          border-radius: 1rem;
+          background: #ffffff;
+          color: var(--text-main);
+          padding: 0.75rem 1.5rem;
+          border-radius: 10px;
           font-weight: 600;
-          border: 1px solid rgba(107,114,128,0.3);
+          border: 1px solid var(--border-color);
           cursor: pointer;
-          transition: all 0.25s ease;
+          transition: all 0.2s ease;
         }
 
         .btn-secondary:hover {
-          background: rgba(107,114,128,0.22);
+          background: #f8fafc;
+          border-color: #cbd5e1;
         }
 
-        .message {
-          padding: 1rem 1.3rem;
-          border-radius: 1rem;
-          margin-bottom: 1.6rem;
-          font-weight: 500;
-          border-left: 5px solid;
-          animation: fadeIn 0.4s forwards;
+        .controls-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          flex-wrap: wrap;
+          gap: 1rem;
+          margin-bottom: 2rem;
         }
 
-        @keyframes fadeIn {
-          to { opacity: 1; transform: translateY(0); }
+        .search-container {
+          background: #ffffff;
+          border-radius: 12px;
+          border: 1px solid var(--border-color);
+          padding: 0.25rem 1rem;
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          flex: 1;
+          min-width: 300px;
+          max-width: 450px;
+          box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+          transition: border-color 0.2s ease, box-shadow 0.2s ease;
         }
 
-        .message-success {
-          background: rgba(16,185,129,0.1);
-          color: #065f46;
-          border-left-color: #10b981;
+        .search-container:focus-within {
+          border-color: var(--primary-brand);
+          box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
         }
 
-        .message-error {
-          background: rgba(239,68,68,0.1);
-          color: #991b1b;
-          border-left-color: #ef4444;
+        .search-container i {
+          color: var(--text-secondary);
+          font-size: 0.9rem;
+        }
+
+        .search-input {
+          border: none;
+          outline: none;
+          width: 100%;
+          font-size: 0.95rem;
+          padding: 0.6rem 0;
+          color: var(--text-main);
+          background: transparent;
+        }
+
+        .filters-group {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+
+        .filter-select {
+          padding: 0.6rem 2.5rem 0.6rem 0.75rem;
+          border-radius: 8px;
+          border: 1px solid var(--border-color);
+          font-size: 0.875rem;
+          font-weight: 600;
+          background-color: #ffffff;
+          cursor: pointer;
+          color: var(--text-main);
+          appearance: none;
+          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+          background-repeat: no-repeat;
+          background-position: right 0.75rem center;
+          background-size: 1rem;
+        }
+
+        .filter-label {
+          font-size: 0.8rem;
+          font-weight: 700;
+          color: var(--text-secondary);
+          text-transform: uppercase;
+          margin-right: 4px;
         }
 
         .jobs-grid {
           display: grid;
-          gap: 1.8rem;
-          align-items: stretch;
-        }
-
-        @media (min-width: 992px) {
-          .jobs-grid { grid-template-columns: repeat(3, 1fr); }
-        }
-
-        @media (min-width: 768px) and (max-width: 991px) {
-          .jobs-grid { grid-template-columns: repeat(2, 1fr); }
-        }
-
-        @media (max-width: 767px) {
-          .jobs-grid { grid-template-columns: 1fr; }
+          grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+          gap: 1.5rem;
         }
 
         .job-card {
-          background: var(--glass-bg);
-          border-radius: 1.4rem;
-          padding: 1.8rem;
-          box-shadow: 0 10px 32px rgba(0,0,0,0.15), inset 0 0 18px rgba(255,255,255,0.25);
-          backdrop-filter: blur(14px);
-          border: 1px solid var(--glass-border);
-          transition: all 0.35s ease;
+          background: #ffffff;
+          border: 1px solid var(--border-color);
+          border-radius: 16px;
+          padding: 1.5rem;
           display: flex;
           flex-direction: column;
-          height: 100%;
-          min-height: 420px;
-          overflow: hidden;
+          gap: 1.25rem;
+          transition: all 0.3s ease;
+          position: relative;
         }
 
         .job-card:hover {
-          transform: translateY(-6px);
-          box-shadow: 0 20px 50px rgba(99,102,241,0.28);
+          border-color: var(--primary-brand);
+          box-shadow: 0 10px 20px rgba(0,0,0,0.04);
+          transform: translateY(-4px);
         }
 
-        .job-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: flex-start;
-          margin-bottom: 1.2rem;
-        }
-
-        .job-title {
-          font-size: 1.35rem;
-          font-weight: 800;
-          color: var(--text-main);
-          line-height: 1.3;
-          margin: 0;
-          flex: 1;
-        }
-
-        .status-badge {
-          padding: 0.45rem 1rem;
-          border-radius: 9999px;
-          font-size: 0.82rem;
+        .job-status {
+          position: absolute;
+          top: 1.5rem;
+          right: 1.5rem;
+          font-size: 0.75rem;
           font-weight: 700;
           text-transform: uppercase;
-          color: #fff !important;
-          min-width: 85px;
-          text-align: center;
-          margin-left: 1rem;
+          padding: 0.25rem 0.75rem;
+          border-radius: 999px;
         }
+
         .status-active {
-          background: linear-gradient(135deg, #10b981, #34d399);
-          color: #fff !important;
+          background: #f0fdf4;
+          color: #166534;
+          border: 1px solid #bbf7d0;
         }
+
         .status-inactive {
-          background: linear-gradient(135deg, #ef4444, #f87171);
-          color: #fff !important;
+          background: #fef2f2;
+          color: #991b1b;
+          border: 1px solid #fecaca;
         }
 
-        .job-meta {
-          font-size: 0.93rem;
-          color: #000;
-          margin-bottom: 1rem;
-          flex-grow: 1;
+        .job-card-header h3 {
+          font-size: 1.25rem;
+          font-weight: 700;
+          color: var(--text-main);
+          margin: 0;
+          padding-right: 4rem;
+          margin-bottom: 0.5rem;
         }
 
-        .job-meta p {
-          margin: 0.45rem 0;
-          color: #000;
+        .job-location {
+          font-size: 0.9rem;
+          color: var(--text-secondary);
+          display: flex;
+          align-items: center;
+          gap: 4px;
         }
 
-        .job-description {
-          color: #000;
-          line-height: 1.6;
-          margin: 1rem 0 1.4rem;
-          flex-grow: 1;
-          overflow: hidden;
-          display: -webkit-box;
-          -webkit-line-clamp: 5;
-          -webkit-box-orient: vertical;
+        .job-details-list {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 0.75rem;
+        }
+
+        .detail-item {
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
+        }
+
+        .detail-label {
+          font-size: 0.75rem;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          color: var(--text-secondary);
+          font-weight: 600;
+        }
+
+        .detail-value {
+          font-size: 0.9rem;
+          font-weight: 500;
+          color: var(--text-main);
+        }
+
+        .job-tags {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 6px;
+          margin-top: 0.5rem;
+        }
+
+        .tag {
+          font-size: 0.75rem;
+          background: #f1f5f9;
+          color: #475569;
+          padding: 0.2rem 0.6rem;
+          border-radius: 6px;
+          border: 1px solid #e2e8f0;
         }
 
         .job-actions {
-          display: flex;
-          gap: 1rem;
+          display: grid;
+          grid-template-columns: 1.2fr 0.8fr 1fr 42px;
+          gap: 8px;
+          padding-top: 1.25rem;
+          border-top: 1px solid var(--border-color);
           margin-top: auto;
-          padding-top: 1.2rem;
-          border-top: 1px solid rgba(0,0,0,0.08);
-          flex-wrap: wrap;
+          align-items: center;
         }
 
         .action-btn {
-          flex: 1 1 120px;
-          padding: 0.85rem 1.5rem;
-          border-radius: 1rem;
+          height: 40px;
+          border-radius: 10px;
+          font-size: 0.85rem;
           font-weight: 600;
-          font-size: 0.98rem;
-          text-align: center;
           cursor: pointer;
-          transition: all 0.28s ease;
-          border: none;
-          color: white;
-          box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+          transition: all 0.2s ease;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 6px;
+          white-space: nowrap;
+          border: 1px solid transparent;
         }
 
-        .action-btn:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+        .btn-view-apps {
+          background: #fdf4ff;
+          color: #7e22ce;
+          border-color: #f5d0fe;
         }
 
-        .btn-edit { background: linear-gradient(135deg, #6366f1, #8b5cf6); }
-        .btn-delete { background: linear-gradient(135deg, #ef4444, #f87171); }
-
-        .loading-spinner {
-          border: 5px solid rgba(99,102,241,0.12);
-          border-top: 5px solid var(--primary-start);
-          border-radius: 50%;
-          width: 48px;
-          height: 48px;
-          animation: spin 1s linear infinite;
-          margin: 3rem auto;
+        .btn-view-apps:hover {
+          background: #fae8ff;
         }
 
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
+        .btn-edit-action {
+          background: #f5f3ff;
+          color: #5b21b6;
+          border-color: #ddd6fe;
+        }
+
+        .btn-edit-action:hover {
+          background: #ede9fe;
+        }
+
+        .btn-delete-action {
+          background: #fff1f2;
+          color: #9f1239;
+          border-color: #fecdd3;
+          padding: 0;
+          width: 42px;
+          flex: none;
+        }
+
+        .btn-delete-action:hover {
+          background: #ffe4e6;
         }
 
         .modal-overlay {
           position: fixed;
           inset: 0;
-          background: rgba(15, 23, 42, 0.65);
+          background: rgba(15, 23, 42, 0.4);
           backdrop-filter: blur(4px);
-          z-index: 1000;
+          z-index: 2100;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -563,106 +635,128 @@ export default function CompanyJobPost() {
         }
 
         .modal-content {
-          background: var(--glass-bg);
-          border-radius: 1.6rem;
-          box-shadow: 0 20px 60px rgba(0,0,0,0.28),
-                      inset 0 0 30px rgba(255,255,255,0.35);
-          backdrop-filter: blur(16px);
-          border: 1px solid var(--glass-border);
+          background: #ffffff;
+          border-radius: 20px;
           width: 100%;
-          max-width: 780px;
-          max-height: 92vh;
+          max-width: 800px;
+          max-height: 90vh;
           overflow-y: auto;
-          animation: modalPop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+          animation: slideUp 0.3s ease-out;
         }
 
-        @keyframes modalPop {
-          from { opacity: 0; transform: scale(0.92) translateY(30px); }
-          to   { opacity: 1; transform: scale(1) translateY(0); }
+        @keyframes slideUp {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
         }
 
         .modal-header {
-          padding: 1.8rem 2.2rem 1.2rem;
-          border-bottom: 1px solid rgba(226,232,240,0.5);
+          padding: 1.5rem 2rem;
+          border-bottom: 1px solid var(--border-color);
           display: flex;
-          justify-content: space-between;
           align-items: center;
-        }
-
-        .modal-close-btn {
-          background: none;
-          border: none;
-          font-size: 2rem;
-          color: #64748b;
-          cursor: pointer;
-          line-height: 1;
-        }
-
-        .modal-close-btn:hover {
-          color: #ef4444;
+          justify-content: space-between;
+          position: sticky;
+          top: 0;
+          background: #ffffff;
+          z-index: 10;
         }
 
         .modal-body {
-          padding: 0 2.2rem 2rem;
+          padding: 2rem;
         }
 
         .modal-footer {
-          padding: 1.4rem 2.2rem;
-          border-top: 1px solid rgba(226,232,240,0.5);
+          padding: 1.5rem 2rem;
+          border-top: 1px solid var(--border-color);
           display: flex;
-          gap: 1rem;
           justify-content: flex-end;
-          background: rgba(255,255,255,0.35);
+          gap: 12px;
+          background: #f8fafc;
         }
 
-        @media (max-width: 640px) {
-          .modal-content { border-radius: 1.2rem; }
-          .modal-header, .modal-body, .modal-footer {
-            padding-left: 1.5rem;
-            padding-right: 1.5rem;
-          }
+        .message {
+          padding: 1rem;
+          border-radius: 10px;
+          margin-bottom: 2rem;
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          font-weight: 500;
+        }
+
+        .message-success {
+          background: #f0fdf4;
+          color: #166534;
+          border: 1px solid #bbf7d0;
+        }
+
+        .message-error {
+          background: #fef2f2;
+          color: #991b1b;
+          border: 1px solid #fecaca;
+        }
+
+        .loading-spinner {
+          width: 24px;
+          height: 24px;
+          border: 3px solid #e2e8f0;
+          border-top: 3px solid var(--primary-brand);
+          border-radius: 50%;
+          animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+          .form-grid { grid-template-columns: 1fr; }
+          .full-width { grid-column: span 1; }
+          .jobpost-container { padding: 1.5rem 1rem; }
         }
       `}</style>
 
       <div className="jobpost-container">
         <div className="main-content-wrapper">
-
-          {/* Post New Job Form */}
-          <div className="section-card">
+          <div className="section-header">
             <h2 className="section-title">Post a New Job</h2>
+          </div>
 
-            {message && (
-              <div className={`message ${messageType === "success" ? "message-success" : "message-error"}`}>
-                {message}
-              </div>
-            )}
-
-            <form onSubmit={handleSubmit}>
-              <div className="form-grid">
-                <div>
-                  <label className="form-label">Job Title *</label>
-                  <input
-                    type="text"
-                    name="title"
-                    value={formData.title}
-                    onChange={handleChange}
-                    required
-                    className="form-input"
-                    placeholder="e.g. Senior React Developer"
-                  />
+          <div className="card">
+            <div className="card-body">
+              {message && (
+                <div className={`message ${messageType === "success" ? "message-success" : "message-error"}`}>
+                  <i className={`fas ${messageType === "success" ? "fa-check-circle" : "fa-exclamation-circle"}`}></i>
+                  {message}
                 </div>
+              )}
 
-                <div>
-                  <label className="form-label">Job Type *</label>
-                  <select name="job_type" value={formData.job_type} onChange={handleChange} className="form-select">
-                    <option value="full_time">Full Time</option>
-                    <option value="internship">Internship</option>
-                    <option value="part_time">Part Time</option>
-                  </select>
-                </div>
+              <form onSubmit={handleSubmit}>
+                <div className="form-grid">
+                  <div className="form-group">
+                    <label className="form-label">Job Title *</label>
+                    <input
+                      type="text"
+                      name="title"
+                      value={formData.title}
+                      onChange={handleChange}
+                      required
+                      className="form-input"
+                      placeholder="e.g. Senior Software Engineer"
+                    />
+                  </div>
 
-                <div className="form-row">
-                  <div>
+                  <div className="form-group">
+                    <label className="form-label">Job Type *</label>
+                    <select name="job_type" value={formData.job_type} onChange={handleChange} className="form-select">
+                      <option value="full_time">Full Time</option>
+                      <option value="internship">Internship</option>
+                      <option value="part_time">Part Time</option>
+                    </select>
+                  </div>
+
+                  <div className="form-group">
                     <label className="form-label">Skills (comma separated)</label>
                     <input
                       type="text"
@@ -670,11 +764,11 @@ export default function CompanyJobPost() {
                       value={formData.skills}
                       onChange={handleChange}
                       className="form-input"
-                      placeholder="e.g. Python, Django, React"
+                      placeholder="e.g. React, Node.js, AWS"
                     />
                   </div>
 
-                  <div>
+                  <div className="form-group">
                     <label className="form-label">Location</label>
                     <input
                       type="text"
@@ -682,13 +776,11 @@ export default function CompanyJobPost() {
                       value={formData.location}
                       onChange={handleChange}
                       className="form-input"
-                      placeholder="e.g. Chennai (or Remote)"
+                      placeholder="e.g. Remote or City, Country"
                     />
                   </div>
-                </div>
 
-                <div className="form-row">
-                  <div>
+                  <div className="form-group">
                     <label className="form-label">Salary Range</label>
                     <input
                       type="text"
@@ -696,11 +788,11 @@ export default function CompanyJobPost() {
                       value={formData.salary_range}
                       onChange={handleChange}
                       className="form-input"
-                      placeholder="e.g. 8-15 LPA"
+                      placeholder="e.g. $80k - $120k / Year"
                     />
                   </div>
 
-                  <div>
+                  <div className="form-group">
                     <label className="form-label">Last Date to Apply</label>
                     <input
                       type="date"
@@ -710,10 +802,8 @@ export default function CompanyJobPost() {
                       className="form-input"
                     />
                   </div>
-                </div>
 
-                <div className="form-row">
-                  <div>
+                  <div className="form-group">
                     <label className="form-label">Eligible Departments</label>
                     <input
                       type="text"
@@ -721,11 +811,11 @@ export default function CompanyJobPost() {
                       value={formData.departments}
                       onChange={handleChange}
                       className="form-input"
-                      placeholder="CSE, IT, ECE, Mech, All"
+                      placeholder="CSE, IT, ECE"
                     />
                   </div>
 
-                  <div>
+                  <div className="form-group">
                     <label className="form-label">Eligible Programmes</label>
                     <input
                       type="text"
@@ -733,13 +823,11 @@ export default function CompanyJobPost() {
                       value={formData.programmes}
                       onChange={handleChange}
                       className="form-input"
-                      placeholder="B.Tech, MCA, M.Sc"
+                      placeholder="B.Tech, M.Tech, MCA"
                     />
                   </div>
-                </div>
 
-                <div className="form-row">
-                  <div className="full-width">
+                  <div className="form-group full-width">
                     <label className="form-label">Eligible Graduation Years</label>
                     <input
                       type="text"
@@ -747,108 +835,194 @@ export default function CompanyJobPost() {
                       value={formData.graduation_years}
                       onChange={handleChange}
                       className="form-input"
-                      placeholder="2024, 2025, 2026"
+                      placeholder="2024, 2025"
+                    />
+                  </div>
+
+                  <div className="form-group full-width">
+                    <label className="form-label">Job Description *</label>
+                    <textarea
+                      name="description"
+                      value={formData.description}
+                      onChange={handleChange}
+                      required
+                      className="form-textarea"
+                      placeholder="Describe the role, responsibilities, and requirements..."
                     />
                   </div>
                 </div>
 
-                <div className="full-width">
-                  <label className="form-label">Description *</label>
-                  <textarea
-                    name="description"
-                    value={formData.description}
-                    onChange={handleChange}
-                    required
-                    className="form-textarea"
-                    placeholder="Describe the role, responsibilities, requirements..."
-                  />
+                <div style={{ marginTop: "2rem", display: "flex", justifyContent: "flex-end" }}>
+                  <button type="submit" className="btn-primary">
+                    <i className="fas fa-paper-plane"></i>
+                    Post Opening
+                  </button>
                 </div>
-              </div>
-
-              <div className="form-actions">
-                <button type="submit" className="btn-primary">
-                  Post Job
-                </button>
-              </div>
-            </form>
+              </form>
+            </div>
           </div>
 
-          {/* Your Posted Jobs + Search Bar */}
-          <h2 className="section-title">Your Posted Jobs</h2>
+          <div className="stats-row">
+            <div className="stat-card">
+              <div className="stat-icon icon-total"><i className="fas fa-briefcase"></i></div>
+              <div className="stat-info">
+                <span className="stat-value">{jobs.length}</span>
+                <span className="stat-label">Total Jobs</span>
+              </div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-icon icon-active"><i className="fas fa-check-circle"></i></div>
+              <div className="stat-info">
+                <span className="stat-value">{jobs.filter(j => j.is_active).length}</span>
+                <span className="stat-label">Active</span>
+              </div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-icon icon-closed"><i className="fas fa-times-circle"></i></div>
+              <div className="stat-info">
+                <span className="stat-value">{jobs.filter(j => !j.is_active).length}</span>
+                <span className="stat-label">Closed</span>
+              </div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-icon icon-apps"><i className="fas fa-users"></i></div>
+              <div className="stat-info">
+                <span className="stat-value">{jobs.reduce((acc, job) => acc + (job.applicants_count || 0), 0)}</span>
+                <span className="stat-label">Applicants</span>
+              </div>
+            </div>
+          </div>
 
-          <div className="search-wrapper">
-            <input
-              type="text"
-              className="search-input"
-              placeholder="Search jobs by title, location, skills..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-            {searchTerm && (
-              <button className="clear-btn" onClick={() => setSearchTerm("")}>
-                ×
-              </button>
-            )}
+          <div className="section-header">
+            <h2 className="section-title">Your Job Postings</h2>
+          </div>
+
+          <div className="controls-row">
+            <div className="search-container">
+              <i className="fas fa-search"></i>
+              <input
+                type="text"
+                className="search-input"
+                placeholder="Search by title, location, or skills..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+              {searchTerm && (
+                <i 
+                  className="fas fa-times" 
+                  style={{ cursor: "pointer", color: "#94a3b8" }} 
+                  onClick={() => setSearchTerm("")}
+                ></i>
+              )}
+            </div>
+
+            <div className="filters-group">
+              <div className="filter-item">
+                <span className="filter-label">Status</span>
+                <select className="filter-select" value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
+                  <option value="all">All Status</option>
+                  <option value="active">Active Only</option>
+                  <option value="closed">Closed Only</option>
+                </select>
+              </div>
+
+              <div className="filter-item">
+                <span className="filter-label">Type</span>
+                <select className="filter-select" value={filterType} onChange={(e) => setFilterType(e.target.value)}>
+                  <option value="all">All Types</option>
+                  <option value="full_time">Full Time</option>
+                  <option value="internship">Internship</option>
+                  <option value="part_time">Part Time</option>
+                </select>
+              </div>
+
+              <div className="filter-item">
+                <span className="filter-label">Sort</span>
+                <select className="filter-select" value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+                  <option value="newest">Newest First</option>
+                  <option value="oldest">Oldest First</option>
+                  <option value="title">Alphabetical</option>
+                </select>
+              </div>
+            </div>
           </div>
 
           {loadingJobs ? (
-            <div className="text-center py-12">
-              <div className="loading-spinner"></div>
-              <p style={{ marginTop: "1.2rem", color: "#94a3b8" }}>Loading your postings...</p>
+            <div style={{ textAlign: "center", padding: "4rem" }}>
+              <div className="loading-spinner" style={{ margin: "0 auto 1rem" }}></div>
+              <p style={{ color: "var(--text-secondary)" }}>Fetching your recorded positions...</p>
             </div>
           ) : error ? (
-            <div className="message message-error text-center py-8">{error}</div>
+            <div className="message message-error">{error}</div>
           ) : filteredJobs.length === 0 ? (
-            <div className="section-card text-center py-10">
-              <p style={{ fontSize: "1.1rem", color: "#64748b", whiteSpace: "pre-line" }}>
-                {searchTerm
-                  ? "No matching jobs found."
-                  : "You haven't posted any jobs yet.\nStart creating opportunities above!"}
+            <div className="card" style={{ textAlign: "center", padding: "4rem" }}>
+              <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>📭</div>
+              <h3 style={{ margin: "0 0 0.5rem" }}>No Jobs Found</h3>
+              <p style={{ color: "#64748b", margin: 0 }}>
+                {searchTerm ? "Try a different search term" : "You haven't posted any jobs yet"}
               </p>
             </div>
           ) : (
             <div className="jobs-grid">
               {filteredJobs.map((job) => (
                 <div key={job.id} className="job-card">
-                  <div className="job-header">
-                    <h3 className="job-title">{job.title}</h3>
-                    <span className={`status-badge ${job.is_active ? "status-active" : "status-inactive"}`}>
-                      {job.is_active ? "Active" : "Inactive"}
-                    </span>
+                  <span className={`job-status ${job.is_active ? "status-active" : "status-inactive"}`}>
+                    {job.is_active ? "Active" : "Closed"}
+                  </span>
+                  
+                  <div className="job-card-header">
+                    <h3>{job.title}</h3>
+                    <div className="job-location">
+                      <i className="fas fa-map-marker-alt"></i>
+                      {job.location || "Remote"}
+                    </div>
                   </div>
 
-                  <div className="job-meta">
-                    <p>Company: {job.company || "—"}</p>
-                    <p>📍 {job.location || "Not specified"}</p>
-                    <p>💼 {job.job_type?.replace("_", " ") || "Not specified"}</p>
-                    <p>💰 {job.salary_range || "Not disclosed"}</p>
-                    {job.departments?.length > 0 && (
-                      <p>🏢 Departments: {job.departments.join(", ")}</p>
-                    )}
-                    {job.programmes?.length > 0 && (
-                      <p>📚 Programmes: {job.programmes.join(", ")}</p>
-                    )}
-                    {job.graduation_years?.length > 0 && (
-                      <p>🎓 Years: {job.graduation_years.join(", ")}</p>
-                    )}
-                    {job.skills?.length > 0 && (
-                      <p>🛠 Skills: {job.skills.join(", ")}</p>
-                    )}
-                    {job.last_date_to_apply && (
-                      <p style={{ color: "#dc2626" }}>
-                        Apply by: {job.last_date_to_apply}
-                      </p>
-                    )}
+                  <div className="job-details-list">
+                    <div className="detail-item">
+                      <span className="detail-label">Type</span>
+                      <span className="detail-value">{job.job_type?.replace("_", " ") || "Full Time"}</span>
+                    </div>
+                    <div className="detail-item">
+                      <span className="detail-label">Salary</span>
+                      <span className="detail-value">{job.salary_range || "Competitive"}</span>
+                    </div>
+                    <div className="detail-item">
+                      <span className="detail-label">Department</span>
+                      <span className="detail-value">{job.departments?.[0] || "All"}</span>
+                    </div>
+                    <div className="detail-item">
+                      <span className="detail-label">Apply By</span>
+                      <span className="detail-value" style={{ color: "#ef4444" }}>
+                        {job.last_date_to_apply || "Rolling"}
+                      </span>
+                    </div>
                   </div>
 
-                  <p className="job-description">{job.description || "No description provided."}</p>
+                  {job.skills?.length > 0 && (
+                    <div className="job-tags">
+                      {job.skills.slice(0, 4).map((skill, idx) => (
+                        <span key={idx} className="tag">{skill}</span>
+                      ))}
+                      {job.skills.length > 4 && <span className="tag">+{job.skills.length - 4} more</span>}
+                    </div>
+                  )}
 
                   <div className="job-actions">
-                    <button onClick={() => handleEdit(job)} className="action-btn btn-edit">
+                    <button onClick={() => window.location.href='/company/applicants'} className="action-btn btn-view-apps">
+                      <i className="fas fa-users"></i>
+                      Apps ({job.applicants_count || 0})
+                    </button>
+                    <button onClick={() => handleEdit(job)} className="action-btn btn-edit-action">
+                      <i className="far fa-edit"></i>
                       Edit
                     </button>
-                    <button onClick={() => handleDelete(job.id)} className="action-btn btn-delete">
-                      Delete
+                    <button onClick={() => handleToggleStatus(job, job.is_active)} className="action-btn" style={{ background: job.is_active ? "#fef2f2" : "#f0fdf4", color: job.is_active ? "#991b1b" : "#166534", border: `1px solid ${job.is_active ? "#fecaca" : "#bbf7d0"}` }}>
+                      <i className={`fas fa-${job.is_active ? "ban" : "check"}`}></i>
+                      {job.is_active ? "Close" : "Open"}
+                    </button>
+                    <button onClick={() => handleDelete(job.id)} className="action-btn btn-delete-action" title="Delete">
+                      <i className="far fa-trash-alt"></i>
                     </button>
                   </div>
                 </div>
@@ -858,23 +1032,23 @@ export default function CompanyJobPost() {
         </div>
       </div>
 
-      {/* Edit Modal */}
       {showEditModal && (
         <div className="modal-overlay" onClick={() => setShowEditModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h2 className="section-title" style={{ margin: 0, fontSize: "1.9rem" }}>
-                Edit Job Posting
-              </h2>
-              <button className="modal-close-btn" onClick={() => setShowEditModal(false)}>
-                ×
+              <h2 className="section-title" style={{ margin: 0 }}>Edit Position</h2>
+              <button 
+                style={{ background: "none", border: "none", fontSize: "1.5rem", cursor: "pointer", color: "#64748b" }} 
+                onClick={() => setShowEditModal(false)}
+              >
+                <i className="fas fa-times"></i>
               </button>
             </div>
 
             <div className="modal-body">
               <form onSubmit={handleSubmit}>
                 <div className="form-grid">
-                  <div>
+                  <div className="form-group">
                     <label className="form-label">Job Title *</label>
                     <input
                       type="text"
@@ -886,7 +1060,7 @@ export default function CompanyJobPost() {
                     />
                   </div>
 
-                  <div>
+                  <div className="form-group">
                     <label className="form-label">Job Type *</label>
                     <select name="job_type" value={formData.job_type} onChange={handleChange} className="form-select">
                       <option value="full_time">Full Time</option>
@@ -895,95 +1069,73 @@ export default function CompanyJobPost() {
                     </select>
                   </div>
 
-                  <div className="form-row">
-                    <div>
-                      <label className="form-label">Skills (comma separated)</label>
-                      <input
-                        type="text"
-                        name="skills"
-                        value={formData.skills}
-                        onChange={handleChange}
-                        className="form-input"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="form-label">Location</label>
-                      <input
-                        type="text"
-                        name="location"
-                        value={formData.location}
-                        onChange={handleChange}
-                        className="form-input"
-                      />
-                    </div>
+                  <div className="form-group">
+                    <label className="form-label">Skills</label>
+                    <input
+                      type="text"
+                      name="skills"
+                      value={formData.skills}
+                      onChange={handleChange}
+                      className="form-input"
+                    />
                   </div>
 
-                  <div className="form-row">
-                    <div>
-                      <label className="form-label">Salary Range</label>
-                      <input
-                        type="text"
-                        name="salary_range"
-                        value={formData.salary_range}
-                        onChange={handleChange}
-                        className="form-input"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="form-label">Last Date to Apply</label>
-                      <input
-                        type="date"
-                        name="last_date_to_apply"
-                        value={formData.last_date_to_apply}
-                        onChange={handleChange}
-                        className="form-input"
-                      />
-                    </div>
+                  <div className="form-group">
+                    <label className="form-label">Location</label>
+                    <input
+                      type="text"
+                      name="location"
+                      value={formData.location}
+                      onChange={handleChange}
+                      className="form-input"
+                    />
                   </div>
 
-                  <div className="form-row">
-                    <div>
-                      <label className="form-label">Eligible Departments</label>
-                      <input
-                        type="text"
-                        name="departments"
-                        value={formData.departments}
-                        onChange={handleChange}
-                        className="form-input"
-                        placeholder="CSE, IT, ECE, Mech, All"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="form-label">Eligible Programmes</label>
-                      <input
-                        type="text"
-                        name="programmes"
-                        value={formData.programmes}
-                        onChange={handleChange}
-                        className="form-input"
-                        placeholder="B.Tech, MCA, M.Sc"
-                      />
-                    </div>
+                  <div className="form-group">
+                    <label className="form-label">Salary Range</label>
+                    <input
+                      type="text"
+                      name="salary_range"
+                      value={formData.salary_range}
+                      onChange={handleChange}
+                      className="form-input"
+                    />
                   </div>
 
-                  <div className="form-row">
-                    <div className="full-width">
-                      <label className="form-label">Eligible Graduation Years</label>
-                      <input
-                        type="text"
-                        name="graduation_years"
-                        value={formData.graduation_years}
-                        onChange={handleChange}
-                        className="form-input"
-                        placeholder="2024, 2025, 2026"
-                      />
-                    </div>
+                  <div className="form-group">
+                    <label className="form-label">Last Date to Apply</label>
+                    <input
+                      type="date"
+                      name="last_date_to_apply"
+                      value={formData.last_date_to_apply}
+                      onChange={handleChange}
+                      className="form-input"
+                    />
                   </div>
 
-                  <div className="full-width">
+                  <div className="form-group">
+                    <label className="form-label">Eligible Departments</label>
+                    <input
+                      type="text"
+                      name="departments"
+                      value={formData.departments}
+                      onChange={handleChange}
+                      className="form-input"
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Eligible Programmes</label>
+                    <input
+                      type="text"
+                      name="programmes"
+                      value={formData.programmes}
+                      onChange={handleChange}
+                      className="form-input"
+                    />
+                  </div>
+
+                  <div className="form-group full-width">
                     <label className="form-label">Description *</label>
                     <textarea
                       name="description"
@@ -995,7 +1147,7 @@ export default function CompanyJobPost() {
                   </div>
                 </div>
 
-                <div className="modal-footer">
+                <div className="modal-footer" style={{ margin: "2rem -2rem -2rem", borderRadius: "0 0 20px 20px" }}>
                   <button
                     type="button"
                     className="btn-secondary"
@@ -1004,7 +1156,7 @@ export default function CompanyJobPost() {
                     Cancel
                   </button>
                   <button type="submit" className="btn-primary">
-                    Update Job
+                    Save Changes
                   </button>
                 </div>
               </form>
@@ -1012,6 +1164,7 @@ export default function CompanyJobPost() {
           </div>
         </div>
       )}
+
     </>
   );
 }

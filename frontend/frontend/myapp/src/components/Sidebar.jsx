@@ -201,7 +201,7 @@ const Sidebar = () => {
         .sidebar-wrapper {
           width: 260px;
           height: 100%;
-          background: rgba(30, 20, 50, 0.92) !important;
+          background: #011627 !important;
           box-shadow: 0 10px 32px rgba(0,0,0,0.4);
           backdrop-filter: blur(24px) saturate(160%);
           -webkit-backdrop-filter: blur(24px) saturate(160%);

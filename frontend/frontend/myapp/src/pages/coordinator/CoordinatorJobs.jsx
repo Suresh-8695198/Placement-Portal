@@ -181,318 +181,529 @@ export default function CoordinatorJobs() {
 
   return (
     <>
+      <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
       <style>{`
-        :root {
-          --primary: #7c3aed;
-          --primary-dark: #6d28d9;
-          --primary-light: #a78bfa;
-          --accent: #c084fc;
-          --glass-bg: rgba(255, 255, 255, 0.975);
-          --shadow-sm: 0 6px 22px rgba(0,0,0,0.1);
-          --shadow-md: 0 14px 40px rgba(124,58,237,0.32);
-        }
-
-        body {
-          background: linear-gradient(135deg, #4c1d95, #6d28d9, #8b5cf6);
+        .coordinator-page {
+          background-color: #fcfdfe;
           min-height: 100vh;
-          font-family: 'Segoe UI', system-ui, sans-serif;
-          margin: 0;
-          color: #1f2937;
+          padding: 2rem;
+          font-family: 'Inter', sans-serif;
+          color: #1e293b;
         }
 
-        .page-wrapper {
-          padding: 2.5rem 1.5rem;
-          max-width: 1400px;
+        .registry-container {
+          max-width: 1200px;
           margin: 0 auto;
         }
 
-        .header {
-          text-align: center;
-          margin-bottom: 3.2rem;
+        /* Advanced Hub Header (Image-like Card Design) */
+        .dashboard-banner {
+          background: #9d174d; /* Muted Deep Ruby Pink - Less Eye Strain */
+          padding: 2rem 3.5rem;
+          border-radius: 20px;
+          margin-bottom: 2.5rem;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          position: relative;
+          overflow: hidden;
+          border: none;
         }
 
-        .welcome-title {
-          font-size: 2.8rem;
-          font-weight: 800;
-          color: #7f40ed;
-          text-shadow: 0 4px 14px rgba(109,40,217,0.5);
-          margin-bottom: 0.6rem;
-          letter-spacing: -0.4px;
+        /* Abstract Sharp Decorations */
+        .banner-shape-1 {
+          position: absolute;
+          top: -20px;
+          right: -20px;
+          width: 300px;
+          height: 300px;
+          background: rgba(255, 255, 255, 0.05);
+          border-radius: 40px;
+          transform: rotate(15deg);
         }
 
-        .dept-badge {
-          background: linear-gradient(135deg, var(--primary), var(--accent));
-          color: white;
-          padding: 0.7rem 1.8rem;
+        .banner-shape-2 {
+          position: absolute;
+          bottom: -50px;
+          left: 10%;
+          width: 200px;
+          height: 200px;
+          background: rgba(0, 0, 0, 0.1);
           border-radius: 999px;
-          font-weight: 600;
-          font-size: 1.1rem;
-          display: inline-block;
-          box-shadow: 0 4px 12px rgba(124,58,237,0.3);
         }
 
-        .glass-card {
-          background: var(--glass-bg);
-          border-radius: 1.6rem;
-          padding: 2.8rem;
-          box-shadow: 0 22px 70px rgba(109,40,217,0.25);
+        .banner-content {
+          position: relative;
+          z-index: 2;
+          max-width: 60%;
         }
 
-        h2.section-title {
-          color: var(--primary-dark);
-          font-size: 2.2rem;
+        .banner-content h1 {
+          font-family: 'Outfit', sans-serif;
+          font-size: 1.5rem;
+          font-weight: 800;
+          color: #ffffff;
+          margin: 0;
+          letter-spacing: -0.03em;
+          text-transform: uppercase;
+        }
+
+        .banner-content p {
+          margin: 0.5rem 0 1.5rem 0;
+          color: rgba(255, 255, 255, 0.9);
+          font-size: 0.85rem;
+          font-weight: 500;
+          line-height: 1.5;
+        }
+
+        .banner-stats {
+          display: flex;
+          gap: 2rem;
+          margin-top: 1rem;
+        }
+
+        .stat-badge {
+          background: rgba(255, 255, 255, 0.15);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          color: #ffffff;
+          padding: 0.6rem 1.25rem;
+          border-radius: 10px;
+          font-size: 0.7rem;
           font-weight: 700;
-          margin: 2rem 0 1.8rem;
+          display: flex;
+          align-items: center;
+          gap: 0.6rem;
         }
 
-        .grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-          gap: 1.8rem;
-        }
-
-        .card {
-          background: white;
-          border-radius: 1.3rem;
-          padding: 2.4rem 1.6rem;
-          cursor: pointer;
-          text-align: center;
-          box-shadow: var(--shadow-sm);
-          transition: all 0.32s ease;
-          border-left: 6px solid var(--primary-light);
-        }
-
-        .card:hover {
-          transform: translateY(-10px);
-          box-shadow: var(--shadow-md);
-        }
-
-        table {
-          width: 100%;
-          border-collapse: separate;
-          border-spacing: 0;
+        .banner-illustration {
+          position: relative;
+          z-index: 2;
+          width: 100px;
+          height: 100px;
+          background: #ffffff;
+          border-radius: 20px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 2.5rem;
+          color: #9d174d;
+          flex-shrink: 0;
           margin-top: 1.5rem;
         }
 
-        th {
-          background: linear-gradient(135deg, var(--primary), var(--accent));
-          color: white;
-          padding: 1.3rem 1.6rem;
+        .banner-illustration i {
+          transform: rotate(-10deg);
         }
 
-        td {
-          padding: 1.25rem 1.6rem;
-          background: white;
-          border-bottom: 1px solid #f3e8ff;
-        }
-
-        .back-btn {
-          margin: 1rem 0 2.2rem;
-          padding: 0.85rem 2.2rem;
-          background: linear-gradient(135deg, var(--primary), var(--primary-light));
-          border: none;
+        .dept-indicator-small {
+          background: rgba(255, 255, 255, 1);
+          color: #9d174d;
+          padding: 0.5rem 1.4rem;
           border-radius: 999px;
-          color: white;
-          font-weight: 600;
-          font-size: 1.1rem;
-          cursor: pointer;
-          transition: all 0.3s;
-          box-shadow: 0 4px 14px rgba(124,58,237,0.3);
+          font-size: 0.65rem;
+          font-weight: 800;
+          position: absolute;
+          top: 1.5rem;
+          right: 3rem;
+          text-transform: uppercase;
+          letter-spacing: 1px;
+          border: 1.5px solid #9d174d;
+          z-index: 5;
         }
 
-        .back-btn:hover {
-          transform: translateY(-4px);
-          box-shadow: 0 12px 32px rgba(124,58,237,0.45);
-        }
-
-        .toggle-container {
+        /* Registry Sections */
+        .section-header {
           display: flex;
+          align-items: center;
           gap: 1rem;
-          margin: 1.5rem 0;
+          margin-bottom: 2rem;
+          border-bottom: 2px solid #e2e8f0;
+          padding-bottom: 1rem;
+        }
+
+        .section-header h2 {
+          font-family: 'Outfit', sans-serif;
+          font-size: 1.5rem;
+          font-weight: 700;
+          color: #0f172a;
+          margin: 0;
+        }
+
+        .nav-breadcrumb {
+          display: flex;
+          gap: 0.75rem;
+          align-items: center;
+          margin-bottom: 1.5rem;
+          font-size: 0.9rem;
+          color: #64748b;
+        }
+
+        .breadcrumb-item {
+          cursor: pointer;
+          font-weight: 600;
+          transition: color 0.2s;
+        }
+        .breadcrumb-item:hover { color: #9d174d; }
+        .breadcrumb-active { color: #0f172a; font-weight: 700; }
+
+        /* Modern Programme Badges */
+        .programme-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+          gap: 1.5rem;
+        }
+
+        .programme-card {
+          background: #ffffff;
+          border: 1.5px solid #e2e8f0;
+          border-radius: 12px;
+          padding: 2rem 1.5rem;
+          text-align: center;
+          cursor: pointer;
+          transition: all 0.2s ease-in-out;
+          position: relative;
+          overflow: hidden;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          min-height: 160px;
+        }
+
+        .programme-card:hover {
+          border-color: #9d174d;
+          background: #fff1f2;
+          transform: translateY(-2px);
+        }
+
+        .programme-card h3 {
+          font-family: 'Outfit', sans-serif;
+          font-size: 1.25rem;
+          font-weight: 800;
+          color: #1e293b;
+          margin: 0.75rem 0 0 0;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+
+        .programme-card::after {
+          content: 'VIEW BATCHES';
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          background: #9d174d;
+          color: white;
+          font-size: 0.75rem;
+          font-weight: 900;
+          padding: 0.6rem;
+          transform: translateY(100%);
+          transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+          letter-spacing: 1px;
+        }
+
+        .programme-card:hover::after {
+          transform: translateY(0);
+        }
+
+        /* Action Controls */
+        .registry-controls {
+          background: #ffffff;
+          border: 1.5px solid #e2e8f0;
+          border-radius: 12px;
+          padding: 1.5rem;
+          margin-bottom: 2rem;
+          display: flex;
+          gap: 1.5rem;
+          align-items: center;
           flex-wrap: wrap;
         }
 
-        .toggle-btn {
-          padding: 0.8rem 1.8rem;
-          border-radius: 999px;
-          font-weight: 600;
+        .control-group {
+          display: flex;
+          gap: 0.5rem;
+          background: #f8fafc;
+          padding: 0.4rem;
+          border-radius: 8px;
+          border: 1.5px solid #e2e8f0;
+        }
+
+        .tab-btn {
+          padding: 0.6rem 1.5rem;
+          border-radius: 6px;
+          border: none;
+          background: transparent;
+          color: #64748b;
+          font-weight: 700;
+          font-size: 0.85rem;
           cursor: pointer;
-          transition: all 0.25s;
-          border: 2px solid var(--primary);
-          background: white;
-          color: var(--primary-dark);
-          font-size: 1rem;
-        }
-
-        .toggle-btn.active {
-          background: var(--primary);
-          color: white;
-          border-color: var(--primary);
-          box-shadow: 0 4px 14px rgba(124,58,237,0.3);
-        }
-
-        .toggle-btn:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 6px 18px rgba(124,58,237,0.25);
-        }
-
-        .search-input {
-          width: 100%;
-          max-width: 400px;
-          padding: 0.9rem 1.3rem;
-          margin: 1.5rem 0;
-          border: 2px solid #e5e7eb;
-          border-radius: 999px;
-          font-size: 1rem;
-          outline: none;
           transition: all 0.2s;
         }
 
-        .search-input:focus {
-          border-color: var(--primary);
-          box-shadow: 0 0 0 3px rgba(124,58,237,0.15);
+        .tab-btn.active {
+          background: #ffffff;
+          color: #9d174d;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
 
-        .empty-message {
-          text-align: center;
-          padding: 4rem 1rem;
-          color: #6b7280;
-          font-size: 1.35rem;
+        .registry-search {
+          flex-grow: 1;
+          background: #f8fafc;
+          border: 1.5px solid #e2e8f0;
+          padding: 0.75rem 1.25rem;
+          border-radius: 8px;
+          outline: none;
+          font-family: 'Inter', sans-serif;
           font-weight: 500;
+          transition: all 0.2s;
+        }
+        .registry-search:focus { border-color: #9d174d; background: #ffffff; }
+
+        /* Institutional Table */
+        .registry-table-wrap {
+          background: #ffffff;
+          border: 1.5px solid #e2e8f0;
+          border-radius: 12px;
+          overflow: hidden;
+        }
+
+        .registry-table { width: 100%; border-collapse: collapse; }
+        .registry-table th {
+          background: #9d174d;
+          color: white;
+          padding: 1.25rem;
+          font-family: 'Inter', sans-serif;
+          font-weight: 800;
+          font-size: 0.75rem;
+          text-transform: uppercase;
+          letter-spacing: 1px;
+          text-align: left;
+          border-bottom: 3px solid #831843;
+        }
+
+        .registry-table td {
+          padding: 1.25rem;
+          border-bottom: 1.5px solid #f1f5f9;
+          font-size: 0.95rem;
+          font-weight: 500;
+          color: #334155;
+        }
+
+        .registry-table tr:hover td {
+          background: #f8fafc;
+        }
+
+        .btn-action {
+          background: #f1f5f9;
+          border: 1.5px solid #cbd5e1;
+          color: #0f172a;
+          padding: 0.6rem 1.2rem;
+          border-radius: 6px;
+          font-weight: 700;
+          font-size: 0.85rem;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+        .btn-action:hover {
+          background: #e11d48;
+          border-color: #e11d48;
+          color: white;
+        }
+
+        .back-nav {
+          background: #0f172a;
+          color: white;
+          border: none;
+          padding: 0.6rem 1.2rem;
+          border-radius: 6px;
+          font-weight: 700;
+          font-size: 0.85rem;
+          cursor: pointer;
+          margin-bottom: 1.5rem;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+        }
+
+        .empty-state {
+          padding: 5rem 2rem;
+          text-align: center;
+          color: #64748b;
+          font-weight: 500;
+          font-size: 1.1rem;
         }
       `}</style>
 
-      <div className="page-wrapper">
-        <div className="header">
-          <h1 className="welcome-title">Welcome, {coordinatorName}</h1>
-          <div className="dept-badge">{department} Department</div>
-        </div>
+      <div className="coordinator-page">
+        <div className="registry-container">
+          <header className="dashboard-banner">
+            <div className="banner-shape-1"></div>
+            <div className="banner-shape-2"></div>
+            
+            <div className="dept-indicator-small">
+              <i className="fas fa-university me-1"></i> {department}
+            </div>
 
-        <div className="glass-card">
+            <div className="banner-content">
+              <h1>Opportunities Hub</h1>
+              <p>Discover and manage active career pathways, job records, and applicant synchronization for your department's registry.</p>
+              
+              <div className="banner-stats">
+                <div className="stat-badge">
+                  <i className="fas fa-layer-group"></i> {programmes.length} Programmes Registered
+                </div>
+                <div className="stat-badge">
+                  <i className="fas fa-briefcase"></i> {coordinatorName.split(' ')[0]} Active Management
+                </div>
+              </div>
+            </div>
 
-          {!selectedProgramme && !loading && (
-            <>
-              <h2 className="section-title">Select Programme</h2>
-              <div className="grid">
+            <div className="banner-illustration">
+              <i className="fas fa-briefcase"></i>
+            </div>
+          </header>
+
+          <nav className="nav-breadcrumb">
+            <span
+              className={`breadcrumb-item ${!selectedProgramme ? "breadcrumb-active" : ""}`}
+              onClick={() => { setSelectedProgramme(null); setSelectedYear(null); }}
+            >
+              All Programmes
+            </span>
+            {selectedProgramme && (
+              <>
+                <i className="fas fa-chevron-right mx-1 small"></i>
+                <span
+                  className={`breadcrumb-item ${!selectedYear ? "breadcrumb-active" : ""}`}
+                  onClick={() => setSelectedYear(null)}
+                >
+                  {selectedProgramme.replace(/_/g, " ")}
+                </span>
+              </>
+            )}
+            {selectedYear && (
+              <>
+                <i className="fas fa-chevron-right mx-1 small"></i>
+                <span className="breadcrumb-active">Batch {selectedYear}</span>
+              </>
+            )}
+          </nav>
+
+          {!selectedProgramme && (
+            <section>
+              <div className="section-header">
+                <h2>Select Programme Registry</h2>
+              </div>
+              <div className="programme-grid">
                 {programmes.map((prog) => (
-                  <div
-                    key={prog}
-                    className="card"
-                    onClick={() => setSelectedProgramme(prog)}
-                  >
+                  <div key={prog} className="programme-card" onClick={() => setSelectedProgramme(prog)}>
+                    <i className="fas fa-folder-open mb-3 fa-2x" style={{ color: '#9d174d' }}></i>
                     <h3>{prog.replace(/_/g, " ")}</h3>
                   </div>
                 ))}
               </div>
-            </>
+            </section>
           )}
 
           {selectedProgramme && !selectedYear && (
-            <>
-              <button className="back-btn" onClick={() => setSelectedProgramme(null)}>
-                ← Back to Programmes
+            <section>
+              <button className="back-nav" onClick={() => setSelectedProgramme(null)}>
+                <i className="fas fa-arrow-left"></i> Return to Programmes
               </button>
-
-              <h2 className="section-title">Select Graduation Year</h2>
-
+              <div className="section-header">
+                <h2>Select Batch Year</h2>
+              </div>
               {yearsLoading ? (
-                <div>Checking available batches...</div>
+                <div className="empty-state">Synchronizing registry batches...</div>
               ) : (
-                <div className="grid">
+                <div className="programme-grid">
                   {availableYears.map((year) => (
-                    <div
-                      key={year}
-                      className="card"
-                      onClick={() => setSelectedYear(year)}
-                    >
-                      <h3>{year}</h3>
+                    <div key={year} className="programme-card" onClick={() => setSelectedYear(year)}>
+                      <i className="fas fa-calendar-alt mb-3 fa-2x" style={{ color: '#9d174d' }}></i>
+                      <h3>Batch {year}</h3>
                     </div>
                   ))}
                 </div>
               )}
-            </>
+            </section>
           )}
 
           {selectedProgramme && selectedYear && (
-            <>
-              <button className="back-btn" onClick={() => setSelectedYear(null)}>
-                ← Back to Years
+            <section>
+              <button className="back-nav" onClick={() => setSelectedYear(null)}>
+                <i className="fas fa-arrow-left"></i> Back to Batches
               </button>
 
-              <h2 className="section-title">
-                {jobType === "active" ? "Active " : ""}Jobs for{" "}
-                {selectedProgramme.replace(/_/g, " ")} — {selectedYear}
-              </h2>
-
-              <div className="toggle-container">
-                <button 
-                  className={`toggle-btn ${jobType === "active" ? "active" : ""}`}
-                  onClick={() => setJobType("active")}
-                >
-                  Active Jobs
-                </button>
-                <button 
-                  className={`toggle-btn ${jobType === "all" ? "active" : ""}`}
-                  onClick={() => setJobType("all")}
-                >
-                  All Jobs
-                </button>
+              <div className="section-header">
+                <h2>Job Registry: {selectedProgramme.replace(/_/g, " ")} — {selectedYear}</h2>
               </div>
 
-              <input
-                className="search-input"
-                type="text"
-                placeholder="Search jobs..."
-                value={searchJob}
-                onChange={(e) => setSearchJob(e.target.value)}
-              />
+              <div className="registry-controls">
+                <div className="control-group">
+                  <button
+                    className={`tab-btn ${jobType === "active" ? "active" : ""}`}
+                    onClick={() => setJobType("active")}
+                  >
+                    Active Listings
+                  </button>
+                  <button
+                    className={`tab-btn ${jobType === "all" ? "active" : ""}`}
+                    onClick={() => setJobType("all")}
+                  >
+                    Complete Archive
+                  </button>
+                </div>
+
+                <input
+                  className="registry-search"
+                  type="text"
+                  placeholder="Filter by company, role or location..."
+                  value={searchJob}
+                  onChange={(e) => setSearchJob(e.target.value)}
+                />
+              </div>
 
               {filteredJobs.length === 0 ? (
-                <div className="empty-message">
-                  {jobType === "active" 
-                    ? "No active jobs found for this batch." 
-                    : "No jobs found for this batch."}
-                </div>
+                <div className="empty-state">No matching records found in the registry for this criteria.</div>
               ) : (
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Title</th>
-                      <th>Company</th>
-                      <th>Location</th>
-                      <th>Salary</th>
-                      <th>Last Date</th>
-                      <th>Applicants</th>
-                    </tr>
-                  </thead>
-
-                  <tbody>
-                    {filteredJobs.map((job) => (
-                      <tr key={job.id}>
-                        <td>{job.title}</td>
-                        <td>{job.company}</td>
-                        <td>{job.job_location}</td>
-                        <td>{job.salary_range}</td>
-                        <td>{job.last_date_to_apply}</td>
-                        <td>
-                          <button
-                            className="btn btn-primary"
-                            onClick={() => handleViewApplicants(job)}
-                          >
-                            View Applicants
-                          </button>
-                        </td>
+                <div className="registry-table-wrap">
+                  <table className="registry-table">
+                    <thead>
+                      <tr>
+                        <th>Job Title</th>
+                        <th>Company Name</th>
+                        <th>Work Location</th>
+                        <th>Remuneration</th>
+                        <th>Deadline</th>
+                        <th>Applicants</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {filteredJobs.map((job) => (
+                        <tr key={job.id}>
+                          <td style={{ fontWeight: '700', color: '#0f172a' }}>{job.title}</td>
+                          <td>{job.company}</td>
+                          <td>{job.job_location}</td>
+                          <td>{job.salary_range}</td>
+                          <td>{job.last_date_to_apply}</td>
+                          <td>
+                            <button className="btn-action" onClick={() => handleViewApplicants(job)}>
+                              <i className="fas fa-users"></i> View Applicants
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               )}
-
-            </>
+            </section>
           )}
         </div>
       </div>
     </>
   );
 }
-

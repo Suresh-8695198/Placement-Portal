@@ -18,12 +18,7 @@ export default function CoordinatorDashboard() {
     approvedJobs: 0,
     pendingJobs: 0
   });
-  const [recentStudents, setRecentStudents] = useState([
-    { name: "Bessie Cooper", batch: "2021-25", dept: "CSE", status: "Placed", price: "$5447.00" },
-    { name: "Courtney Henry", batch: "2022-26", dept: "IT", status: "Pending", price: "$7445.00" },
-    { name: "Esther Howard", batch: "2021-25", dept: "ECE", status: "Placed", price: "$7451.00" },
-    { name: "Eleanor Pena", batch: "2023-27", dept: "MECH", status: "Pending", price: "$5430.00" },
-  ]);
+  const [recentStudents, setRecentStudents] = useState([]);
   const [yearData, setYearData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState(null);
@@ -53,10 +48,11 @@ export default function CoordinatorDashboard() {
 
       const dept = localStorage.getItem("coordinatorDepartment") || "MA_Tamil";
 
-      const [statsRes, pieRes, yearRes] = await Promise.all([
+      const [statsRes, pieRes, yearRes, activityRes] = await Promise.all([
         axios.get(`${API_BASE}/dashboard-stats/`, { params: { department: dept }, withCredentials: true }),
         axios.get(`${API_BASE}/department-placement-stats/`, { params: { department: dept }, withCredentials: true }),
         axios.get(`${API_BASE}/year-wise-placement-trend/`, { params: { department: dept }, withCredentials: true }),
+        axios.get(`${API_BASE}/recent-activity/`, { params: { department: dept }, withCredentials: true }),
       ]);
 
       const statsData = statsRes.data;
@@ -72,6 +68,7 @@ export default function CoordinatorDashboard() {
       });
 
       setYearData(yearRes.data || []);
+      setRecentStudents(activityRes.data.activity || []);
 
     } catch (error) {
       console.error("Dashboard fetch error:", error);
@@ -266,9 +263,10 @@ export default function CoordinatorDashboard() {
         .avatar { width: 44px; height: 44px; border-radius: 12px; object-fit: cover; }
         .user-name { font-weight: 700; color: #1e293b; font-size: 1rem; }
 
-        .status-tag { padding: 0.4rem 1.2rem; border-radius: 2rem; font-size: 0.8rem; font-weight: 700; }
-        .status-placed { background: #dcfce7; color: #15803d; }
-        .status-pending { background: #fff7ed; color: #c2410c; }
+        .status-placed, .status-selected { background: #dcfce7; color: #15803d; }
+        .status-pending, .status-applied { background: #e0f2fe; color: #075985; }
+        .status-shortlisted { background: #fef9c3; color: #854d0e; }
+        .status-rejected { background: #fee2e2; color: #991b1b; }
 
         .region-card { background: white; border-radius: 2.5rem; padding: 2.5rem; display: flex; flex-direction: column; align-items: center; }
         .map-placeholder {
@@ -406,23 +404,34 @@ export default function CoordinatorDashboard() {
                 </tr>
               </thead>
               <tbody>
-                {recentStudents.map((s, i) => (
-                  <tr key={i}>
-                    <td>
-                      <div className="user-cell">
-                        <img className="avatar" src={`https://i.pravatar.cc/150?u=${s.name}`} alt="" />
-                        <span className="user-name">{s.name}</span>
+                {recentStudents.length > 0 ? (
+                  recentStudents.map((s, i) => (
+                    <tr key={i}>
+                      <td>
+                        <div className="user-cell">
+                          <img className="avatar" src={`https://ui-avatars.com/api/?name=${encodeURIComponent(s.name)}&background=random`} alt="" />
+                          <span className="user-name">{s.name}</span>
+                        </div>
+                      </td>
+                      <td><span style={{ fontWeight: 600, color: '#64748b' }}>{s.batch || "N/A"}</span></td>
+                      <td><span style={{ fontWeight: 600, color: '#1e293b' }}>{s.dept || "N/A"}</span></td>
+                      <td>
+                        <span className={`status-tag status-${s.status?.toLowerCase() || 'pending'}`}>
+                          {s.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="4" className="text-center py-5">
+                      <div className="text-muted">
+                        <i className="fas fa-history fa-2x mb-3 opacity-20"></i>
+                        <p className="mb-0">No recent activity recorded for your department.</p>
                       </div>
                     </td>
-                    <td><span style={{ fontWeight: 600, color: '#64748b' }}>{s.batch}</span></td>
-                    <td><span style={{ fontWeight: 600, color: '#1e293b' }}>{s.dept}</span></td>
-                    <td>
-                      <span className={`status-tag ${s.status === 'Placed' ? 'status-placed' : 'status-pending'}`}>
-                        {s.status}
-                      </span>
-                    </td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </table>
           </div>

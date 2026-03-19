@@ -176,14 +176,11 @@ def delete_about(request, student_id):
     return JsonResponse({"message": "About section cleared"})
 
 
-import cloudinary.uploader
 from .models import Student, StudentProfile
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from django.shortcuts import get_object_or_404
-import cloudinary.uploader
-from .models import Student, StudentProfile
 
 
 @csrf_exempt
@@ -199,13 +196,8 @@ def delete_profile_photo(request):
         profile = get_object_or_404(StudentProfile, student=student)
 
         if profile.profile_image:
-            # 1. Delete from Cloudinary
-            public_id = getattr(profile.profile_image, 'public_id', None)
-            if public_id:
-                try:
-                    cloudinary.uploader.destroy(public_id)
-                except Exception as cloud_err:
-                    print(f"Cloudinary delete warning: {cloud_err}")
+            # 1. Delete from local storage
+            profile.profile_image.delete(save=False)
 
             # 2. Clear the field in database
             profile.profile_image = None

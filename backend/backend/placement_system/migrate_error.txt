@@ -1,4 +1,0 @@
-Operations to perform:
-  Apply all migrations: admin, admin_app, auth, companies, contenttypes, coordinator, sessions, students
-Running migrations:
-  Applying admin_app.0002_announcement...

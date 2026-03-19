@@ -15,6 +15,10 @@ export default function StudentsList() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [entriesPerPage, setEntriesPerPage] = useState(10);
+
   const navigate = useNavigate();
   const coordinatorUsername = localStorage.getItem("coordinatorUsername") || "";
   const department = localStorage.getItem("coordinatorDepartment") || "Department";
@@ -24,6 +28,14 @@ export default function StudentsList() {
     s.university_reg_no?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     s.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // Pagination Logic
+  const indexOfLastEntry = currentPage * entriesPerPage;
+  const indexOfFirstEntry = indexOfLastEntry - entriesPerPage;
+  const currentEntries = filteredStudents.slice(indexOfFirstEntry, indexOfLastEntry);
+  const totalPages = Math.ceil(filteredStudents.length / entriesPerPage);
+
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
   const downloadCSV = () => {
     if (students.length === 0) return;
@@ -119,7 +131,7 @@ export default function StudentsList() {
       <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
       <style>{`
         .students-view-wrapper {
-          padding: 2.5rem;
+          padding: 0.5rem 2.5rem 2rem;
           max-width: 1550px;
           margin: 0 auto;
           font-family: 'Plus Jakarta Sans', sans-serif;
@@ -129,7 +141,7 @@ export default function StudentsList() {
           display: flex;
           align-items: center;
           gap: 12px;
-          margin-bottom: 2rem;
+          margin-bottom: 0.5rem;
           font-size: 0.85rem;
           font-weight: 700;
           color: #94a3b8;
@@ -142,11 +154,11 @@ export default function StudentsList() {
         .breadcrumb-item.active { color: #475569; pointer-events: none; }
 
         .page-header {
-          margin-bottom: 2.5rem;
+          margin-bottom: 1rem;
           display: flex;
           justify-content: space-between;
           align-items: center;
-          padding-bottom: 1.5rem;
+          padding-bottom: 0.75rem;
           gap: 2rem;
         }
 
@@ -161,83 +173,152 @@ export default function StudentsList() {
 
         .header-subtitle { color: #64748b; font-size: 0.9rem; margin-top: 4px; display: block; font-weight: 500; }
 
-        /* ─── Global Stats Bar ─── */
+        /* ─── Global Stats Bar (Redesigned) ─── */
         .stats-bar {
           display: grid;
           grid-template-columns: repeat(3, 1fr);
           gap: 1.5rem;
-          margin-bottom: 2.5rem;
+          margin-bottom: 1.5rem;
         }
 
         .stat-card {
-          background: #ffffff;
-          border: 2px solid #94a3b8; /* Highly visible grey border */
-          border-radius: 1.25rem;
-          padding: 1.25rem 1.5rem;
+          position: relative;
+          overflow: hidden;
+          border-radius: 0;           /* Sharp Corners */
+          padding: 1.75rem;
           display: flex;
-          align-items: center;
+          flex-direction: column;
           gap: 1.25rem;
-          transition: all 0.3s;
+          transition: all 0.3s cubic-bezier(0.19, 1, 0.22, 1);
+          color: #ffffff;
+          border-bottom: 5px solid rgba(0,0,0,0.2); /* Solid bottom accent */
+          box-shadow: 4px 4px 0px rgba(0,0,0,0.05);
         }
-        .stat-card:hover { transform: translateY(-2px); border-color: #7c3aed; }
 
-        .stat-icon {
-          width: 48px;
-          height: 48px;
-          background: #f8fafc;
-          border-radius: 12px;
+        .stat-card:hover { 
+          transform: translateY(-4px); 
+          box-shadow: 4px 4px 0px rgba(0,0,0,0.15); /* Hard shadow only */
+        }
+
+        .stat-card.teal { background: #059669; }
+        .stat-card.blue { background: #1e3a8a; }
+        .stat-card.purple { background: #4c1d95; }
+
+        .stat-icon-wrapper {
+          width: 44px;
+          height: 44px;
+          background: rgba(0,0,0,0.1);
+          border-radius: 0; /* Sharp icon box */
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 1.2rem;
-          color: #1e293b;
+          font-size: 1.15rem;
+          z-index: 2;
+          border: 1px solid rgba(255,255,255,0.2);
         }
-        .stat-info { display: flex; flex-direction: column; }
-        .stat-value { font-size: 1.25rem; font-weight: 800; color: #1e293b; line-height: 1.2; }
-        .stat-label { font-size: 0.75rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        .stat-card.teal .stat-icon-wrapper { color: #ffffff; }
+        .stat-card.blue .stat-icon-wrapper { color: #ffffff; }
+        .stat-card.purple .stat-icon-wrapper { color: #ffffff; }
+
+        .stat-info { display: flex; flex-direction: column; z-index: 2; }
+        .stat-value { font-size: 2rem; font-weight: 800; line-height: 1; margin-bottom: 4px; }
+        .stat-label { font-size: 0.9rem; font-weight: 600; opacity: 0.9; }
+
+        .stat-decoration {
+          position: absolute;
+          right: -15px;
+          bottom: -15px;
+          font-size: 6rem;
+          opacity: 0.15;
+          transform: rotate(-15deg);
+          pointer-events: none;
+          z-index: 1;
+        }
 
         .program-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+          grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
           gap: 1.5rem;
         }
 
         .selection-card {
           background: #ffffff;
-          border: 2px solid #94a3b8; /* Highly visible grey border */
-          border-radius: 1.5rem;
-          padding: 2.25rem;
+          border: 2.5px solid #1e293b; /* Strong professional border */
+          border-radius: 0;           /* Sharp institutional corners */
+          padding: 3.5rem 2rem;       /* Larger size */
           cursor: pointer;
-          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
           display: flex;
           flex-direction: column;
           align-items: center;
           text-align: center;
-          gap: 1.25rem;
+          gap: 1.8rem;
+          box-shadow: 8px 8px 0px rgba(30, 41, 59, 0.05); /* Architectural hard shadow */
+          position: relative;
         }
 
         .selection-card:hover {
-          border-color: #7c3aed;
-          transform: translateY(-4px);
-          box-shadow: 0 10px 25px -10px rgba(0,0,0,0.1);
+          background: #f8fafc;
+          border-color: #0f172a;
+          transform: translate(-3px, -3px);
+          box-shadow: 6px 6px 0px #cbd5e1; /* Neutral grey hard shadow */
         }
 
         .card-icon {
-          width: 52px;
-          height: 52px;
-          background: #f1f5f9;
-          border-radius: 14px;
+          width: 60px;
+          height: 60px;
+          background: #f8fafc;
+          border: 2px solid #e2e8f0;
           display: flex;
           align-items: center;
           justify-content: center;
-          color: #7c3aed;
-          font-size: 1.35rem;
+          color: #1e293b;
+          font-size: 1.5rem;
+          transition: all 0.2s;
         }
 
-        .selection-card:hover .card-icon { background: #7c3aed; color: #ffffff; }
+        .selection-card:hover .card-icon { 
+          background: #0f172a; 
+          color: #ffffff; 
+          border-color: #0f172a;
+        }
 
-        .card-name { font-family: 'Outfit', sans-serif; font-size: 1.15rem; font-weight: 700; color: #1e293b; margin: 0; }
-        .card-meta { font-size: 0.75rem; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+        .card-info-wrap {
+          display: flex;
+          flex-direction: column;
+          gap: 0.8rem;
+          width: 100%;
+        }
+
+        .card-name { 
+          font-family: 'Outfit', sans-serif; 
+          font-size: 1.4rem; 
+          font-weight: 800; 
+          color: #0f172a; 
+          margin: 0; 
+          text-transform: uppercase;
+          letter-spacing: 1px;
+        }
+
+        .card-meta { 
+          font-size: 0.8rem; 
+          color: #64748b; 
+          font-weight: 800; 
+          text-transform: uppercase; 
+          letter-spacing: 2px;
+          border: 1.5px solid #e2e8f0;
+          padding: 0.6rem 1.2rem;
+          display: inline-block;
+          margin: 0 auto;
+          transition: all 0.2s;
+        }
+
+        .selection-card:hover .card-meta {
+          color: #0f172a;
+          border-color: #0f172a;
+          background: #f1f5f9;
+        }
 
         /* ─── Advanced Controls Header ─── */
         .controls-header {
@@ -280,15 +361,6 @@ export default function StudentsList() {
         .action-btn:hover { border-color: #7c3aed; color: #7c3aed; background: #f8fafc; }
 
         /* ─── Table UI ─── */
-        .table-container {
-          background: white;
-          border-radius: 1.5rem;
-          padding: 1.25rem;
-          border: 2px solid #94a3b8; /* Highly visible grey border */
-          box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);
-          overflow: hidden;
-        }
-        .modern-table { width: 100%; border-collapse: separate; border-spacing: 0; }
         .modern-table th { 
           padding: 1.25rem 1rem; 
           font-size: 0.75rem; 
@@ -296,18 +368,7 @@ export default function StudentsList() {
           color: #64748b; 
           text-transform: uppercase; 
           letter-spacing: 1px;
-          border-bottom: 2px solid #cbd5e1; /* Slightly lighter inner border */
-        }
-
-        .modern-table { width: 100%; border-collapse: separate; border-spacing: 0; }
-        .modern-table th { 
-          padding: 1.25rem 1rem; 
-          font-size: 0.75rem; 
-          font-weight: 800; 
-          color: #64748b; 
-          text-transform: uppercase; 
-          letter-spacing: 1px;
-          border-bottom: 2px solid #f1f5f9;
+          border-bottom: 1px solid #f1f5f9;
         }
         .modern-table td { padding: 1.25rem 1rem; vertical-align: middle; border-bottom: 1px solid #f1f5f9; }
         
@@ -364,6 +425,99 @@ export default function StudentsList() {
           background: #7c3aed; color: white; border: none; padding: 0.75rem 2rem; 
           border-radius: 12px; font-weight: 700; margin-top: 1.5rem; 
         }
+
+        /* ─── Pagination & Entries ─── */
+        .entries-select {
+          background: #ffffff;
+          border: 1.5px solid #e2e8f0;
+          border-radius: 8px;
+          padding: 0.5rem 2.5rem 0.5rem 1rem;
+          font-size: 0.85rem;
+          font-weight: 600;
+          color: #475569;
+          cursor: pointer;
+          outline: none;
+          appearance: none;
+          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+          background-repeat: no-repeat;
+          background-position: right 0.75rem center;
+          background-size: 1rem;
+        }
+
+        .pagination-wrap {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-top: 1.5rem;
+          padding: 1rem 0;
+          border-top: 1px solid #f1f5f9;
+        }
+
+        .page-info { font-size: 0.85rem; color: #64748b; font-weight: 600; }
+
+        .page-buttons { display: flex; gap: 6px; }
+        .page-btn {
+          width: 36px;
+          height: 36px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 8px;
+          border: 1.5px solid #e2e8f0;
+          background: white;
+          font-size: 0.85rem;
+          font-weight: 700;
+          color: #64748b;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+
+        .page-btn:hover { border-color: #7c3aed; color: #7c3aed; background: #f8fafc; }
+        .page-btn.active { background: #7c3aed; color: white; border-color: #7c3aed; }
+        .page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* ─── Table Redesign ─── */
+        .table-container {
+          background: white;
+          padding: 0;
+          border: none; /* Removed heavy border as requested */
+          box-shadow: none;
+          overflow: visible;
+        }
+
+        .modern-table { width: 100%; border-collapse: collapse; }
+        .modern-table thead th {
+          background: #5b21b6; /* Vibrant Rich Violet */
+          padding: 1.25rem;
+          font-size: 0.75rem;
+          font-weight: 800;
+          color: #ffffff;
+          text-transform: uppercase;
+          letter-spacing: 1.25px;
+          text-align: left;
+          border-bottom: 3px solid #4c1d95;
+          position: sticky;
+          top: 0;
+          z-index: 10;
+        }
+
+        .modern-table tbody tr {
+          transition: background 0.2s;
+          border-bottom: 1px solid #f1f5f9;
+        }
+
+        .modern-table tbody tr:nth-child(even) {
+          background: #fcfdfe; /* Subtle zebra striping */
+        }
+
+        .modern-table tbody tr:hover {
+          background: #f1f5f9;
+        }
+
+        .modern-table td {
+          padding: 1.25rem;
+          vertical-align: middle;
+        }
       `}</style>
 
       <div className="students-view-wrapper">
@@ -413,32 +567,37 @@ export default function StudentsList() {
 
         {/* Global Stats */}
         <div className="stats-bar">
-          <div className="stat-card">
-            <div className="stat-icon" style={{ color: '#7c3aed', background: '#f5f0ff' }}>
+          <div className="stat-card teal">
+            <div className="stat-icon-wrapper">
               <i className="fas fa-layer-group"></i>
             </div>
             <div className="stat-info">
               <span className="stat-value">{programmes.length}</span>
               <span className="stat-label">Programmes</span>
             </div>
+            <i className="fas fa-layer-group stat-decoration"></i>
           </div>
-          <div className="stat-card">
-            <div className="stat-icon" style={{ color: '#0ea5e9', background: '#f0f9ff' }}>
+          
+          <div className="stat-card blue">
+            <div className="stat-icon-wrapper">
               <i className="fas fa-archive"></i>
             </div>
             <div className="stat-info">
               <span className="stat-value">{batches.length || '-'}</span>
               <span className="stat-label">Active Batches</span>
             </div>
+            <i className="fas fa-archive stat-decoration"></i>
           </div>
-          <div className="stat-card">
-            <div className="stat-icon" style={{ color: '#10b981', background: '#f0fdf4' }}>
+
+          <div className="stat-card purple">
+            <div className="stat-icon-wrapper">
               <i className="fas fa-user-graduate"></i>
             </div>
             <div className="stat-info">
               <span className="stat-value">{selectedBatch ? filteredStudents.length : '-'}</span>
               <span className="stat-label">Total Records</span>
             </div>
+            <i className="fas fa-user-graduate stat-decoration"></i>
           </div>
         </div>
 
@@ -455,8 +614,10 @@ export default function StudentsList() {
                 {programmes.map((prog) => (
                   <div key={prog} className="selection-card" onClick={() => handleProgrammeClick(prog)}>
                     <div className="card-icon"><i className="fas fa-graduation-cap"></i></div>
-                    <h3 className="card-name">{prog.replace(/_/g, " ").toUpperCase()}</h3>
-                    <span className="card-meta">View Batches</span>
+                    <div className="card-info-wrap">
+                      <h3 className="card-name">{prog.replace(/_/g, " ")}</h3>
+                      <span className="card-meta">View Batches</span>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -468,8 +629,10 @@ export default function StudentsList() {
                 {batches.map((year) => (
                   <div key={year} className="selection-card" onClick={() => handleBatchClick(year)}>
                     <div className="card-icon"><i className="fas fa-calendar-alt"></i></div>
-                    <h3 className="card-name">Batch {year}</h3>
-                    <span className="card-meta">View Students</span>
+                    <div className="card-info-wrap">
+                      <h3 className="card-name">Batch {year}</h3>
+                      <span className="card-meta">Open Directory</span>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -479,13 +642,35 @@ export default function StudentsList() {
             {selectedProgramme && selectedBatch && (
               <>
                 <div className="controls-header">
-                  <span style={{ fontSize: '0.9rem', fontWeight: 700, color: '#1e293b' }}>
-                    Showing {filteredStudents.length} Students
-                  </span>
-                  <button className="action-btn" onClick={downloadCSV}>
-                    <i className="fas fa-file-export"></i>
-                    Export CSV
-                  </button>
+                  <div className="d-flex align-items-center gap-3">
+                    <div className="d-flex align-items-center gap-2">
+                      <span className="page-info">Show</span>
+                      <select 
+                        className="entries-select" 
+                        value={entriesPerPage}
+                        onChange={(e) => {
+                          setEntriesPerPage(Number(e.target.value));
+                          setCurrentPage(1);
+                        }}
+                      >
+                        <option value={10}>10</option>
+                        <option value={25}>25</option>
+                        <option value={50}>50</option>
+                        <option value={100}>100</option>
+                      </select>
+                      <span className="page-info">Entries</span>
+                    </div>
+                  </div>
+
+                  <div className="d-flex align-items-center gap-3">
+                    <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#64748b' }}>
+                      Showing <strong>{indexOfFirstEntry + 1}</strong> to <strong>{Math.min(indexOfLastEntry, filteredStudents.length)}</strong> of <strong>{filteredStudents.length}</strong>
+                    </span>
+                    <button className="action-btn" onClick={downloadCSV}>
+                      <i className="fas fa-file-export"></i>
+                      Export CSV
+                    </button>
+                  </div>
                 </div>
 
                 <div className="table-container">
@@ -495,42 +680,97 @@ export default function StudentsList() {
                       <p className="text-muted fw-bold">No students match your search.</p>
                     </div>
                   ) : (
-                    <table className="modern-table">
-                      <thead>
-                        <tr>
-                          <th>Registration No</th>
-                          <th>Student Details</th>
-                          <th>Degree Type</th>
-                          <th>Batch Year</th>
-                          <th>Contact</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {filteredStudents.map((s) => (
-                          <tr key={s.id || s.university_reg_no}>
-                            <td><span className="user-id">{s.university_reg_no}</span></td>
-                            <td>
-                              <div className="d-flex flex-column">
-                                <span className="user-name">{s.name}</span>
-                                <span className="user-email">{s.email}</span>
-                              </div>
-                            </td>
-                            <td><span className="tag">{s.ug_pg}</span></td>
-                            <td><span className="tag" style={{ background: '#7c3aed', color: 'white' }}>{s.passed_out_year}</span></td>
-                            <td>
-                              <div style={{ display: 'flex', gap: '8px' }}>
-                                <button className="btn btn-sm btn-light border" title="Email Student">
-                                  <i className="far fa-envelope text-primary"></i>
-                                </button>
-                                <button className="btn btn-sm btn-light border" title="Call Student">
-                                  <i className="fas fa-phone-alt text-success"></i>
-                                </button>
-                              </div>
-                            </td>
+                    <>
+                      <table className="modern-table">
+                        <thead>
+                          <tr>
+                            <th>Registration No</th>
+                            <th>Student Details</th>
+                            <th>Degree</th>
+                            <th>Batch</th>
+                            <th>Actions</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                        </thead>
+                        <tbody>
+                          {currentEntries.map((s) => (
+                            <tr key={s.id || s.university_reg_no}>
+                              <td><span className="user-id">{s.university_reg_no}</span></td>
+                              <td>
+                                <div className="d-flex flex-column">
+                                  <span className="user-name">{s.name}</span>
+                                  <span className="user-email">{s.email}</span>
+                                </div>
+                              </td>
+                              <td><span className="tag">{s.ug_pg}</span></td>
+                              <td><span className="tag" style={{ background: '#7c3aed', color: 'white' }}>{s.passed_out_year}</span></td>
+                              <td>
+                                <div style={{ display: 'flex', gap: '8px' }}>
+                                  <button className="btn btn-sm btn-light border" title="Email Student">
+                                    <i className="far fa-envelope text-primary"></i>
+                                  </button>
+                                  <button className="btn btn-sm btn-light border" title="Call Student">
+                                    <i className="fas fa-phone-alt text-success"></i>
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+
+                      {/* Pagination Controls */}
+                      <div className="pagination-wrap">
+                        <span className="page-info">
+                          Page {currentPage} of {totalPages || 1}
+                        </span>
+                        <div className="page-buttons">
+                          <button 
+                            className="page-btn" 
+                            disabled={currentPage === 1}
+                            onClick={() => paginate(currentPage - 1)}
+                          >
+                            <i className="fas fa-chevron-left"></i>
+                          </button>
+                          
+                          {[...Array(totalPages)].map((_, i) => {
+                            // Show max 5 page buttons
+                            if (totalPages > 5) {
+                              if (i + 1 === 1 || i + 1 === totalPages || (i + 1 >= currentPage - 1 && i + 1 <= currentPage + 1)) {
+                                return (
+                                  <button 
+                                    key={i} 
+                                    className={`page-btn ${currentPage === i + 1 ? 'active' : ''}`}
+                                    onClick={() => paginate(i + 1)}
+                                  >
+                                    {i + 1}
+                                  </button>
+                                );
+                              } else if (i + 1 === currentPage - 2 || i + 1 === currentPage + 2) {
+                                return <span key={i} style={{ padding: '0 4px', color: '#cbd5e1' }}>...</span>;
+                              }
+                              return null;
+                            }
+                            return (
+                              <button 
+                                key={i} 
+                                className={`page-btn ${currentPage === i + 1 ? 'active' : ''}`}
+                                onClick={() => paginate(i + 1)}
+                              >
+                                {i + 1}
+                              </button>
+                            );
+                          })}
+
+                          <button 
+                            className="page-btn" 
+                            disabled={currentPage === totalPages || totalPages === 0}
+                            onClick={() => paginate(currentPage + 1)}
+                          >
+                            <i className="fas fa-chevron-right"></i>
+                          </button>
+                        </div>
+                      </div>
+                    </>
                   )}
                 </div>
               </>

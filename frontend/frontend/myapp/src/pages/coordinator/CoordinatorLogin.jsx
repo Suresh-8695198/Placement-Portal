@@ -172,10 +172,10 @@ export default function CoordinatorLogin() {
         .btn-login { 
           width:100%; padding:0.9rem; font-size:1.05rem; font-weight:600; color:white; 
           background:linear-gradient(135deg, #7c3aed, #c084fc); border:none; border-radius:1.2rem; 
-          transition:all 0.4s ease; box-shadow:0 6px 20px rgba(124,58,237,0.38); 
+          transition:all 0.4s ease; box-shadow:none;
         }
         .btn-login:hover:not(:disabled) { 
-          transform:translateY(-4px); box-shadow:0 14px 35px rgba(124,58,237,0.52); 
+          transform:translateY(-4px); box-shadow:none;
         }
         .btn-login:disabled { opacity:0.7; cursor:not-allowed; }
 
@@ -224,9 +224,13 @@ export default function CoordinatorLogin() {
 
         <div className="login-wrapper">
           <div className="logo-section">
-            <div className="logo-icon">
-              <i className="fas fa-user-shield"></i>
-            </div>
+            <img 
+              src="/Logo.png" 
+              alt="University Logo" 
+              className="university-logo" 
+              style={{ height: "100px", marginBottom: "1.5rem" }} 
+              onError={(e) => { e.target.onerror = null; e.target.src="/logo.png"; }}
+            />
             <h1 className="login-title">Coordinator Login</h1>
             <p className="login-subtitle">Access your department dashboard</p>
           </div>

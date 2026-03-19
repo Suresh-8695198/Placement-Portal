@@ -274,12 +274,12 @@ const Login = () => {
           transition: all 0.35s ease;
           position: relative;
           overflow: hidden;
-          box-shadow: 0 5px 15px rgba(75,0,130,0.35);
+          box-shadow: none;
         }
 
         .btn-login:hover:not(:disabled) {
           transform: translateY(-3px);
-          box-shadow: 0 12px 30px rgba(75,0,130,0.5);
+          box-shadow: none;
         }
 
         .btn-login::before {
