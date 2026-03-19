@@ -7,8 +7,9 @@ export default function AdminPageLayout({ title, icon, children }) {
       <style>{`
         .admin-page-container {
           min-height: calc(100vh - 80px);
-          padding: 0.75rem 2rem 4rem;
+          padding: 0.75rem 1rem 4rem; /* More compact padding to save space */
           background: #f8fafc;
+          width: 100%;
         }
 
         .admin-page-title {
@@ -121,10 +122,10 @@ export default function AdminPageLayout({ title, icon, children }) {
 
         @media (max-width: 576px) {
           .admin-page-container {
-            padding: 1.8rem 1rem;
+            padding: 1.5rem 0.75rem;
           }
           .admin-page-title {
-            font-size: 1.9rem;
+            font-size: 1.7rem;
           }
         }
       `}</style>

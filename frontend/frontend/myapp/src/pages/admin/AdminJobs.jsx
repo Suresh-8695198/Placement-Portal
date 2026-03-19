@@ -33,6 +33,8 @@ export default function AdminJobs() {
   const [selectedProgrammes, setSelectedProgrammes] = useState([]);
   const [selectedYears, setSelectedYears] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [selectedJobDetails, setSelectedJobDetails] = useState(null);
 
   // Advanced Filters
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
@@ -211,6 +213,11 @@ export default function AdminJobs() {
     }
   };
 
+  const handleShowDetails = (job) => {
+    setSelectedJobDetails(job);
+    setShowDetailsModal(true);
+  };
+
   // Always show department, programme, and graduation year columns for all tabs
   const showColumns = true;
 
@@ -243,6 +250,8 @@ export default function AdminJobs() {
           justify-content: space-between;
           align-items: center;
           margin-bottom: 2rem;
+          flex-wrap: wrap;
+          gap: 1rem;
         }
 
         .page-title {
@@ -290,14 +299,16 @@ export default function AdminJobs() {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          gap: 2rem;
+          gap: 1.5rem;
           margin-bottom: 1.5rem;
           box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+          flex-wrap: wrap;
         }
 
         .search-container {
           position: relative;
           flex: 1;
+          min-width: 280px;
           max-width: 450px;
         }
 
@@ -517,35 +528,40 @@ export default function AdminJobs() {
           background: #ffffff;
           border-radius: 1rem;
           border: 1px solid #e2e8f0;
-          overflow: hidden;
+          overflow-x: auto;
           box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+          width: 100%;
+          max-width: 100%;
         }
 
         .table {
           width: 100%;
+          min-width: 1200px; /* Ensure all columns are visible with scroll if needed */
           border-collapse: collapse;
+          border-spacing: 0;
           margin: 0;
         }
 
         .table th {
           background: #f8fafc;
-          color: #000000;
-          font-weight: 600;
-          text-transform: uppercase;
-          font-size: 0.7rem;
-          letter-spacing: 0.08em;
-          padding: 1rem 1.25rem;
-          border-bottom: 1px solid #e2e8f0;
           text-align: left;
+          padding: 1rem 0.75rem; /* More compact padding */
+          font-weight: 700;
+          color: #64748b;
+          font-size: 0.75rem;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          border-bottom: 2px solid #e2e8f0;
         }
 
         .table td {
-          padding: 1.1rem 1.25rem;
+          padding: 1rem 0.75rem; /* More compact padding */
           border-bottom: 1px solid #f1f5f9;
           color: #000000;
           font-size: 0.875rem;
           vertical-align: middle;
           font-weight: 400;
+          white-space: nowrap; /* Prevent contents from wrapping awkwardly */
         }
 
         .table tr:last-child td { border-bottom: none; }
@@ -574,6 +590,7 @@ export default function AdminJobs() {
           display: flex;
           gap: 0.5rem;
           justify-content: flex-end;
+          min-width: 320px; /* Ensure enough space for 3 buttons */
         }
 
         .btn-action {
@@ -613,6 +630,121 @@ export default function AdminJobs() {
           color: #ffffff;
           border-color: #ef4444;
           transform: translateY(-1px);
+        }
+
+        .btn-details {
+          background: #f8fafc;
+          color: #6366f1;
+          border-color: #e2e8f0;
+        }
+
+        .btn-details:hover {
+          background: #6366f1;
+          color: #ffffff;
+          border-color: #6366f1;
+          transform: translateY(-1px);
+        }
+
+        /* ─── Detail Modal Styling ───────────────────────────────── */
+        .detail-card {
+          border: 1px solid #f1f5f9;
+          border-radius: 1rem;
+          padding: 1.25rem;
+          background: #ffffff;
+          margin-bottom: 0;
+          transition: all 0.25s;
+        }
+
+        .detail-card:hover {
+          border-color: #6366f1;
+          background: #fcfcff;
+        }
+
+        .detail-label {
+          font-size: 0.72rem;
+          font-weight: 800;
+          color: #64748b;
+          text-transform: uppercase;
+          letter-spacing: 0.08em;
+          margin-bottom: 0.6rem;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+        }
+
+        .detail-value {
+          font-size: 1rem;
+          color: #0f172a;
+          font-weight: 700;
+        }
+
+        .detail-badge {
+          display: inline-flex;
+          align-items: center;
+          padding: 0.45rem 0.9rem;
+          background: #f1f5f9;
+          color: #475569;
+          border-radius: 2rem;
+          font-size: 0.8rem;
+          font-weight: 600;
+          margin-right: 0.6rem;
+          margin-bottom: 0.6rem;
+          border: 1px solid #e2e8f0;
+          transition: all 0.2s;
+        }
+
+        .detail-badge:hover {
+          background: #e2e8f0;
+          transform: translateY(-1px);
+        }
+
+        .job-desc-box {
+          background: #f8fafc;
+          border-radius: 1rem;
+          padding: 1.5rem;
+          border: 1px solid #e2e8f0;
+          border-left: 5px solid #6366f1;
+          font-size: 1rem;
+          line-height: 1.7;
+          color: #334155;
+          max-height: 350px;
+          overflow-y: auto;
+          white-space: pre-line;
+          box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+        }
+
+        .modal-details-grid {
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 1.5rem;
+        }
+
+        .section-divider {
+          height: 1px;
+          background: #e2e8f0;
+          margin: 2.5rem 0;
+          position: relative;
+        }
+
+        .section-divider::after {
+          content: attr(data-label);
+          position: absolute;
+          left: 50%;
+          top: 50%;
+          transform: translate(-50%, -50%);
+          background: #ffffff;
+          padding: 0 1rem;
+          font-size: 0.7rem;
+          font-weight: 800;
+          color: #94a3b8;
+          text-transform: uppercase;
+          letter-spacing: 0.15em;
+        }
+
+        @media (max-width: 768px) {
+          .modal-details-grid {
+            grid-template-columns: 1fr;
+          }
         }
 
         /* ─── Empty State ────────────────────────────────────────── */
@@ -769,7 +901,29 @@ export default function AdminJobs() {
           display: flex;
           align-items: center;
           justify-content: center;
-          z-index: 1000;
+          z-index: 2000;
+        }
+        
+        @media (max-width: 768px) {
+          .control-bar {
+            flex-direction: column;
+            align-items: stretch;
+          }
+          .search-container {
+            max-width: 100%;
+          }
+          .filter-group {
+            flex-direction: column;
+            align-items: flex-start;
+          }
+          .header-actions {
+            flex-direction: column;
+            align-items: flex-start;
+          }
+          .back-btn {
+            width: 100%;
+            justify-content: center;
+          }
         }
       `}</style>
 
@@ -1043,6 +1197,13 @@ export default function AdminJobs() {
                       </td>
                       <td data-label="Actions">
                         <div className="action-cell">
+                          <button
+                            className="btn-action btn-details"
+                            onClick={() => handleShowDetails(job)}
+                          >
+                            <i className="fas fa-info-circle"></i>
+                            Full Details
+                          </button>
                           {activeTab !== "approved" && (
                             <button
                               className="btn-action btn-approve"
@@ -1190,6 +1351,158 @@ export default function AdminJobs() {
                     Confirm & Approve
                   </button>
                 </div>
+            </div>
+          </div>
+        )}
+
+        {/* Full Application Details Modal */}
+        {showDetailsModal && selectedJobDetails && (
+          <div className="modal-overlay" onClick={() => setShowDetailsModal(false)}>
+            <div className="modal-content" style={{maxWidth: '850px', width: '95%', padding: '0'}} onClick={e => e.stopPropagation()}>
+              
+              {/* Decorative Header */}
+              <div className="p-4 border-bottom bg-light d-flex justify-content-between align-items-center" style={{borderTopLeftRadius: '1.25rem', borderTopRightRadius: '1.25rem'}}>
+                <div className="d-flex align-items-center gap-4">
+                  <div className="bg-white shadow-sm p-3 rounded-4 d-flex align-items-center justify-content-center" style={{width: '64px', height: '64px'}}>
+                    <i className="fas fa-building fa-2x text-primary opacity-50"></i>
+                  </div>
+                  <div>
+                    <h4 className="fw-800 mb-1" style={{fontFamily: 'Outfit', letterSpacing: '-0.02em'}}>
+                      {selectedJobDetails.title}
+                    </h4>
+                    <div className="d-flex align-items-center gap-2">
+                      <span className="badge bg-primary bg-opacity-10 text-primary fw-700 px-2">Job Opening</span>
+                      <span className="text-secondary small fw-500">• Posted by <strong>{selectedJobDetails.company}</strong></span>
+                    </div>
+                  </div>
+                </div>
+                <button 
+                  type="button" 
+                  className="btn-close shadow-none" 
+                  onClick={() => setShowDetailsModal(false)}
+                ></button>
+              </div>
+
+              <div className="modal-body p-4" style={{maxHeight: '75vh', overflowY: 'auto'}}>
+                
+                {/* Status Alert if not approved */}
+                {activeTab === 'pending' && (
+                  <div className="alert alert-warning border-0 d-flex align-items-center gap-3 mb-4 rounded-4 shadow-sm">
+                    <i className="fas fa-shield-alt fa-lg"></i>
+                    <div>
+                      <h6 className="mb-0 fw-700">Verification Required</h6>
+                      <p className="mb-0 small opacity-75">Please review the details thoroughly before granting access to students.</p>
+                    </div>
+                  </div>
+                )}
+
+                <div className="modal-details-grid">
+                  <div className="detail-card">
+                    <div className="detail-label">
+                      <i className="fas fa-map-marker-alt"></i> Location
+                    </div>
+                    <div className="detail-value">{selectedJobDetails.location || "On-site / Remote not specified"}</div>
+                  </div>
+                  
+                  <div className="detail-card">
+                    <div className="detail-label">
+                      <i className="fas fa-money-bill-wave"></i> Package / Salary
+                    </div>
+                    <div className="detail-value text-success">
+                      {selectedJobDetails.salary_range || "Competitive / Not Disclosed"}
+                    </div>
+                  </div>
+
+                  <div className="detail-card">
+                    <div className="detail-label">
+                      <i className="fas fa-briefcase"></i> Employment Type
+                    </div>
+                    <div className="detail-value">{selectedJobDetails.job_type}</div>
+                  </div>
+
+                  <div className="detail-card">
+                    <div className="detail-label">
+                      <i className="fas fa-hourglass-end"></i> Application Deadline
+                    </div>
+                    <div className="detail-value text-danger">
+                      {selectedJobDetails.application_deadline 
+                        ? new Date(selectedJobDetails.application_deadline).toLocaleDateString('en-GB', {day: 'numeric', month: 'long', year: 'numeric'}) 
+                        : "Ongoing Enrollment"}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="section-divider" data-label="Job Scope"></div>
+
+                <div className="mb-5">
+                  <div className="detail-label mb-3">
+                    <i className="fas fa-file-alt"></i> Detailed Description & Candidate Requirements
+                  </div>
+                  <div className="job-desc-box">
+                    {selectedJobDetails.description || "The company has not provided a text-based description for this role."}
+                  </div>
+                </div>
+
+                <div className="section-divider" data-label="Student Eligibility"></div>
+
+                <div className="row g-4">
+                  <div className="col-md-6">
+                    <div className="detail-label mb-3">
+                      <i className="fas fa-university"></i> Eligible Departments
+                    </div>
+                    <div className="d-flex flex-wrap">
+                      {selectedJobDetails.show_to_all_departments ? (
+                        <span className="detail-badge bg-primary text-white border-0">All Departments</span>
+                      ) : selectedJobDetails.departments && selectedJobDetails.departments.length > 0 ? (
+                        selectedJobDetails.departments.map(dept => (
+                          <span key={dept} className="detail-badge">{dept}</span>
+                        ))
+                      ) : (
+                        <span className="text-muted small">No specific departments set.</span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="col-md-6">
+                    <div className="detail-label mb-3">
+                      <i className="fas fa-calendar-check"></i> Target Graduating Batches
+                    </div>
+                    <div className="d-flex flex-wrap">
+                      {selectedJobDetails.graduation_years && selectedJobDetails.graduation_years.length > 0 ? (
+                        selectedJobDetails.graduation_years.map(year => (
+                          <span key={year} className="detail-badge" style={{background: '#f0fdf4', color: '#16a34a', borderColor: '#dcfce7'}}>Class of {year}</span>
+                        ))
+                      ) : (
+                        <span className="text-muted small">No batch restrictions.</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="modal-footer p-4 border-top bg-light" style={{borderBottomLeftRadius: '1.25rem', borderBottomRightRadius: '1.25rem'}}>
+                <button 
+                  type="button" 
+                  className="btn btn-light fw-700 px-4 py-2 border rounded-3"
+                  onClick={() => setShowDetailsModal(false)}
+                >
+                  Close View
+                </button>
+                
+                {activeTab === "pending" && (
+                  <button 
+                    type="button" 
+                    className="btn btn-success fw-700 px-4 py-2 rounded-3 shadow-sm ms-2"
+                    style={{backgroundColor: '#10b981'}}
+                    onClick={() => {
+                      setShowDetailsModal(false);
+                      handleApproveClick(selectedJobDetails.id);
+                    }}
+                  >
+                    Confirm & Approve Job
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         )}
