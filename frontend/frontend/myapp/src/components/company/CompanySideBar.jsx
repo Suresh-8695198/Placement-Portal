@@ -10,12 +10,12 @@ export default function CompanySideBar() {
       <style>{`
         :root {
           --sidebar-bg: #0f172a;
-          --sidebar-text: #94a3b8;
-          --sidebar-active-bg: #3b82f6;
+          --sidebar-text: #64748b;
+          --sidebar-active-bg: #4f46e5;
           --sidebar-active-text: #ffffff;
-          --sidebar-hover-bg: rgba(255, 255, 255, 0.05);
+          --sidebar-hover-bg: #1e293b;
           --sidebar-border: #1e293b;
-          --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+          --font-family: 'Inter', -apple-system, system-ui, sans-serif;
         }
 
         .sidebar-wrapper {
@@ -25,73 +25,52 @@ export default function CompanySideBar() {
           border-right: 1px solid var(--sidebar-border);
           display: flex;
           flex-direction: column;
-          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
           z-index: 1000;
-        }
-
-        @media (max-width: 992px) {
-          .sidebar-wrapper {
-            width: 85px;
-          }
-          .sidebar-brand .brand-name,
-          .menu-label,
-          .nav-label,
-          .upgrade-card {
-            display: none;
-          }
-          .nav-link {
-            justify-content: center;
-            padding: 1rem !important;
-            margin: 0.5rem !important;
-          }
-          .nav-icon {
-            margin: 0 !important;
-          }
         }
 
         .sidebar-inner {
           height: 100%;
           display: flex;
           flex-direction: column;
-          padding: 1.5rem 1rem;
+          padding: 2rem 1.25rem;
         }
 
         .sidebar-brand {
           display: flex;
           align-items: center;
-          gap: 12px;
-          padding: 0.5rem 0.75rem;
-          margin-bottom: 2.5rem;
+          gap: 14px;
+          padding: 0 0.75rem;
+          margin-bottom: 3.5rem;
         }
 
-        .brand-logo {
-          width: 40px;
-          height: 40px;
-          background: #4f46e5;
+        .brand-logo-sq {
+          width: 42px;
+          height: 42px;
+          background: var(--sidebar-active-bg);
           border-radius: 12px;
           display: flex;
           align-items: center;
           justify-content: center;
           color: white;
-          font-size: 1.2rem;
-          box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.1), 0 2px 4px -1px rgba(79, 70, 229, 0.06);
+          font-size: 1.25rem;
+          box-shadow: 0 8px 16px -4px rgba(79, 70, 229, 0.4);
         }
 
-        .brand-name {
-          font-size: 1.5rem;
-          font-weight: 700;
+        .brand-name-text {
+          font-size: 1.35rem;
+          font-weight: 850;
           color: #ffffff;
-          letter-spacing: -0.025em;
+          letter-spacing: -0.03em;
         }
 
-        .menu-label {
-          font-size: 0.75rem;
-          font-weight: 600;
-          color: #94a3b8;
+        .nav-section-label {
+          font-size: 0.7rem;
+          font-weight: 800;
+          color: #475569;
           text-transform: uppercase;
-          letter-spacing: 0.05em;
-          margin-bottom: 1rem;
-          padding-left: 1rem;
+          letter-spacing: 0.1em;
+          margin-bottom: 1.25rem;
+          padding-left: 0.75rem;
         }
 
         .nav-list {
@@ -102,36 +81,36 @@ export default function CompanySideBar() {
         }
 
         .nav-item {
-          margin-bottom: 0.4rem;
+          margin-bottom: 0.5rem;
         }
 
         .nav-link {
           display: flex;
           align-items: center;
-          padding: 0.75rem 1rem;
+          padding: 0.85rem 1rem;
           color: var(--sidebar-text);
-          text-decoration: none;
-          font-size: 0.95rem;
-          font-weight: 500;
+          text-decoration: none !important;
+          font-size: 0.925rem;
+          font-weight: 600;
           border-radius: 12px;
-          transition: all 0.2s ease;
-          gap: 12px;
+          transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+          gap: 14px;
         }
 
         .nav-link:hover {
           background: var(--sidebar-hover-bg);
-          color: #0f172a;
+          color: #ffffff;
         }
 
         .nav-link.active {
           background: var(--sidebar-active-bg);
           color: var(--sidebar-active-text);
-          box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.2);
+          box-shadow: 0 4px 12px -2px rgba(79, 70, 229, 0.3);
         }
 
         .nav-icon {
-          font-size: 1.25rem;
-          width: 24px;
+          font-size: 1.1rem;
+          width: 20px;
           display: flex;
           justify-content: center;
           transition: transform 0.2s ease;
@@ -141,25 +120,82 @@ export default function CompanySideBar() {
           color: white;
         }
 
-        .sidebar-wrapper {
-          scrollbar-width: none;
-          -ms-overflow-style: none;
+        .sidebar-footer {
+          margin-top: auto;
+          padding-top: 2rem;
+          border-top: 1px solid var(--sidebar-border);
         }
-        .sidebar-wrapper::-webkit-scrollbar {
-          display: none;
+
+        .user-mini-profile {
+           display: flex;
+           align-items: center;
+           gap: 12px;
+           padding: 0.75rem;
+           border-radius: 14px;
+           cursor: pointer;
+           transition: background 0.2s;
+        }
+
+        .user-mini-profile:hover {
+           background: var(--sidebar-hover-bg);
+        }
+
+        .user-avatar-sm {
+           width: 36px;
+           height: 36px;
+           background: #1e293b;
+           border-radius: 10px;
+           color: #94a3b8;
+           display: flex;
+           align-items: center;
+           justify-content: center;
+           font-weight: 700;
+           font-size: 0.85rem;
+           border: 1px solid #334155;
+        }
+
+        .user-info-sm {
+           display: flex;
+           flex-direction: column;
+           overflow: hidden;
+        }
+
+        .user-name-sm {
+           color: #ffffff;
+           font-size: 0.85rem;
+           font-weight: 700;
+           white-space: nowrap;
+           overflow: hidden;
+           text-overflow: ellipsis;
+        }
+
+        .user-role-sm {
+           color: #475569;
+           font-size: 0.75rem;
+           font-weight: 600;
+        }
+
+        @media (max-width: 992px) {
+          .sidebar-wrapper { width: 88px; }
+          .brand-name-text, .nav-section-label, .nav-label, .user-info-sm { display: none; }
+          .sidebar-brand { justify-content: center; padding: 0; }
+          .nav-link { justify-content: center; padding: 1rem; }
+          .nav-icon { margin: 0; font-size: 1.3rem; }
+          .sidebar-inner { align-items: center; }
+          .user-mini-profile { justify-content: center; }
         }
       `}</style>
 
       <div className="sidebar-wrapper">
         <div className="sidebar-inner">
           <div className="sidebar-brand">
-            <div className="brand-logo">
-              <i className="fas fa-rocket"></i>
+            <div className="brand-logo-sq">
+              <i className="fas fa-layer-group"></i>
             </div>
-            <span className="brand-name">Portal</span>
+            <span className="brand-name-text">NexusHQ</span>
           </div>
 
-          <p className="menu-label">Main Menu</p>
+          <p className="nav-section-label">Organization</p>
 
           <ul className="nav-list">
             <li className="nav-item">
@@ -167,8 +203,8 @@ export default function CompanySideBar() {
                 to="profile"
                 className={({ isActive }) => (isActive ? "nav-link active" : "nav-link")}
               >
-                <i className="fas fa-th-large nav-icon"></i>
-                <span className="nav-label">Overview</span>
+                <i className="fas fa-columns nav-icon"></i>
+                <span className="nav-label">Direct Dashboard</span>
               </NavLink>
             </li>
 
@@ -177,8 +213,8 @@ export default function CompanySideBar() {
                 to="post-job"
                 className={({ isActive }) => (isActive ? "nav-link active" : "nav-link")}
               >
-                <i className="fas fa-plus-circle nav-icon"></i>
-                <span className="nav-label">Post Job</span>
+                <i className="fas fa-plus-square nav-icon"></i>
+                <span className="nav-label">New Opportunity</span>
               </NavLink>
             </li>
 
@@ -187,8 +223,8 @@ export default function CompanySideBar() {
                 to="applicants"
                 className={({ isActive }) => (isActive ? "nav-link active" : "nav-link")}
               >
-                <i className="fas fa-user-friends nav-icon"></i>
-                <span className="nav-label">Applicants</span>
+                <i className="fas fa-users-viewfinder nav-icon"></i>
+                <span className="nav-label">Talent Pool</span>
               </NavLink>
             </li>
 
@@ -197,13 +233,21 @@ export default function CompanySideBar() {
                 to="report"
                 className={({ isActive }) => (isActive ? "nav-link active" : "nav-link")}
               >
-                <i className="fas fa-chart-line nav-icon"></i>
-                <span className="nav-label">Reports</span>
+                <i className="fas fa-chart-pie nav-icon"></i>
+                <span className="nav-label">Analytics</span>
               </NavLink>
             </li>
           </ul>
 
-
+          <div className="sidebar-footer">
+             <div className="user-mini-profile">
+                <div className="user-avatar-sm">HQ</div>
+                <div className="user-info-sm">
+                   <span className="user-name-sm">Organization Settings</span>
+                   <span className="user-role-sm">Enterprise Account</span>
+                </div>
+             </div>
+          </div>
         </div>
       </div>
     </>
