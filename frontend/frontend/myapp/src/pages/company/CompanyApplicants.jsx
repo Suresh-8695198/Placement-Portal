@@ -835,8 +835,6 @@ export default function CompanyApplicants() {
           )}
         </div>
       </div>
-        </div>
-      </div>
     </>
   );
 }
