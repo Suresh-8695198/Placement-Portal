@@ -226,7 +226,7 @@ export default function AdminJobs() {
   // ────────────────────────────────────────────────
 
   return (
-    <AdminPageLayout title="Job Postings Approval" icon="fas fa-briefcase">
+    <AdminPageLayout title="Manage Job Approvals" icon="fas fa-briefcase">
       <link
         href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
         rel="stylesheet"
@@ -805,17 +805,17 @@ export default function AdminJobs() {
           border-radius: 1.25rem;
           border: none;
           box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+          overflow: hidden;
         }
 
         .modal-header {
           padding: 1.5rem;
           background: #f8fafc;
-          border-top-left-radius: 1.25rem;
-          border-top-right-radius: 1.25rem;
+          border-bottom: 1px solid #e2e8f0;
         }
 
         .modal-title {
-          font-family: 'Manrope', sans-serif;
+          font-family: 'Outfit', sans-serif;
           font-weight: 800;
           color: #0f172a;
           letter-spacing: -0.01em;
@@ -828,34 +828,106 @@ export default function AdminJobs() {
         .modal-footer {
           padding: 1.25rem 1.5rem;
           background: #f8fafc;
-          border-bottom-left-radius: 1.25rem;
-          border-bottom-right-radius: 1.25rem;
-        }
-
-        .form-check-label {
-          color: #1e293b;
-          font-weight: 500;
-        }
-
-        .section-header {
-          font-size: 0.75rem;
-          font-weight: 600;
-          color: #10b981;
-          text-transform: uppercase;
-          letter-spacing: 0.1em;
-          margin: 2rem 0 1rem;
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
+          border-top: 1px solid #e2e8f0;
         }
 
         .scroll-area {
-          max-height: 220px;
+          max-height: 280px;
           overflow-y: auto;
-          background: #f8fafc;
-          padding: 1rem;
+          background: #ffffff;
           border-radius: 0.75rem;
+          padding: 1.25rem;
+          margin-bottom: 2rem;
+          border: 1px solid #e2e8f0;
+          box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+        }
+
+        .checkbox-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+          gap: 1rem;
+        }
+
+        .form-check-card {
+          padding: 0.75rem 1rem;
           border: 1px solid #f1f5f9;
+          border-radius: 0.75rem;
+          background: #f8fafc;
+          transition: all 0.2s;
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          cursor: pointer;
+        }
+
+        .form-check-card:hover {
+          border-color: #10b981;
+          background: #ffffff;
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        .form-check-card .form-check-input {
+          margin-top: 0;
+          width: 1.1rem;
+          height: 1.1rem;
+          cursor: pointer;
+        }
+        
+        .form-check-card label {
+           cursor: pointer;
+           font-size: 0.9rem;
+           font-weight: 600;
+           color: #334155;
+           flex: 1;
+           margin: 0;
+        }
+
+        .section-header {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          font-size: 0.8rem;
+          font-weight: 800;
+          color: #10b981;
+          margin: 1.5rem 0 1rem;
+          text-transform: uppercase;
+          letter-spacing: 0.1em;
+        }
+
+        .modal-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(15, 23, 42, 0.5); /* Sophisticated Slate tint */
+          backdrop-filter: blur(8px) saturate(150%);
+          -webkit-backdrop-filter: blur(8px) saturate(150%);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 9999;
+          padding: 1rem;
+          animation: modalFadeIn 0.3s ease-out;
+        }
+
+        @keyframes modalFadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+
+        .modal-content {
+          background: #ffffff;
+          border-radius: 1.25rem;
+          border: 1px solid rgba(255, 255, 255, 0.3);
+          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.3);
+          overflow: hidden;
+          animation: modalSlideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes modalSlideUp {
+          from { transform: translateY(20px) scale(0.98); opacity: 0; }
+          to { transform: translateY(0) scale(1); opacity: 1; }
         }
 
         .action-btn {
@@ -928,17 +1000,7 @@ export default function AdminJobs() {
       `}</style>
 
       <div className="jobs-wrapper">
-        <div className="header-actions">
-          <h1 className="page-title">
-            <i className="fas fa-briefcase"></i>
-            Manage Job Approvals
-          </h1>
-          <button className="back-btn" onClick={() => navigate("/admin/dashboard")}>
-            <i className="fas fa-arrow-left"></i>
-            Back to Dashboard
-          </button>
-        </div>
-
+        {/* Messages */}
         {message && (
           <div className={`message ${messageType}`}>
             <i className={`fas fa-${messageType === 'success' ? 'check-circle' : 'exclamation-circle'}`}></i>
@@ -947,6 +1009,11 @@ export default function AdminJobs() {
         )}
 
         <div className="control-bar">
+          <button className="back-btn me-2" onClick={() => navigate("/admin/dashboard")}>
+            <i className="fas fa-arrow-left"></i>
+            Back
+          </button>
+
           <div className="search-container">
             <i className="fas fa-search search-icon"></i>
             <input
@@ -1233,31 +1300,31 @@ export default function AdminJobs() {
 
         {/* Job Visibility Modal */}
         {showModal && (
-          <div
-            className="modal-overlay"
-            onClick={() => setShowModal(false)}
-          >
-            <div className="modal-content" onClick={e => e.stopPropagation()}>
-                <div className="modal-header">
-                  <h5 className="modal-title">
-                    <i className="fas fa-eye me-2" style={{color: '#10b981'}}></i>
-                    Visibility Settings
-                  </h5>
-                  <button
-                    type="button"
-                    className="btn-close"
-                    onClick={() => setShowModal(false)}
-                  ></button>
+          <div className="modal-overlay" onClick={() => setShowModal(false)}>
+            <div className="modal-content" style={{maxWidth: '750px', width: '95%', padding: '0'}} onClick={e => e.stopPropagation()}>
+                
+                <div className="p-4 border-bottom bg-light d-flex justify-content-between align-items-center" style={{borderTopLeftRadius: '1.25rem', borderTopRightRadius: '1.25rem'}}>
+                  <div className="d-flex align-items-center gap-3">
+                    <div className="p-3 rounded-circle bg-success bg-opacity-10 text-success">
+                      <i className="fas fa-eye fa-lg"></i>
+                    </div>
+                    <div>
+                      <h5 className="modal-title mb-0 fw-800">Visibility Settings</h5>
+                      <p className="text-secondary mb-0 small fw-500">Configure who can see and apply for this job</p>
+                    </div>
+                  </div>
+                  <button type="button" className="btn-close shadow-none" onClick={() => setShowModal(false)}></button>
                 </div>
 
-                <div className="modal-body">
-                  <p className="mb-4 text-black opacity-70">
-                    Define the target audience for this job posting.
-                  </p>
+                <div className="modal-body p-4" style={{maxHeight: '70vh', overflowY: 'auto'}}>
+                  <div className="alert alert-info border-0 d-flex align-items-center gap-3 mb-4 rounded-4 shadow-sm bg-primary bg-opacity-10 text-primary">
+                    <i className="fas fa-info-circle fa-lg"></i>
+                    <p className="mb-0 small fw-500">Targeting the right audience ensures higher quality applications and relevant placements.</p>
+                  </div>
 
-                  <div className="form-check mb-4">
+                  <div className="form-check-card mb-4 border-primary border-opacity-25 bg-white py-3">
                     <input
-                      className="form-check-input"
+                      className="form-check-input ms-0 me-2"
                       type="checkbox"
                       id="selectAll"
                       checked={selectAll}
@@ -1269,86 +1336,89 @@ export default function AdminJobs() {
                         }
                       }}
                     />
-                    <label className="form-check-label fw-bold" htmlFor="selectAll">
-                      Show to All Departments & Programmes
+                    <label className="form-check-label fw-800 text-primary" htmlFor="selectAll">
+                      Global Visibility (Show to All Departments & Programmes)
                     </label>
                   </div>
 
                   {!selectAll && (
                     <>
                       <div className="section-header">
-                        <i className="fas fa-graduation-cap"></i>
-                        Programmes
+                        <i className="fas fa-graduation-cap"></i> Programmes
                       </div>
-                      <div className="scroll-area">
-                        {programmes.map((p) => (
-                          <div key={p.name} className="form-check mb-2">
-                            <input
-                              className="form-check-input"
-                              type="checkbox"
-                              id={`prog-${p.name}`}
-                              checked={selectedProgrammes.includes(p.name)}
-                              onChange={() => {
-                                setSelectedProgrammes((prev) =>
-                                  prev.includes(p.name)
-                                    ? prev.filter((x) => x !== p.name)
-                                    : [...prev, p.name]
-                                );
-                                if (!selectedDepartments.includes(p.department)) {
-                                  setSelectedDepartments((prev) => [...prev, p.department]);
-                                }
-                              }}
-                            />
-                            <label className="form-check-label" htmlFor={`prog-${p.name}`}>
-                              {p.name} <small className="text-black opacity-50 ms-1">({p.department})</small>
-                            </label>
-                          </div>
-                        ))}
+                      <div className="scroll-area mb-4">
+                        <div className="checkbox-grid">
+                          {programmes.map((p) => (
+                            <div key={p.name} className="form-check-card">
+                              <input
+                                className="form-check-input"
+                                type="checkbox"
+                                id={`prog-${p.name}`}
+                                checked={selectedProgrammes.includes(p.name)}
+                                onChange={() => {
+                                  setSelectedProgrammes((prev) =>
+                                    prev.includes(p.name)
+                                      ? prev.filter((x) => x !== p.name)
+                                      : [...prev, p.name]
+                                  );
+                                  if (!selectedDepartments.includes(p.department)) {
+                                    setSelectedDepartments((prev) => [...prev, p.department]);
+                                  }
+                                }}
+                              />
+                              <label className="form-check-label" htmlFor={`prog-${p.name}`}>
+                                {p.name} <br/>
+                                <small className="text-secondary fw-400">{p.department}</small>
+                              </label>
+                            </div>
+                          ))}
+                        </div>
                       </div>
 
                       <div className="section-header">
-                        <i className="fas fa-calendar-check"></i>
-                        Graduation Years
+                        <i className="fas fa-calendar-check"></i> Graduation Years
                       </div>
                       <div className="scroll-area">
-                        {graduationYears.map((y) => (
-                          <div key={y} className="form-check mb-2">
-                            <input
-                              className="form-check-input"
-                              type="checkbox"
-                              id={`year-${y}`}
-                              checked={selectedYears.includes(y)}
-                              onChange={() =>
-                                setSelectedYears((prev) =>
-                                  prev.includes(y) ? prev.filter((x) => x !== y) : [...prev, y]
-                                )
-                              }
-                            />
-                            <label className="form-check-label" htmlFor={`year-${y}`}>
-                              {y}
-                            </label>
-                          </div>
-                        ))}
+                        <div className="checkbox-grid">
+                          {graduationYears.map((y) => (
+                            <div key={y} className="form-check-card">
+                              <input
+                                className="form-check-input"
+                                type="checkbox"
+                                id={`year-${y}`}
+                                checked={selectedYears.includes(y)}
+                                onChange={() =>
+                                  setSelectedYears((prev) =>
+                                    prev.includes(y) ? prev.filter((x) => x !== y) : [...prev, y]
+                                  )
+                                }
+                              />
+                              <label className="form-check-label" htmlFor={`year-${y}`}>
+                                Class of {y}
+                              </label>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     </>
                   )}
                 </div>
 
-                <div className="modal-footer">
+                <div className="modal-footer p-4 border-top bg-light" style={{borderBottomLeftRadius: '1.25rem', borderBottomRightRadius: '1.25rem'}}>
                   <button
                     type="button"
-                    className="action-btn action-btn-outline"
+                    className="btn btn-light fw-700 px-4 py-2 border rounded-3"
                     onClick={() => setShowModal(false)}
                   >
                     Cancel
                   </button>
                   <button
                     type="button"
-                    className="action-btn action-btn-primary"
+                    className="btn btn-success fw-700 px-4 py-2 rounded-3 shadow-sm ms-2"
                     style={{backgroundColor: '#10b981'}}
                     onClick={() => handleAction("approve", selectedJobId)}
                   >
-                    Confirm & Approve
+                    Confirm & Approve Job
                   </button>
                 </div>
             </div>
@@ -1453,10 +1523,12 @@ export default function AdminJobs() {
                     <div className="d-flex flex-wrap">
                       {selectedJobDetails.show_to_all_departments ? (
                         <span className="detail-badge bg-primary text-white border-0">All Departments</span>
-                      ) : selectedJobDetails.departments && selectedJobDetails.departments.length > 0 ? (
+                      ) : Array.isArray(selectedJobDetails.departments) && selectedJobDetails.departments.length > 0 ? (
                         selectedJobDetails.departments.map(dept => (
                           <span key={dept} className="detail-badge">{dept}</span>
                         ))
+                      ) : selectedJobDetails.departments ? (
+                        <span className="detail-badge">{selectedJobDetails.departments}</span>
                       ) : (
                         <span className="text-muted small">No specific departments set.</span>
                       )}
@@ -1468,10 +1540,12 @@ export default function AdminJobs() {
                       <i className="fas fa-calendar-check"></i> Target Graduating Batches
                     </div>
                     <div className="d-flex flex-wrap">
-                      {selectedJobDetails.graduation_years && selectedJobDetails.graduation_years.length > 0 ? (
+                      {Array.isArray(selectedJobDetails.graduation_years) && selectedJobDetails.graduation_years.length > 0 ? (
                         selectedJobDetails.graduation_years.map(year => (
                           <span key={year} className="detail-badge" style={{background: '#f0fdf4', color: '#16a34a', borderColor: '#dcfce7'}}>Class of {year}</span>
                         ))
+                      ) : selectedJobDetails.graduation_years ? (
+                        <span className="detail-badge" style={{background: '#f0fdf4', color: '#16a34a', borderColor: '#dcfce7'}}>{selectedJobDetails.graduation_years}</span>
                       ) : (
                         <span className="text-muted small">No batch restrictions.</span>
                       )}
