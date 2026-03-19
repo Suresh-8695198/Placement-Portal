@@ -536,24 +536,26 @@ export default function AdminJobs() {
 
         .table {
           width: 100%;
+          min-width: 1200px; /* Ensure all columns are visible with scroll if needed */
           border-collapse: collapse;
+          border-spacing: 0;
           margin: 0;
         }
 
         .table th {
           background: #f8fafc;
-          color: #000000;
-          font-weight: 600;
-          text-transform: uppercase;
-          font-size: 0.7rem;
-          letter-spacing: 0.08em;
-          padding: 1rem 1.25rem;
-          border-bottom: 1px solid #e2e8f0;
           text-align: left;
+          padding: 1rem 0.75rem; /* More compact padding */
+          font-weight: 700;
+          color: #64748b;
+          font-size: 0.75rem;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          border-bottom: 2px solid #e2e8f0;
         }
 
         .table td {
-          padding: 1.1rem 1.25rem;
+          padding: 1rem 0.75rem; /* More compact padding */
           border-bottom: 1px solid #f1f5f9;
           color: #000000;
           font-size: 0.875rem;

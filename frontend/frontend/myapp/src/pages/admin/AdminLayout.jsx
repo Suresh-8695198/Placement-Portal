@@ -76,7 +76,7 @@ export default function AdminLayout() {
           margin-left: 250px;
           transition: margin-left 0.3s ease;
           background: #f8fafc;
-          overflow-x: hidden;
+          overflow-x: auto; /* allow content-driven scroll if necessary */
         }
 
         @media (max-width: 992px) {
@@ -99,7 +99,7 @@ export default function AdminLayout() {
         .admin-content-wrapper {
           flex: 1;
           overflow-y: auto;
-          overflow-x: hidden;
+          overflow-x: auto; /* allow scroll to prevent clipping */
           padding: 0.5rem 1.5rem 1.5rem;
           -webkit-overflow-scrolling: touch;
         }

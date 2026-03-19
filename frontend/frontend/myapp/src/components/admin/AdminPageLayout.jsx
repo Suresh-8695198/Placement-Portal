@@ -7,10 +7,9 @@ export default function AdminPageLayout({ title, icon, children }) {
       <style>{`
         .admin-page-container {
           min-height: calc(100vh - 80px);
-          padding: 0.75rem 1.5rem 4rem;
+          padding: 0.75rem 1rem 4rem; /* More compact padding to save space */
           background: #f8fafc;
           width: 100%;
-          overflow-x: hidden;
         }
 
         .admin-page-title {
