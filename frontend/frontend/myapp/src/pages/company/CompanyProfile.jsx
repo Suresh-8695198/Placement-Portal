@@ -256,12 +256,9 @@ export default function CompanyProfile() {
         .hero-logo-container {
           width: 120px;
           height: 120px;
-          border-radius: 20px;
-          background: var(--bg-soft);
           display: flex;
           align-items: center;
           justify-content: center;
-          border: 1px solid var(--border-main);
           overflow: hidden;
           font-size: 2.5rem;
           font-weight: 700;
@@ -271,7 +268,7 @@ export default function CompanyProfile() {
         .hero-logo-container img {
           width: 100%;
           height: 100%;
-          object-fit: cover;
+          object-fit: contain;
         }
 
         .hero-text h1 {

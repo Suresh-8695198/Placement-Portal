@@ -255,15 +255,21 @@ export default function CompanyEmailCheck() {
           box-shadow: 0 0 0 4px var(--focus-ring);
         }
 
+        .input-relative {
+          position: relative;
+          width: 100%;
+        }
+
         .input-icon {
           position: absolute;
           left: 1.2rem;
           top: 50%;
-          transform: translateY(15%);
+          transform: translateY(-50%);
           color: #64748b;
           font-size: 1.3rem;
           pointer-events: none;
           transition: color 0.25s;
+          z-index: 2;
         }
 
         .input-wrapper:focus-within .input-icon {
@@ -417,16 +423,18 @@ export default function CompanyEmailCheck() {
           <form onSubmit={handleSubmit}>
             <div className="input-wrapper">
               <label className="form-label">Company Email</label>
-              <i className="fas fa-envelope input-icon"></i>
-              <input
-                type="email"
-                className="form-control"
-                placeholder="company@business.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                autoFocus
-              />
+              <div className="input-relative">
+                <i className="fas fa-envelope input-icon"></i>
+                <input
+                  type="email"
+                  className="form-control"
+                  placeholder="company@business.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  autoFocus
+                />
+              </div>
             </div>
 
             <button type="submit" className="btn-continue" disabled={loading}>

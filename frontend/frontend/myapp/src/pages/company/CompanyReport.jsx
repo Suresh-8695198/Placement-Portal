@@ -23,6 +23,14 @@ export default function CompanyReport() {
   // Track which application is being updated (for button loading)
   const [updatingAppId, setUpdatingAppId] = useState(null);
 
+  // Pagination & Filtering States
+  const [entriesPerPage, setEntriesPerPage] = useState(6);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [deptFilter, setDeptFilter] = useState("all");
+  const [jobFilter, setJobFilter] = useState("all");
+  const [sortBy, setSortBy] = useState("newest");
+  const [showAdvanced, setShowAdvanced] = useState(false);
+
   const companyEmail = localStorage.getItem("companyEmail");
 
   const fetchApplications = async (status = "") => {
@@ -39,6 +47,7 @@ export default function CompanyReport() {
       setApplications(apps);
       setFilteredApplications(apps);
       setActiveFilter(status || "all");
+      setCurrentPage(1); // Reset to page 1 on search/filter/status change
     } catch (err) {
       console.error("Failed to load applications:", err);
     } finally {
@@ -46,21 +55,74 @@ export default function CompanyReport() {
     }
   };
 
-  // Client-side search filtering
-  useEffect(() => {
+  const formatFileUrl = (url) => {
+    if (!url) return "";
+    if (url.startsWith("http")) return url;
+    return `${API_BASE}${url}`;
+  };
+
+  // Derived unique depts/jobs for advanced filters
+  const uniqueDepts = React.useMemo(() => {
+    const depts = new Set(applications.map(app => app.student?.department).filter(Boolean));
+    return Array.from(depts).sort();
+  }, [applications]);
+
+  const uniqueJobs = React.useMemo(() => {
+    const jobs = new Set(applications.map(app => app.job?.title).filter(Boolean));
+    return Array.from(jobs).sort();
+  }, [applications]);
+
+  // Client-side filtering, sorting, and processed data
+  const processedApplications = React.useMemo(() => {
     let result = [...applications];
 
+    // Status Filter (handled by API mostly, but keeping for consistency)
+    if (activeFilter !== "all") {
+      result = result.filter(app => (app.status || "").toLowerCase() === activeFilter.toLowerCase());
+    }
+
+    // Search Filtering
     if (searchTerm.trim()) {
       const term = searchTerm.toLowerCase().trim();
       result = result.filter((app) => {
         const jobTitle = (app.job?.title || "").toLowerCase();
+        const candidateName = (app.student?.name || "").toLowerCase();
         const dept = (app.student?.department || "").toLowerCase();
-        return jobTitle.includes(term) || dept.includes(term);
+        return jobTitle.includes(term) || dept.includes(term) || candidateName.includes(term);
       });
     }
 
-    setFilteredApplications(result);
-  }, [searchTerm, applications]);
+    // Advanced Filters
+    if (deptFilter !== "all") {
+      result = result.filter(app => app.student?.department === deptFilter);
+    }
+    if (jobFilter !== "all") {
+      result = result.filter(app => app.job?.title === jobFilter);
+    }
+
+    // Sorting
+    result.sort((a, b) => {
+      if (sortBy === "newest") return new Date(b.created_at || 0) - new Date(a.created_at || 0);
+      if (sortBy === "oldest") return new Date(a.created_at || 0) - new Date(b.created_at || 0);
+      if (sortBy === "name_az") return (a.student?.name || "").localeCompare(b.student?.name || "");
+      if (sortBy === "name_za") return (b.student?.name || "").localeCompare(a.student?.name || "");
+      return 0;
+    });
+
+    return result;
+  }, [applications, searchTerm, deptFilter, jobFilter, sortBy, activeFilter]);
+
+  // Pagination slices
+  const paginatedApplications = React.useMemo(() => {
+    const start = (currentPage - 1) * entriesPerPage;
+    return processedApplications.slice(start, start + entriesPerPage);
+  }, [processedApplications, currentPage, entriesPerPage]);
+
+  const totalPages = Math.ceil(processedApplications.length / entriesPerPage);
+
+  useEffect(() => {
+    setCurrentPage(1); // Reset page on filter changes
+  }, [searchTerm, deptFilter, jobFilter, sortBy, entriesPerPage, activeFilter]);
 
   useEffect(() => {
     if (companyEmail) fetchApplications();
@@ -247,6 +309,156 @@ export default function CompanyReport() {
           font-size: 1rem;
           color: var(--text-main);
           background: transparent;
+        }
+
+        /* --- New Registry Control Styles --- */
+        .registry-filters-bar {
+          background: #ffffff;
+          border: 1px solid var(--border-color);
+          border-radius: 12px;
+          padding: 1.25rem 1.5rem;
+          margin: 1.5rem auto 2.5rem;
+          max-width: 1200px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          flex-wrap: wrap;
+          gap: 1.5rem;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+        }
+
+        .bar-left, .bar-right {
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+          flex-wrap: wrap;
+        }
+
+        .btn-filter-toggle {
+          padding: 0.6rem 1.2rem;
+          background: #f8fafc;
+          border: 1px solid var(--border-color);
+          border-radius: 8px;
+          color: #475569;
+          font-weight: 600;
+          font-size: 0.85rem;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+
+        .btn-filter-toggle.active {
+          background: var(--primary-brand);
+          color: white;
+          border-color: var(--primary-brand);
+        }
+
+        .entries-selector {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          color: var(--text-secondary);
+          font-size: 0.85rem;
+          font-weight: 600;
+        }
+
+        .entries-selector select, .filter-select {
+          padding: 0.5rem 0.75rem;
+          border-radius: 6px;
+          border: 1px solid var(--border-color);
+          background: white;
+          font-weight: 600;
+          color: var(--text-main);
+          outline: none;
+          cursor: pointer;
+        }
+
+        .advanced-panel {
+          background: #f8fafc;
+          border: 1px solid var(--border-color);
+          border-radius: 12px;
+          padding: 1.5rem;
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+          gap: 1.5rem;
+          margin-bottom: 2rem;
+          animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+          from { opacity: 0; transform: translateY(-10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+
+        .filter-group {
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
+        }
+
+        .filter-group label {
+          font-size: 0.75rem;
+          font-weight: 700;
+          text-transform: uppercase;
+          color: var(--text-secondary);
+          letter-spacing: 0.05em;
+        }
+
+        /* --- Pagination --- */
+        .pagination-area {
+          margin-top: 4rem;
+          padding-top: 2rem;
+          border-top: 1px solid var(--border-color);
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          flex-wrap: wrap;
+          gap: 1.5rem;
+        }
+
+        .page-info {
+          font-size: 0.9rem;
+          font-weight: 600;
+          color: var(--text-secondary);
+        }
+
+        .page-controls {
+          display: flex;
+          gap: 0.5rem;
+        }
+
+        .page-btn {
+          width: 38px;
+          height: 38px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: white;
+          border: 1px solid var(--border-color);
+          border-radius: 8px;
+          font-weight: 700;
+          color: var(--text-main);
+          cursor: pointer;
+          transition: 0.2s;
+          font-size: 0.9rem;
+        }
+
+        .page-btn:hover:not(:disabled) {
+          border-color: var(--primary-brand);
+          color: var(--primary-brand);
+        }
+
+        .page-btn.active {
+          background: var(--primary-brand);
+          color: white;
+          border-color: var(--primary-brand);
+        }
+
+        .page-btn:disabled {
+          opacity: 0.4;
+          cursor: not-allowed;
         }
 
         /* Applications Grid */
@@ -644,94 +856,189 @@ export default function CompanyReport() {
             )}
           </div>
 
+          <div className="registry-filters-bar">
+            <div className="bar-left">
+              <button 
+                className={`btn-filter-toggle ${showAdvanced ? "active" : ""}`}
+                onClick={() => setShowAdvanced(!showAdvanced)}
+              >
+                <i className={`fas fa-${showAdvanced ? "times" : "sliders-h"}`}></i>
+                {showAdvanced ? "Hide Advanced Filters" : "Advanced Filters"}
+              </button>
+              
+              <div className="entries-selector">
+                <span>Show</span>
+                <select value={entriesPerPage} onChange={(e) => setEntriesPerPage(Number(e.target.value))}>
+                  <option value={6}>6 per page</option>
+                  <option value={12}>12 per page</option>
+                  <option value={24}>24 per page</option>
+                  <option value={50}>50 per page</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="bar-right">
+              <div className="entries-selector">
+                <span>Sort by:</span>
+                <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+                  <option value="newest">Newest First</option>
+                  <option value="oldest">Oldest First</option>
+                  <option value="name_az">Name A-Z</option>
+                  <option value="name_za">Name Z-A</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {showAdvanced && (
+            <div className="advanced-panel">
+              <div className="filter-group">
+                <label>Target Department</label>
+                <select className="filter-select" value={deptFilter} onChange={(e) => setDeptFilter(e.target.value)}>
+                  <option value="all">All Departments</option>
+                  {uniqueDepts.map(d => <option key={d} value={d}>{d}</option>)}
+                </select>
+              </div>
+              <div className="filter-group">
+                <label>Job Posting</label>
+                <select className="filter-select" value={jobFilter} onChange={(e) => setJobFilter(e.target.value)}>
+                  <option value="all">All Role Types</option>
+                  {uniqueJobs.map(j => <option key={j} value={j}>{j}</option>)}
+                </select>
+              </div>
+              <div className="filter-group" style={{ justifyContent: 'flex-end', alignItems: 'flex-end' }}>
+                <button 
+                  onClick={() => { setDeptFilter("all"); setJobFilter("all"); setSearchTerm(""); }}
+                  style={{ background: 'none', border: 'none', color: '#6366f1', fontWeight: 700, fontSize: '0.75rem', cursor: 'pointer', textTransform: 'uppercase' }}
+                >
+                  Reset Parameters
+                </button>
+              </div>
+            </div>
+          )}
           {loading ? (
             <div className="loading-wrap">
               <div className="spinner"></div>
               <p style={{ color: "#64748b", fontWeight: 500 }}>Fetching latest reports...</p>
             </div>
-          ) : filteredApplications.length === 0 ? (
+          ) : processedApplications.length === 0 ? (
             <div style={{ textAlign: "center", padding: "5rem 2rem", background: "#ffffff", borderRadius: "24px", border: "1px solid #e2e8f0" }}>
               <div style={{ fontSize: "3.5rem", marginBottom: "1.5rem" }}>📁</div>
               <h2 style={{ fontSize: "1.5rem", fontWeight: 700, color: "#0f172a" }}>No Matching Records</h2>
               <p style={{ color: "#64748b" }}>We couldn't find any applications matching your current filters.</p>
               <button 
-                onClick={() => handleStatusChange("all")}
+                onClick={() => { handleStatusChange("all"); setDeptFilter("all"); setJobFilter("all"); setSearchTerm(""); }}
                 style={{ marginTop: "1rem", padding: "0.6rem 1.5rem", borderRadius: "10px", border: "1px solid #e2e8f0", background: "#f8fafc", fontWeight: 600, cursor: "pointer" }}
               >
-                Reset Filters
+                Reset All Filters
               </button>
             </div>
           ) : (
-            <div className="applications-grid">
-              {filteredApplications.map((app) => {
-                const status = (app.status || "Applied").trim();
-                const isUpdating = updatingAppId === app.application_id;
+            <>
+              <div className="applications-grid">
+                {paginatedApplications.map((app) => {
+                  const status = (app.status || "Applied").trim();
+                  const isUpdating = updatingAppId === app.application_id;
 
-                return (
-                  <div key={app.application_id} className="app-card">
-                    <div className="app-header">
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "4px" }}>
-                        <h3 className="candidate-name">{app.student?.name}</h3>
-                        <span className={`status-pill status-${status.toLowerCase()}`}>
-                           {status}
-                        </span>
+                  return (
+                    <div key={app.application_id} className="app-card">
+                      <div className="app-header">
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "4px" }}>
+                          <h3 className="candidate-name">{app.student?.name}</h3>
+                          <span className={`status-pill status-${status.toLowerCase()}`}>
+                             {status}
+                          </span>
+                        </div>
+                        <div className="info-row">
+                          <i className="far fa-envelope"></i>
+                          {app.student?.email}
+                        </div>
                       </div>
-                      <div className="info-row">
-                        <i className="far fa-envelope"></i>
-                        {app.student?.email}
+
+                      <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                         <div className="info-row" style={{ color: "#334155", fontWeight: 600 }}>
+                            <i className="fas fa-briefcase"></i>
+                            {app.job?.title}
+                         </div>
+                         <div className="info-row">
+                            <i className="fas fa-university"></i>
+                            {app.student?.department || "Department N/A"}
+                         </div>
+                      </div>
+
+                      <div className="action-container">
+                        <button
+                          className="action-button btn-full"
+                          onClick={() => setSelectedStudentEmail(app.student?.email)}
+                        >
+                          <i className="far fa-id-badge"></i>
+                          Review Credentials
+                        </button>
+
+                        <button
+                          className="action-button btn-status-update"
+                          onClick={() => updateStatus(app.application_id, "Shortlisted")}
+                          disabled={status.toLowerCase() === "shortlisted" || isUpdating}
+                        >
+                          Shortlist
+                        </button>
+
+                        <button
+                          className="action-button btn-status-update"
+                          onClick={() => updateStatus(app.application_id, "Selected")}
+                          disabled={status.toLowerCase() === "selected" || isUpdating}
+                          style={{ color: "#166534" }}
+                        >
+                          Select
+                        </button>
+                        
+                        <button
+                          className="action-button btn-status-update"
+                          onClick={() => updateStatus(app.application_id, "Rejected")}
+                          disabled={status.toLowerCase() === "rejected" || isUpdating}
+                          style={{ color: "#991b1b", gridColumn: "span 2" }}
+                        >
+                          Mark as Rejected
+                        </button>
                       </div>
                     </div>
+                  );
+                })}
+              </div>
 
-                    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                       <div className="info-row" style={{ color: "#334155", fontWeight: 600 }}>
-                          <i className="fas fa-briefcase"></i>
-                          {app.job?.title}
-                       </div>
-                       <div className="info-row">
-                          <i className="fas fa-university"></i>
-                          {app.student?.department || "Department N/A"}
-                       </div>
-                    </div>
-
-                    <div className="action-container">
-                      <button
-                        className="action-button btn-full"
-                        onClick={() => setSelectedStudentEmail(app.student?.email)}
-                      >
-                        <i className="far fa-id-badge"></i>
-                        Review Credentials
-                      </button>
-
-                      <button
-                        className="action-button btn-status-update"
-                        onClick={() => updateStatus(app.application_id, "Shortlisted")}
-                        disabled={status.toLowerCase() === "shortlisted" || isUpdating}
-                      >
-                        Shortlist
-                      </button>
-
-                      <button
-                        className="action-button btn-status-update"
-                        onClick={() => updateStatus(app.application_id, "Selected")}
-                        disabled={status.toLowerCase() === "selected" || isUpdating}
-                        style={{ color: "#166534" }}
-                      >
-                        Select
-                      </button>
-                      
-                      <button
-                        className="action-button btn-status-update"
-                        onClick={() => updateStatus(app.application_id, "Rejected")}
-                        disabled={status.toLowerCase() === "rejected" || isUpdating}
-                        style={{ color: "#991b1b", gridColumn: "span 2" }}
-                      >
-                        Mark as Rejected
-                      </button>
-                    </div>
+              {totalPages > 1 && (
+                <div className="pagination-area">
+                  <div className="page-info">
+                    Showing {(currentPage - 1) * entriesPerPage + 1} to {Math.min(currentPage * entriesPerPage, processedApplications.length)} of {processedApplications.length} candidates
                   </div>
-                );
-              })}
-            </div>
+                  <div className="page-controls">
+                    <button 
+                      className="page-btn" 
+                      disabled={currentPage === 1} 
+                      onClick={() => setCurrentPage(p => p - 1)}
+                    >
+                      <i className="fas fa-chevron-left"></i>
+                    </button>
+                    {[...Array(totalPages)].map((_, i) => (
+                      <button 
+                        key={i} 
+                        className={`page-btn ${currentPage === i + 1 ? "active" : ""}`}
+                        onClick={() => setCurrentPage(i + 1)}
+                      >
+                        {i + 1}
+                      </button>
+                    ))}
+                    <button 
+                      className="page-btn" 
+                      disabled={currentPage === totalPages} 
+                      onClick={() => setCurrentPage(p => p + 1)}
+                    >
+                      <i className="fas fa-chevron-right"></i>
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
@@ -851,7 +1158,7 @@ export default function CompanyReport() {
                             <div className="data-label">{cert.issued_by} • {cert.year_obtained}</div>
                             <div className="data-value" style={{ marginBottom: "10px" }}>{cert.title}</div>
                             {cert.file && (
-                              <a href={cert.file} target="_blank" rel="noopener noreferrer" style={{ color: "var(--primary-brand)", fontWeight: 600, fontSize: "0.8rem", textDecoration: "none" }}>
+                              <a href={formatFileUrl(cert.file)} target="_blank" rel="noopener noreferrer" style={{ color: "var(--primary-brand)", fontWeight: 600, fontSize: "0.8rem", textDecoration: "none" }}>
                                 View Evidence →
                               </a>
                             )}
@@ -868,7 +1175,7 @@ export default function CompanyReport() {
                       {profile.resume ? (
                         <>
                           <p style={{ color: "#475569", marginBottom: "1.5rem" }}>The candidate has uploaded a formal curriculum vitae.</p>
-                          <a href={profile.resume} target="_blank" rel="noopener noreferrer" className="portfolio-button">
+                          <a href={formatFileUrl(profile.resume)} target="_blank" rel="noopener noreferrer" className="portfolio-button">
                              <i className="far fa-file-alt"></i>
                              Download Comprehensive Resume
                           </a>

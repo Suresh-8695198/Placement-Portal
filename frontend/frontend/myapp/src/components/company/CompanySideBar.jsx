@@ -66,6 +66,8 @@ export default function CompanySideBar() {
           width: 100%;
           height: 100%;
           object-fit: contain;
+          border-radius: 50%;
+          filter: brightness(1.1) drop-shadow(0 0 10px rgba(255, 255, 255, 0.1));
         }
 
         .brand-name-text {
