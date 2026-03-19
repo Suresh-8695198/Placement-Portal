@@ -14,7 +14,7 @@ export default function CoordinatorSidebar() {
         .coordinator-sidebar-wrapper {
           width: 250px;
           height: 100vh;
-          background: #1e1b4b;
+          background: #011627;
           border-right: none;
           position: fixed;
           top: 0;
@@ -105,13 +105,14 @@ export default function CoordinatorSidebar() {
         }
 
         .section-link.active {
-          background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+          background: #2563eb; /* Professional Blue */
           color: #ffffff;
+          box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
         }
 
-        .section-link .nav-icon { font-size: 1.15rem; width: 24px; text-align: center; }
+        .section-link .nav-icon { font-size: 1.1rem; width: 24px; text-align: center; }
 
-        .logout-btn-container { padding: 1.5rem 1rem 2rem; }
+        .logout-btn-container { padding: 1.5rem 1.25rem 2rem; }
 
         .logout-btn {
           width: 100%;
@@ -120,22 +121,22 @@ export default function CoordinatorSidebar() {
           gap: 0.75rem;
           padding: 0.85rem;
           color: rgba(255,255,255,0.7);
-          font-size: 0.85rem;
-          font-weight: 800;
+          font-size: 0.8rem;
+          font-weight: 700;
           background: rgba(255,255,255,0.05);
           border: 1px solid rgba(255,255,255,0.1);
-          border-radius: 12px;
+          border-radius: 10px;
           cursor: pointer;
           transition: all 0.2s;
           text-transform: uppercase;
           justify-content: center;
+          letter-spacing: 0.5px;
         }
 
         .logout-btn:hover {
-          background: #ef4444;
+          background: #dc2626;
           color: white;
-          border-color: #ef4444;
-          box-shadow: 0 8px 20px rgba(239, 68, 68, 0.2);
+          border-color: #dc2626;
         }
       `}</style>
 

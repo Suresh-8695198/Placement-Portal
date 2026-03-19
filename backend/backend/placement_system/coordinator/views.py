@@ -1271,3 +1271,32 @@ def get_admin_announcements(request):
         for a in announcements
     ]
     return JsonResponse({"announcements": data})
+
+
+@require_GET
+def recent_student_activity(request):
+    """
+    Returns latest 10 job applications (activity) for a specific department.
+    """
+    department = request.GET.get('department')
+    if not department:
+        return JsonResponse({"error": "Department parameter is required"}, status=400)
+
+    from companies.models import JobApplication
+
+    # Detailed join with Student to get name, batch (passed_out_year), dept, status
+    applications = JobApplication.objects.filter(
+        student__department=department
+    ).select_related('student', 'job').order_by('-applied_at')[:10]
+
+    activity_list = []
+    for app in applications:
+        activity_list.append({
+            "name": app.student.name,
+            "batch": app.student.passed_out_year,
+            "dept": app.student.department,
+            "status": app.status, # e.g. "Applied", "Shortlisted", "Selected", "Rejected"
+            "applied_at": app.applied_at.strftime("%Y-%m-%d %H:%M")
+        })
+
+    return JsonResponse({"activity": activity_list})

@@ -36,4 +36,5 @@ urlpatterns = [
    path("jobs/", views.coordinator_jobs, name="coordinator_jobs"),
 
     path('announcements/', views.get_admin_announcements, name='coordinator-admin-announcements'),
-]
+    path('recent-activity/', views.recent_student_activity, name='recent_student_activity'),
+]

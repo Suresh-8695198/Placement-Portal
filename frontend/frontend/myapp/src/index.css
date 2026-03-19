@@ -5,9 +5,9 @@
   --primary-hover: #4f46e5;
   --bg-main: #f8fafc;
   --bg-sidebar: #0f172a;
-  --text-main: #1e293b;
-  --text-muted: #64748b;
-  --border-color: #e2e8f0;
+  --text-main: #000000; /* Deep Black for max readability */
+  --text-muted: #374151; /* Much darker grey/slate instead of faint grey */
+  --border-color: #cbd5e1;
   --white: #ffffff;
   --success: #10b981;
   --danger: #ef4444;
@@ -18,6 +18,15 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+}
+
+html, body, #root {
+  margin: 0 !important;
+  padding: 0 !important;
+  height: 100vh !important;
+  max-height: 100vh !important;
+  width: 100vw !important;
+  overflow: hidden !important;
 }
 
 body {

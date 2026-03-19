@@ -16,14 +16,14 @@ export default function CoordinatorPageLayout({ title, children }) {
       <style>{`
         .coordinator-page-wrapper {
           min-height: 100vh;
-          padding: 3rem 2rem 5rem;
+          padding: 0.5rem 2.5rem 5rem;
           background: #f8f9fc;
           color: #2d3748;
         }
 
         .page-header {
           text-align: center;
-          margin-bottom: 3rem;
+          margin-bottom: 1.5rem;
           color: white;
           text-shadow: 0 2px 12px rgba(0,0,0,0.35);
         }
@@ -52,8 +52,7 @@ export default function CoordinatorPageLayout({ title, children }) {
         }
 
         .page-card:hover {
-          transform: translateY(-8px);
-          box-shadow: 0 30px 80px rgba(0,0,0,0.22);
+          /* No lift or shadow */
         }
 
         /* Optional message container (used in child pages) */
@@ -106,9 +105,11 @@ export default function CoordinatorPageLayout({ title, children }) {
       `}</style>
 
       <div className="coordinator-page-wrapper">
-        <div className="page-header">
-          {title && <h2 className="page-title">{title}</h2>}
-        </div>
+        {title && (
+          <div className="page-header">
+            <h2 className="page-title">{title}</h2>
+          </div>
+        )}
 
         <div className="page-card">
           {children}

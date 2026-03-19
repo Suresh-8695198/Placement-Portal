@@ -27,6 +27,54 @@ export default function UploadExcel() {
   const [rollNo, setRollNo] = useState("");
   const [student, setStudent] = useState(null);
 
+  // Modal State
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [addFormData, setAddFormData] = useState({
+    university_reg_no: '',
+    name: '',
+    ug_pg: 'PG',
+    department: department,
+    programme: '',
+    email: '',
+    phone: '',
+    passed_out_year: '',
+  });
+
+  // Handle Add Student Submit
+  const handleAddSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const res = await axios.post(
+        `${API_BASE}/api/students/add/`,
+        addFormData,
+        {
+          headers: { 'Content-Type': 'application/json' },
+          withCredentials: true,
+        }
+      );
+      setMessage(res.data.message || "Student added to registry successfully!");
+      setIsSuccess(true);
+      setIsAddModalOpen(false);
+      // Reset form
+      setAddFormData({
+        university_reg_no: '',
+        name: '',
+        ug_pg: 'PG',
+        department: department,
+        programme: '',
+        email: '',
+        phone: '',
+        passed_out_year: '',
+      });
+    } catch (err) {
+      setMessage(err.response?.data?.error || "Failed to add student to registry.");
+      setIsSuccess(false);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Fetch single student by Roll No
   const fetchStudent = async () => {
     if (!rollNo.trim()) return setMessage("Enter University Roll No");
@@ -34,11 +82,11 @@ export default function UploadExcel() {
     try {
       const res = await axios.get(`${API_BASE}/api/students/${rollNo}/`, { withCredentials: true });
       setStudent(res.data);
-      setMessage(`Student found: ${res.data.name}`);
+      setMessage(`Student record found: ${res.data.name}`);
       setIsSuccess(true);
     } catch (err) {
       setStudent(null);
-      setMessage("Student not found");
+      setMessage("Student not found in the registry");
       setIsSuccess(false);
     } finally {
       setLoading(false);
@@ -51,13 +99,13 @@ export default function UploadExcel() {
     setLoading(true);
     try {
       await axios.put(`${API_BASE}/api/students/${student.university_reg_no}/`, student, { withCredentials: true });
-      setMessage("Student updated successfully!");
+      setMessage("Student record updated successfully!");
       setIsSuccess(true);
       setStudent(null);
       setMode("");
       setRollNo("");
     } catch (err) {
-      setMessage("Update failed");
+      setMessage("Failed to update student record");
       setIsSuccess(false);
     } finally {
       setLoading(false);
@@ -67,16 +115,16 @@ export default function UploadExcel() {
   // Delete student
   const deleteStudent = async () => {
     if (!student) return;
-    if (!window.confirm(`Delete ${student.name}?`)) return;
+    if (!window.confirm(`Are you sure you want to delete ${student.name}'s record permanently?`)) return;
     setLoading(true);
     try {
       await axios.delete(`${API_BASE}/api/students/${student.university_reg_no}/`, { withCredentials: true });
-      setMessage("Student deleted successfully!");
+      setMessage("Student record deleted successfully!");
       setIsSuccess(true);
       setStudent(null);
       setRollNo("");
     } catch (err) {
-      setMessage("Delete failed");
+      setMessage("Failed to delete student record");
       setIsSuccess(false);
     } finally {
       setLoading(false);
@@ -86,13 +134,13 @@ export default function UploadExcel() {
   // Upload Excel
   const uploadExcel = async () => {
     if (!file) {
-      setMessage("Please select an Excel file first.");
+      setMessage("Please select a valid Excel file first.");
       setIsSuccess(false);
       return;
     }
 
     setLoading(true);
-    setMessage("Processing your file...");
+    setMessage("Processing data into the registry...");
     setIsSuccess(false);
 
     const formData = new FormData();
@@ -108,11 +156,11 @@ export default function UploadExcel() {
         }
       );
 
-      setMessage(res.data.message || "Students imported successfully!");
+      setMessage(res.data.message || "Students registry updated successfully!");
       setIsSuccess(true);
       setFile(null);
     } catch (err) {
-      setMessage("Upload failed: " + (err.response?.data?.error || err.message || "Unknown error"));
+      setMessage("Registry update failed: " + (err.response?.data?.error || err.message || "Unknown error"));
       setIsSuccess(false);
     } finally {
       setLoading(false);
@@ -121,133 +169,746 @@ export default function UploadExcel() {
 
   return (
     <>
-      <link
-        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-        rel="stylesheet"
-      />
-      <link
-        rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
-      />
+      <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
 
       <style>{`
-        body {
-          background: linear-gradient(135deg, #6b46c1 0%, #9f7aea 100%);
-          min-height: 100vh;
-          font-family: 'Segoe UI', system-ui, sans-serif;
-          color: #2d3748;
-          overflow-x: hidden;
+        .upload-page-container {
+          padding: 0.5rem 1.5rem 2rem;
+          max-width: 100%;
+          margin: 0;
+          font-family: 'Inter', sans-serif;
+          overflow: visible !important; /* Never scroll locally, let parent handle it */
+          box-sizing: border-box;
         }
 
-        .upload-page { min-height: 100vh; position: relative; padding: 2.5rem 1.5rem; }
-        .upload-wrapper { max-width: 900px; margin: 0 auto; z-index: 1; position: relative; }
-        .header { text-align: center; color: white; margin-bottom: 3.5rem; text-shadow: 0 2px 10px rgba(0,0,0,0.35); }
-        .welcome-title { font-size: 2.6rem; font-weight: 700; color: #7c3aed; margin-bottom: 0.8rem; }
-        .dept-badge { display: inline-block; background: linear-gradient(135deg, #7c3aed, #c084fc); color: white; padding: 0.6rem 1.6rem; border-radius: 50px; font-size: 1.15rem; font-weight: 600; box-shadow: 0 6px 20px rgba(124,58,237,0.5); }
-        .glass-card { background: rgba(255,255,255,0.93); border-radius: 1.5rem; padding: 2.8rem 2.5rem; box-shadow: 0 20px 50px rgba(0,0,0,0.18); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border: 1px solid rgba(255,255,255,0.3); transition: all 0.4s ease; }
-        .glass-card:hover { transform: translateY(-8px); box-shadow: 0 30px 60px rgba(0,0,0,0.22); }
-        .upload-title { font-size: 2.1rem; font-weight: 700; color: #7c3aed; text-align: center; margin-bottom:1.2rem; }
-        .upload-subtitle { color: #4a5568; text-align: center; margin-bottom: 2.5rem; font-size: 1.1rem; }
-        .message-box { padding: 1.3rem; border-radius: 1rem; margin-bottom: 2.2rem; font-weight: 500; text-align: center; border: 1px solid; }
-        .message-success { background: #e9d8fd; color: #6b21a8; border-color: #c084fc; }
-        .message-error { background: #fee2e2; color: #991b1b; border-color: #fca5a5; }
-        .action-buttons { display: flex; flex-wrap: wrap; gap: 1.5rem; justify-content: center; margin: 2.5rem 0; }
-        .btn-primary-gradient, .btn-success-gradient, .btn-choose { padding: 1rem 2.2rem; font-weight: 600; font-size: 1.05rem; border-radius: 50px; box-shadow: 0 8px 25px rgba(0,0,0,0.2); transition: all 0.35s ease; display: flex; align-items: center; gap: 0.7rem; cursor: pointer; }
-        .btn-choose { background: rgba(124,58,237,0.1); border: 2px dashed #c084fc; color: #7c3aed; }
-        .btn-choose:hover { background: rgba(124,58,237,0.2); border-color: #7c3aed; transform: translateY(-3px); }
-        .btn-primary-gradient { background: linear-gradient(135deg, #7c3aed, #c084fc); color: white; border: none; }
-        .btn-success-gradient { background: linear-gradient(135deg, #10b981, #34d399); color: white; border: none; }
-        .btn-primary-gradient:hover:not(:disabled), .btn-success-gradient:hover:not(:disabled) { transform: translateY(-4px); box-shadow: 0 16px 40px rgba(0,0,0,0.35); }
-        .btn-primary-gradient:disabled, .btn-success-gradient:disabled { opacity: 0.65; cursor: not-allowed; transform: none; box-shadow: none; }
-        .file-info { margin-top: 1.8rem; padding: 1.2rem; background: rgba(243,232,255,0.5); border-radius: 1rem; color: #4a5568; text-align: center; font-size: 1rem; }
-        .info-text { margin-top: 2.5rem; text-align: center; color: #6b7280; font-size: 0.98rem; }
-        .floating-dots { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
-        .dot { position: absolute; background: rgba(255, 255, 255, 0.7); border-radius: 50%; box-shadow: 0 0 14px rgba(255,255,255,0.45); animation: floatDot 14s infinite ease-in-out; }
-        @keyframes floatDot { 0%,100% { transform: translate(0,0) scale(1); opacity: 0.65; } 50% { transform: translateY(-50px) scale(1.25); opacity:1; } }
-        @media (max-width: 992px) { .welcome-title { font-size: 2.2rem; } .glass-card { padding: 2rem 1.8rem; } }
-        @media (max-width: 768px) { .upload-page { padding: 1.8rem 1rem; } .action-buttons { flex-direction: column; gap:1.2rem; } .btn-primary-gradient, .btn-success-gradient, .btn-choose { width:100%; justify-content:center; } }
-        @media (max-width: 576px) { .welcome-title { font-size:1.9rem; } .upload-title { font-size:1.7rem; } .glass-card { padding:1.5rem 1.2rem; border-radius:1.2rem; } }
+        .registry-header {
+          margin-bottom: 2rem;
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-end;
+          border-bottom: 2px solid #e2e8f0;
+          padding-bottom: 1.5rem;
+          width: 100%;
+        }
+
+        .header-title-group h1 {
+          font-family: 'Outfit', sans-serif;
+          color: #002147;
+          font-weight: 800;
+          font-size: 1.5rem;
+          margin: 0;
+          letter-spacing: -0.5px;
+        }
+
+        .header-title-group p {
+          color: #111827; /* Rich Black */
+          font-weight: 600;
+          margin: 0.5rem 0 0 0;
+          font-size: 1.1rem;
+        }
+
+        .department-badge {
+          background: #f1f5f9;
+          color: #002147;
+          padding: 0.6rem 1.2rem;
+          border-radius: 8px;
+          font-weight: 700;
+          border: 1px solid #e2e8f0;
+          font-size: 0.9rem;
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+        }
+
+        .registry-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr; /* Changed to 1:1 for better symmetry or 3:2 */
+          grid-template-columns: 1.6fr 1fr;
+          gap: 1.5rem;
+          width: 100%;
+          box-sizing: border-box;
+        }
+
+        .registry-card {
+          background: #ffffff;
+          border: 1px solid #e2e8f0;
+          border-radius: 12px;
+          padding: 2rem;
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+          display: flex;
+          flex-direction: column;
+          height: 100%;
+          box-sizing: border-box;
+        }
+
+        /* Subtle differentiation */
+        .registry-section-import .registry-card {
+          background: #f0fdf4; /* Faint green/emerald tint */
+          border-left: 4px solid #059669; /* Solid Emerald border */
+        }
+        .registry-section-import .card-label {
+          color: #065f46; /* Deep Emerald for heading */
+        }
+        .registry-section-import .card-label i {
+          color: #059669; /* Emerald for icon */
+        }
+        .registry-section-import .upload-zone:hover {
+          border-color: #059669;
+          background: #f0fdf4;
+        }
+
+        .registry-section-lookup .registry-card {
+          background: #eff6ff; /* Faint blue tint for lookup */
+          border-left: 4px solid #2563eb; /* Professional Blue border */
+        }
+        .registry-section-lookup .card-label {
+          color: #1e3a8a; /* Deep Blue for heading */
+        }
+        .registry-section-lookup .card-label i {
+          color: #2563eb; /* Blue for icon */
+        }
+
+        .card-label {
+          font-family: 'Outfit', sans-serif;
+          color: #002147;
+          font-weight: 700;
+          font-size: 1.25rem;
+          margin-bottom: 1.5rem;
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+        }
+
+        .upload-zone {
+          border: 2px dashed #cbd5e1;
+          border-radius: 12px;
+          padding: 3.5rem 2rem;
+          text-align: center;
+          position: relative;
+          transition: all 0.3s;
+          background: #f8fafc;
+        }
+
+        .upload-zone:hover {
+          border-color: #002147;
+          background: #f1f5f9;
+        }
+
+        .upload-icon {
+          font-size: 3rem;
+          color: #94a3b8;
+          margin-bottom: 1rem;
+        }
+
+        .upload-input-overlay {
+          position: absolute;
+          inset: 0;
+          opacity: 0;
+          cursor: pointer;
+        }
+
+        .file-status {
+          margin-top: 1.5rem;
+          padding: 1rem;
+          background: #f1f5f9;
+          border-radius: 8px;
+          border: 1px solid #e2e8f0;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+        }
+
+        .btn-registry-primary {
+          background: #059669; /* Emerald Green */
+          color: white;
+          border: none;
+          padding: 0.8rem 1.8rem;
+          border-radius: 8px;
+          font-weight: 600;
+          font-size: 0.95rem;
+          transition: all 0.2s;
+          display: inline-flex;
+          align-items: center;
+          gap: 0.75rem;
+          cursor: pointer;
+        }
+
+        .btn-registry-primary:hover {
+          background: #047857; /* Darker Emerald on hover */
+          transform: translateY(-1px);
+        }
+
+        .btn-registry-secondary {
+          background: #ffffff;
+          color: #002147;
+          border: 1px solid #e2e8f0;
+          padding: 0.8rem 1.8rem;
+          border-radius: 8px;
+          font-weight: 600;
+          font-size: 0.95rem;
+          transition: all 0.2s;
+          display: inline-flex;
+          align-items: center;
+          gap: 0.75rem;
+        }
+
+        .btn-registry-secondary:hover {
+          background: #f8fafc;
+          border-color: #cbd5e1;
+        }
+
+        .btn-registry-success {
+          background: #059669;
+          color: white;
+          border: none;
+          padding: 0.8rem 1.8rem;
+          border-radius: 8px;
+          font-weight: 600;
+          font-size: 0.95rem;
+          transition: all 0.2s;
+          display: inline-flex;
+          align-items: center;
+          gap: 0.75rem;
+          cursor: pointer;
+        }
+
+        /* Lookup Specific Buttons */
+        .btn-lookup-edit {
+          background: #2563eb;
+          color: white;
+          border: none;
+          padding: 0.75rem 1.5rem;
+          border-radius: 8px;
+          font-weight: 700;
+          font-size: 0.9rem;
+          transition: all 0.2s;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.6rem;
+          cursor: pointer;
+          box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.1);
+        }
+        .btn-lookup-edit:hover { 
+          background: #1d4ed8; 
+          transform: translateY(-1px);
+          box-shadow: 0 6px 12px -2px rgba(37, 99, 235, 0.2);
+        }
+
+        .btn-lookup-delete {
+          background: #dc2626; /* Full Red */
+          color: white;
+          border: none;
+          padding: 0.75rem 1.5rem;
+          border-radius: 8px;
+          font-weight: 700;
+          font-size: 0.9rem;
+          transition: all 0.2s;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.6rem;
+          cursor: pointer;
+          box-shadow: 0 4px 6px -1px rgba(220, 38, 38, 0.1);
+        }
+        .btn-lookup-delete:hover { 
+          background: #b91c1c; /* Darker Red on hover */
+          transform: translateY(-1px);
+          box-shadow: 0 6px 12px -2px rgba(220, 38, 38, 0.2);
+        }
+
+        .btn-registry-success:hover {
+          background: #047857;
+        }
+
+        .btn-registry-danger {
+          background: #dc2626;
+          color: white;
+          border: none;
+          padding: 0.8rem 1.8rem;
+          border-radius: 8px;
+          font-weight: 600;
+          font-size: 0.95rem;
+          transition: all 0.2s;
+        }
+
+        .btn-registry-danger:hover {
+          background: #b91c1c;
+        }
+
+        .registry-input {
+          border: 1px solid #e2e8f0;
+          padding: 0.8rem 1rem;
+          border-radius: 8px;
+          font-size: 1rem;
+          color: #1e293b;
+          width: 100%;
+          outline: none;
+          transition: border-color 0.2s;
+        }
+
+        .registry-input:focus {
+          border-color: #002147;
+        }
+
+        .registry-input::placeholder {
+          color: #4b5563; /* Darker placeholder for visibility */
+          opacity: 0.8;
+        }
+
+        .message-banner {
+          padding: 1rem 1.5rem;
+          border-radius: 8px;
+          margin-bottom: 2rem;
+          font-weight: 600;
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+        }
+
+        .banner-success { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+        .banner-error { background: #fef2f2; color: #991b1b; border: 1px solid #fee2e2; }
+
+        .search-action-group {
+          display: flex;
+          gap: 1rem;
+          margin-top: 1rem;
+        }
+
+        .edit-fields-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 1rem;
+          margin-top: 1.5rem;
+        }
+
+        .field-group {
+          display: flex;
+          flex-direction: column;
+          gap: 0.4rem;
+        }
+
+        .field-label {
+          font-size: 0.8rem;
+          font-weight: 800;
+          color: #000000; /* Pure Black labels */
+          text-transform: uppercase;
+          letter-spacing: 0.025em;
+        }
+
+        .instruction-box {
+          margin-top: 2rem;
+          background: #ffffff;
+          border: 1.5px solid #059669; /* Full thin border instead of thick left */
+          border-radius: 12px;
+          padding: 1.5rem;
+          color: #111827; /* Deep Black for readability */
+          font-size: 0.9rem;
+          line-height: 1.6;
+          display: flex;
+          gap: 1.2rem;
+        }
+
+        .instruction-box strong {
+          color: #065f46;
+          display: block;
+          font-size: 1rem;
+          margin-bottom: 0.75rem;
+          font-family: 'Outfit', sans-serif;
+        }
+
+        .token-group {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 0.5rem;
+          margin-top: 0.75rem;
+          padding: 0;
+          list-style: none;
+        }
+
+        .column-token {
+          background: #f1f5f9;
+          color: #1e3a8a;
+          padding: 0.4rem 0.8rem;
+          border-radius: 6px;
+          font-family: 'Inter', sans-serif;
+          font-size: 0.8rem;
+          font-weight: 700;
+          border: 1px solid #e2e8f0;
+          white-space: nowrap;
+        }
+
+        @media (max-width: 992px) {
+          .registry-grid { grid-template-columns: 1fr; }
+          .upload-page-container { padding: 1.5rem; }
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: rgba(0, 33, 71, 0.4);
+          backdrop-filter: blur(4px);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 2000;
+          animation: fadeIn 0.3s ease;
+        }
+
+        .modal-container {
+          background: #ffffff;
+          width: 90%;
+          max-width: 650px;
+          border-radius: 16px;
+          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+          overflow: hidden;
+          animation: slideUp 0.3s ease;
+          border: 1px solid #e2e8f0;
+        }
+
+        .modal-header {
+          padding: 1.5rem 2rem;
+          border-bottom: 1px solid #f1f5f9;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          background: #f8fafc;
+        }
+
+        .modal-title {
+          font-family: 'Outfit', sans-serif;
+          font-size: 1.5rem;
+          font-weight: 800;
+          color: #002147;
+          margin: 0;
+        }
+
+        .modal-close {
+          background: transparent;
+          border: none;
+          color: #4a5568;
+          font-size: 1.5rem;
+          cursor: pointer;
+          transition: color 0.2s;
+        }
+
+        .modal-close:hover { color: #dc2626; }
+
+        .modal-body {
+          padding: 2rem;
+          max-height: 80vh;
+          overflow-y: auto;
+        }
+
+        .form-grid-2 {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 1.25rem;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
       `}</style>
 
-      <div className="upload-page">
-        <div className="floating-dots">
-          {[...Array(10)].map((_, i) => (
-            <div key={i} className="dot" style={{
-              width: `${Math.random()*10+6}px`,
-              height: `${Math.random()*10+6}px`,
-              left: `${Math.random()*100}%`,
-              top: `${Math.random()*100}%`,
-              animationDelay: `${Math.random()*12}s`
-            }} />
-          ))}
-        </div>
-
-        <div className="upload-wrapper">
-          <div className="header">
-            <h1 className="welcome-title">Welcome, {coordinatorName}!</h1>
-            <div className="dept-badge"><i className="fas fa-building me-2"></i>{department} Department</div>
+      <div className="upload-page-container">
+        {/* Header */}
+        <header className="registry-header">
+          <div className="header-title-group">
+            <h1>Student Registry Management</h1>
           </div>
+          <div className="department-badge">
+            <i className="fas fa-university"></i>
+            {department} Department
+          </div>
+        </header>
 
-          <div className="glass-card">
-            <h2 className="upload-title">Bulk Upload Students</h2>
-            <p className="upload-subtitle">Upload an Excel file (.xlsx / .xls) with student data</p>
+        {/* Status Message */}
+        {message && (
+          <div className={`message-banner ${isSuccess ? 'banner-success' : 'banner-error'}`}>
+            <i className={`fas ${isSuccess ? 'fa-check-circle' : 'fa-exclamation-circle'}`}></i>
+            {message}
+          </div>
+        )}
 
-            {message && <div className={`message-box ${isSuccess ? 'message-success':'message-error'}`}>{message}</div>}
+        <div className="registry-grid">
+          {/* Left Column: Bulk Upload */}
+          <section className="registry-section registry-section-import">
+            <div className="registry-card">
+              <h2 className="card-label">
+                <i className="fas fa-file-csv"></i>
+                Bulk Import Students
+              </h2>
+              <p className="text-muted mb-4">Select an Excel file (.xlsx) containing the latest student records to update the institutional registry.</p>
 
-            {/* Bulk Upload & Add */}
-            <div className="action-buttons">
-              <div style={{position:'relative'}}>
-                <button className="btn-choose"><i className="fas fa-file-excel fa-lg"></i> Choose Excel File</button>
-                <input type="file" accept=".xlsx,.xls" onChange={(e)=>setFile(e.target.files?.[0]||null)}
-                  style={{position:'absolute',inset:0,opacity:0,cursor:'pointer'}} />
+              <div className="upload-zone">
+                <i className="fas fa-cloud-upload-alt upload-icon"></i>
+                <h3 className="h5 font-weight-bold">Choose File to Upload</h3>
+                <p className="small text-muted">or drag and drop here</p>
+                <input
+                  type="file"
+                  accept=".xlsx,.xls"
+                  className="upload-input-overlay"
+                  onChange={(e) => setFile(e.target.files?.[0] || null)}
+                />
               </div>
-              <button className="btn-primary-gradient" onClick={uploadExcel} disabled={loading||!file}>
-                {loading ? <>
-                  <span className="spinner-border spinner-border-sm me-2" role="status"></span> Processing...
-                </>:<>
-                  <i className="fas fa-upload"></i> Upload & Process
-                </>}
-              </button>
-              <button className="btn-success-gradient" onClick={()=>navigate('/coordinator/students/add')}>
-                <i className="fas fa-user-plus"></i> Add Single Student
-              </button>
+
+              {file && (
+                <div className="file-status">
+                  <div>
+                    <i className="fas fa-file-excel text-success me-2"></i>
+                    <span className="font-weight-600">{file.name}</span>
+                    <span className="small text-muted ms-2">({(file.size / 1024).toFixed(1)} KB)</span>
+                  </div>
+                  <button className="btn btn-sm btn-link text-danger" onClick={() => setFile(null)}>
+                    <i className="fas fa-times"></i>
+                  </button>
+                </div>
+              )}
+
+              <div className="mt-4 d-flex gap-3">
+                <button
+                  className="btn-registry-primary"
+                  onClick={uploadExcel}
+                  disabled={loading || !file}
+                >
+                  {loading ? (
+                    <><span className="spinner-border spinner-border-sm"></span> Processing...</>
+                  ) : (
+                    <><i className="fas fa-sync-alt"></i> Import & Synchronize</>
+                  )}
+                </button>
+                <button
+                  className="btn-registry-secondary"
+                  onClick={() => setIsAddModalOpen(true)}
+                >
+                  <i className="fas fa-user-plus"></i> Add Individual
+                </button>
+              </div>
+
+              <div className="instruction-box">
+                <i className="fas fa-info-circle fa-2x" style={{ color: '#059669' }}></i>
+                <div className="flex-grow-1">
+                  <strong>Institutional Registry Template Requirements:</strong>
+                  <p className="mb-2">Your Excel workbook must contain exactly these column headers in the first row:</p>
+                  <div className="token-group">
+                    <span className="column-token">UniversityRegNo</span>
+                    <span className="column-token">Name</span>
+                    <span className="column-token">UG/PG</span>
+                    <span className="column-token">Department</span>
+                    <span className="column-token">Programme</span>
+                    <span className="column-token">Email</span>
+                    <span className="column-token">Phone</span>
+                    <span className="column-token">PassedOutYear</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Right Column: Record Lookup & Management */}
+          <section className="registry-section registry-section-lookup">
+            <div className="registry-card">
+              <h2 className="card-label">
+                <i className="fas fa-search"></i>
+                Record Lookup
+              </h2>
+              <p className="text-muted mb-3">Retrieve or modify specific student records using their University Registration Number.</p>
+
+              <div className="field-group">
+                <label className="field-label">Registration Number</label>
+                <input
+                  type="text"
+                  className="registry-input"
+                  placeholder="e.g. 20240001"
+                  value={rollNo}
+                  onChange={(e) => setRollNo(e.target.value)}
+                />
+              </div>
+
+              <div className="search-action-group">
+                <button className="btn-lookup-edit flex-grow-1" onClick={() => { setMode("edit"); fetchStudent(); }}>
+                  <i className="fas fa-user-edit"></i> Edit Record
+                </button>
+                <button className="btn-lookup-delete flex-grow-1" onClick={() => { setMode("delete"); fetchStudent(); }}>
+                  <i className="fas fa-trash-alt"></i> Delete Record
+                </button>
+              </div>
+
+              {/* Edit Interface */}
+              {student && mode === "edit" && (
+                <div className="edit-fields-grid">
+                  <div className="field-group">
+                    <label className="field-label">Full Name</label>
+                    <input type="text" className="registry-input" value={student.name} onChange={(e) => setStudent({ ...student, name: e.target.value })} />
+                  </div>
+                  <div className="field-group">
+                    <label className="field-label">Institutional Email</label>
+                    <input type="email" className="registry-input" value={student.email} onChange={(e) => setStudent({ ...student, email: e.target.value })} />
+                  </div>
+                  <div className="field-group">
+                    <label className="field-label">Programme</label>
+                    <input type="text" className="registry-input" value={student.programme || ""} onChange={(e) => setStudent({ ...student, programme: e.target.value })} />
+                  </div>
+                  <div className="field-group">
+                    <label className="field-label">Batch Year</label>
+                    <input type="number" className="registry-input" value={student.passed_out_year || ""} onChange={(e) => setStudent({ ...student, passed_out_year: e.target.value })} />
+                  </div>
+                  <div className="col-span-2 mt-2">
+                    <button className="btn-registry-success w-100" onClick={saveEdit}>
+                      Commit Changes to Registry
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Delete Interface */}
+              {student && mode === "delete" && (
+                <div className="mt-4 p-3 border border-danger rounded bg-light">
+                  <p className="mb-3">You are about to delete <strong>{student.name}'s</strong> record. This action cannot be undone.</p>
+                  <button className="btn-registry-danger w-100" onClick={deleteStudent}>
+                    Confirm Permanent Deletion
+                  </button>
+                </div>
+              )}
             </div>
 
-            {/* Edit/Delete Student */}
-            <div className="action-buttons mt-3">
-              <input type="text" placeholder="Enter University Roll No" value={rollNo} onChange={(e)=>setRollNo(e.target.value)} className="form-control" />
-              <button className="btn-primary-gradient" onClick={()=>{setMode("edit"); fetchStudent();}}>Edit</button>
-              <button className="btn-success-gradient" onClick={()=>{setMode("delete"); fetchStudent();}}>Delete</button>
-            </div>
-
-            {/* Edit Form */}
-            {student && mode==="edit" && (
-              <div className="mt-3">
-                <input type="text" value={student.name} placeholder="Name" onChange={(e)=>setStudent({...student,name:e.target.value})} className="form-control mb-2"/>
-                <input type="email" value={student.email} placeholder="Email" onChange={(e)=>setStudent({...student,email:e.target.value})} className="form-control mb-2"/>
-                <input type="text" value={student.department} placeholder="Department" onChange={(e)=>setStudent({...student,department:e.target.value})} className="form-control mb-2"/>
-                <input type="text" value={student.programme||""} placeholder="Programme" onChange={(e)=>setStudent({...student,programme:e.target.value})} className="form-control mb-2"/>
-                <input type="text" value={student.phone||""} placeholder="Phone" onChange={(e)=>setStudent({...student,phone:e.target.value})} className="form-control mb-2"/>
-                <input type="number" value={student.passed_out_year||""} placeholder="Passed Out Year" onChange={(e)=>setStudent({...student,passed_out_year:e.target.value})} className="form-control mb-2"/>
-                <button className="btn-primary-gradient mt-2" onClick={saveEdit}>Save Changes</button>
-              </div>
-            )}
-
-            {/* Delete Form */}
-            {student && mode==="delete" && (
-              <div className="mt-3">
-                <p>Delete <strong>{student.name}</strong> from <strong>{student.department}</strong>?</p>
-                <button className="btn-success-gradient" onClick={deleteStudent}>Confirm Delete</button>
-              </div>
-            )}
-
-            {file && <div className="file-info"><strong>Selected:</strong> {file.name}<br/><span style={{opacity:0.8}}>{(file.size/1024).toFixed(1)} KB • {file.type||'Excel File'}</span></div>}
-
-            <div className="info-text mt-4"><i className="fas fa-info-circle me-2"></i>Ensure your Excel follows the required format: Reg No, Name, Email, Department, Programme, Phone, Passed Out Year</div>
-
-          </div>
+          </section>
         </div>
+
+        {/* Add Individual Modal */}
+        {isAddModalOpen && (
+          <div className="modal-overlay" onClick={() => setIsAddModalOpen(false)}>
+            <div className="modal-container" onClick={(e) => e.stopPropagation()}>
+              <header className="modal-header">
+                <h3 className="modal-title">Add New Student Record</h3>
+                <button className="modal-close" onClick={() => setIsAddModalOpen(false)}>
+                  <i className="fas fa-times"></i>
+                </button>
+              </header>
+              <div className="modal-body">
+                <form onSubmit={handleAddSubmit}>
+                  <div className="form-grid-2">
+                    <div className="field-group mb-3">
+                      <label className="field-label">University Registration No *</label>
+                      <input 
+                        type="text" 
+                        className="registry-input" 
+                        required 
+                        placeholder="e.g. 2024CSE001"
+                        value={addFormData.university_reg_no}
+                        onChange={(e) => setAddFormData({...addFormData, university_reg_no: e.target.value})}
+                      />
+                    </div>
+                    <div className="field-group mb-3">
+                      <label className="field-label">Full Name *</label>
+                      <input 
+                        type="text" 
+                        className="registry-input" 
+                        required 
+                        placeholder="e.g. John Doe"
+                        value={addFormData.name}
+                        onChange={(e) => setAddFormData({...addFormData, name: e.target.value})}
+                      />
+                    </div>
+                    <div className="field-group mb-3">
+                      <label className="field-label">Program Type *</label>
+                      <select 
+                        className="registry-input" 
+                        required
+                        value={addFormData.ug_pg}
+                        onChange={(e) => setAddFormData({...addFormData, ug_pg: e.target.value})}
+                      >
+                        <option value="UG">Undergraduate (UG)</option>
+                        <option value="PG">Postgraduate (PG)</option>
+                      </select>
+                    </div>
+                    <div className="field-group mb-3">
+                      <label className="field-label">Department *</label>
+                      <input 
+                        type="text" 
+                        className="registry-input bg-light" 
+                        value={addFormData.department} 
+                        readOnly 
+                      />
+                    </div>
+                  </div>
+
+                  <div className="field-group mb-3">
+                    <label className="field-label">Programme / Course *</label>
+                    <input 
+                      type="text" 
+                      className="registry-input" 
+                      required 
+                      placeholder="e.g. B.Tech Computer Science"
+                      value={addFormData.programme}
+                      onChange={(e) => setAddFormData({...addFormData, programme: e.target.value})}
+                    />
+                  </div>
+
+                  <div className="form-grid-2">
+                    <div className="field-group mb-3">
+                      <label className="field-label">Institutional Email *</label>
+                      <input 
+                        type="email" 
+                        className="registry-input" 
+                        required 
+                        placeholder="student@university.edu"
+                        value={addFormData.email}
+                        onChange={(e) => setAddFormData({...addFormData, email: e.target.value})}
+                      />
+                    </div>
+                    <div className="field-group mb-3">
+                      <label className="field-label">Phone Number *</label>
+                      <input 
+                        type="tel" 
+                        className="registry-input" 
+                        required 
+                        placeholder="e.g. +91 9876543210"
+                        value={addFormData.phone}
+                        onChange={(e) => setAddFormData({...addFormData, phone: e.target.value})}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="field-group mb-4">
+                    <label className="field-label">Graduation Year *</label>
+                    <select 
+                      className="registry-input" 
+                      required
+                      value={addFormData.passed_out_year}
+                      onChange={(e) => setAddFormData({...addFormData, passed_out_year: e.target.value})}
+                    >
+                      <option value="" disabled>Select Year</option>
+                      {[2024, 2025, 2026, 2027, 2028].map(year => (
+                        <option key={year} value={year}>{year}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="mt-2 text-end">
+                    <button type="button" className="btn-registry-secondary me-3" onClick={() => setIsAddModalOpen(false)}>
+                      Cancel
+                    </button>
+                    <button type="submit" className="btn-registry-primary" disabled={loading}>
+                      {loading ? (
+                        <><span className="spinner-border spinner-border-sm me-2"></span> Adding...</>
+                      ) : (
+                        <><i className="fas fa-plus-circle me-2"></i> Add Student to Registry</>
+                      )}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </>
-  )
+  );
 }
+

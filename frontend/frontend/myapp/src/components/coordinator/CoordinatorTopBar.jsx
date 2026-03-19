@@ -37,9 +37,9 @@ export default function CoordinatorTopBar() {
         }
 
         .search-container:focus-within {
-          border-color: #7c3aed;
+          border-color: #002147;
           background: #ffffff;
-          box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.05);
+          box-shadow: 0 0 0 4px rgba(0, 33, 71, 0.05);
         }
 
         .search-input {
@@ -78,8 +78,8 @@ export default function CoordinatorTopBar() {
 
         .notification-btn:hover {
           background: #f8fafc;
-          color: #7c3aed;
-          border-color: #7c3aed;
+          color: #002147;
+          border-color: #002147;
         }
 
         .notif-dot {
@@ -115,14 +115,14 @@ export default function CoordinatorTopBar() {
           width: 44px;
           height: 44px;
           border-radius: 12px;
-          background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+          background: #002147;
           display: flex;
           align-items: center;
           justify-content: center;
           color: white;
           font-weight: 800;
           font-family: 'Outfit', sans-serif;
-          box-shadow: 0 4px 12px rgba(124, 58, 237, 0.2);
+          box-shadow: 0 4px 12px rgba(0, 33, 71, 0.2);
         }
 
         .user-meta { display: flex; flex-direction: column; line-height: 1.2; }
