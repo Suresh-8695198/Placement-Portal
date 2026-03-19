@@ -4,6 +4,7 @@ from django.views.decorators.http import require_POST, require_GET, require_http
 from django.shortcuts import get_object_or_404
 from django.contrib.auth.hashers import make_password, check_password
 from django.core.mail import send_mail
+from django.core.files.storage import default_storage
 import json
 import random
 from .models import (
@@ -94,7 +95,35 @@ def get_profile(request):
     profile = StudentProfile.objects.filter(student=student).first()
 
     def safe_url(field):
-        return field.url if field else ""
+        if not field:
+            return ""
+
+        try:
+            url = field.url
+        except Exception:
+            return ""
+
+        # If local file exists, return URL
+        try:
+            path = field.name
+            if path and field.storage.exists(path):
+                return url
+        except Exception:
+            pass
+
+        # If URL is an absolute remote URL, return it
+        if url.startswith("http://") or url.startswith("https://"):
+            return url
+
+        # If URL is a media path and file exists, return it
+        if url.startswith("/media/"):
+            try:
+                if default_storage.exists(url.lstrip("/")):
+                    return url
+            except Exception:
+                pass
+
+        return ""
 
     return JsonResponse({
     "student": {
@@ -123,9 +152,7 @@ def get_profile(request):
         }
         for c in Certificate.objects.filter(student=student)
     ],
-    "resume": safe_url(
-        Resume.objects.filter(student=student).first().resume_file
-    ) if Resume.objects.filter(student=student).exists() else ""
+    "resume": safe_url(Resume.objects.filter(student=student).first().resume_file) if Resume.objects.filter(student=student).exists() else ""
 })
 
 
@@ -497,12 +524,16 @@ def register(request):
 
 
 
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
+from django.contrib.auth.hashers import make_password, check_password
+import json
+from students.models import Student
+
 @csrf_exempt
 @require_POST
 def student_login(request):
-    if request.method != "POST":
-        return JsonResponse({"error": "POST method required"}, status=405)
-
     try:
         data = json.loads(request.body)
     except json.JSONDecodeError:
@@ -519,10 +550,9 @@ def student_login(request):
     except Student.DoesNotExist:
         return JsonResponse({"error": "Invalid email or password"}, status=401)
 
-    # ─── First-time login: allow university_reg_no as password ────────
+    # ─── First-time login ─────────────────────────────
     if student.password is None:
         if password == student.university_reg_no:
-            # Success on first try → hash and save the regno as real password
             student.password = make_password(password)
             student.save(update_fields=['password'])
 
@@ -530,18 +560,17 @@ def student_login(request):
                 "message": "Login successful (first-time login)",
                 "student_id": student.id,
                 "email": student.email,
-                "name": student.name,                  # optional – helpful for frontend
+                "name": student.name,
                 "first_time": True,
-                "message_detail": "You used your University Registration Number as password. For security, please change it in your profile."
+                "message_detail": "Please change your password after login."
             }, status=200)
         else:
             return JsonResponse({
-                "error": "First-time login: Please use your University Registration Number (Reg. No.) as the password",
-                "hint": "Your Reg. No. is the one provided by your department/college",
+                "error": "Use your University Registration Number as password",
                 "needs_regno_as_password": True
             }, status=401)
 
-    # Normal login (password already set)
+    # ─── Normal login ─────────────────────────────
     if not check_password(password, student.password):
         return JsonResponse({"error": "Invalid email or password"}, status=401)
 
@@ -552,7 +581,6 @@ def student_login(request):
         "name": student.name,
         "first_time": False,
     }, status=200)
-
 
 
 

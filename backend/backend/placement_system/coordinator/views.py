@@ -152,7 +152,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 from django.http import JsonResponse
 import json
-
+import uuid
 
 from companies.models import Job
 
@@ -161,38 +161,35 @@ from companies.models import Job
 def coordinator_login(request):
     try:
         data = json.loads(request.body)
-        username = data.get("username", "").strip()
+        username = data.get("username")
         password = data.get("password")
 
-        # If the user entered an email instead of a username, look up the actual username
-        if "@" in username:
-            try:
-                user_obj = User.objects.get(email=username)
-                username = user_obj.username
-            except User.DoesNotExist:
-                return JsonResponse({"error": "Invalid credentials"}, status=401)
+        if not username or not password:
+            return JsonResponse({"error": "Username & password required"}, status=400)
 
         user = authenticate(username=username, password=password)
 
         if user is None:
             return JsonResponse({"error": "Invalid credentials"}, status=401)
 
-        login(request, user)
-
-        # Debug: confirm session is active right after login
-        print("After login - user.is_authenticated:", request.user.is_authenticated)
-        print("Session key after login:", request.session.session_key)
-
+        # Check if user is coordinator
         if not hasattr(user, 'departmentcoordinator'):
             return JsonResponse({"error": "Not a coordinator"}, status=403)
+
+        # ✅ Generate new token on every login
+        user.auth_token = uuid.uuid4()
+        user.save()
 
         return JsonResponse({
             "message": "Login successful",
             "username": user.username,
-            "department": user.departmentcoordinator.department
+            "department": user.departmentcoordinator.department,
+            "token": str(user.auth_token)   # frontend must store this
         })
+
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
+
 
 
 
@@ -1299,4 +1296,4 @@ def recent_student_activity(request):
             "applied_at": app.applied_at.strftime("%Y-%m-%d %H:%M")
         })
 
-    return JsonResponse({"activity": activity_list})
+    return JsonResponse({"activity": activity_list})

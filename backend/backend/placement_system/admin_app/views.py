@@ -8,9 +8,22 @@ from .models import AdminUser
 
 from django.contrib.auth.hashers import check_password   # ← make sure this is imported
 
+from django.contrib.auth.hashers import check_password   # ← make sure this is imported
+# admin_app/views.py
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
+from .models import AdminUser
+import json
+from django.contrib.auth.hashers import check_password
+import uuid
+
 @csrf_exempt
 @require_POST
 def admin_login(request):
+    """
+    Admin login: validates credentials and returns a fresh token.
+    """
     try:
         data = json.loads(request.body)
         email = data.get("email")
@@ -24,17 +37,19 @@ def admin_login(request):
         except AdminUser.DoesNotExist:
             return JsonResponse({"error": "Invalid credentials"}, status=401)
 
-        # ────────────────────────────────────────────────
-        #   THIS IS THE CRITICAL CHANGE
-        # ────────────────────────────────────────────────
         if not check_password(password, admin.password):
             return JsonResponse({"error": "Invalid credentials"}, status=401)
+
+        # Generate a fresh token on login to invalidate any previous sessions
+        admin.auth_token = uuid.uuid4()
+        admin.save()
 
         return JsonResponse({
             "message": "Login successful",
             "admin": {
                 "id": admin.id,
-                "email": admin.email
+                "email": admin.email,
+                "token": str(admin.auth_token)  # frontend must store and use this token
             }
         }, status=200)
 
