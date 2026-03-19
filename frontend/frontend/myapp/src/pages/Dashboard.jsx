@@ -3,12 +3,17 @@
 
 
 // src/pages/Dashboard.jsx
-import React from 'react';
+import React, { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import Topbar from '../components/Topbar';
 
 const Dashboard = () => {
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+
+  const openSidebar = () => setMobileSidebarOpen(true);
+  const closeSidebar = () => setMobileSidebarOpen(false);
+
   return (
     <>
       {/* Global fonts & bootstrap */}
@@ -25,15 +30,18 @@ const Dashboard = () => {
 
       <style>{`
         .dashboard-layout {
-          height: 100vh;
-          width: 100vw;
+          min-height: 100dvh;
+          height: 100dvh;
+          width: 100%;
           display: flex;
           overflow: hidden;
           background-color: var(--bg-sidebar);
+          position: relative;
         }
 
-        .sidebar-wrapper {
+        .dashboard-sidebar-shell {
           flex-shrink: 0;
+          z-index: 1001;
         }
 
         .main-area {
@@ -41,6 +49,7 @@ const Dashboard = () => {
           display: flex;
           flex-direction: column;
           min-width: 0;
+          min-height: 0;
           background: var(--bg-main);
           border-top-left-radius: 24px;
           border-bottom-left-radius: 24px;
@@ -51,10 +60,34 @@ const Dashboard = () => {
         .topbar-wrapper {
           z-index: 90;
           flex-shrink: 0;
+          position: relative;
+        }
+
+        .menu-toggle {
+          display: none;
+          position: absolute;
+          right: 0.8rem;
+          top: 50%;
+          transform: translateY(-50%);
+          width: 36px;
+          height: 36px;
+          align-items: center;
+          justify-content: center;
+          border: 1px solid #cbd5e1;
+          border-radius: 8px;
+          background: #ffffff;
+          color: #0f172a;
+          font-size: 1rem;
+          z-index: 1200;
+        }
+
+        .sidebar-backdrop {
+          display: none;
         }
 
         .content-wrapper {
           flex: 1;
+          min-height: 0;
           overflow-y: auto;
           padding: 1.5rem 2rem;
           -webkit-overflow-scrolling: touch;
@@ -70,6 +103,44 @@ const Dashboard = () => {
         }
 
         @media (max-width: 992px) {
+          .menu-toggle {
+            display: inline-flex;
+          }
+
+          .dashboard-sidebar-shell {
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 280px;
+            transform: translateX(-100%);
+            transition: transform 0.25s ease;
+            box-shadow: 6px 0 24px rgba(15, 23, 42, 0.35);
+          }
+
+          .dashboard-sidebar-shell.open {
+            transform: translateX(0);
+          }
+
+          .sidebar-backdrop {
+            display: block;
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.45);
+            z-index: 1000;
+          }
+
+          .main-area {
+            margin: 0;
+            border-radius: 0;
+            box-shadow: none;
+            width: 100%;
+          }
+
+          .topbar-wrapper {
+            padding-right: 2.9rem;
+          }
+
           .content-wrapper {
             padding: 1.4rem 1.6rem;
           }
@@ -77,7 +148,11 @@ const Dashboard = () => {
 
         @media (max-width: 576px) {
           .topbar-wrapper {
-            padding: 0.8rem 1.4rem;
+            padding: 0.8rem 3.2rem 0.8rem 1rem;
+          }
+
+          .menu-toggle {
+            right: 0.7rem;
           }
 
           .content-wrapper {
@@ -86,21 +161,31 @@ const Dashboard = () => {
         }
 
         .content-wrapper::-webkit-scrollbar,
-        .sidebar-wrapper::-webkit-scrollbar {
+        .dashboard-sidebar-shell::-webkit-scrollbar {
           width: 0;
           background: transparent;
         }
       `}</style>
 
       <div className="dashboard-layout">
+        {mobileSidebarOpen && <div className="sidebar-backdrop" onClick={closeSidebar}></div>}
+
         {/* Sidebar */}
-        <div className="sidebar-wrapper">
-          <Sidebar />
+        <div className={`dashboard-sidebar-shell ${mobileSidebarOpen ? "open" : ""}`}>
+          <Sidebar onNavigate={closeSidebar} onClose={closeSidebar} />
         </div>
 
         {/* Main content area */}
         <div className="main-area">
           <div className="topbar-wrapper">
+            <button
+              className="menu-toggle"
+              onClick={openSidebar}
+              aria-label="Open menu"
+              type="button"
+            >
+              <i className="fas fa-bars"></i>
+            </button>
             <Topbar />
           </div>
 

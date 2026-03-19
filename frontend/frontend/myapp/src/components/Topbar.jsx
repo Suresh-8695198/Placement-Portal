@@ -7,35 +7,51 @@ import axios from "axios";
 
 const Topbar = () => {
   const [studentName, setStudentName] = useState("Student");
+  const [studentEmail, setStudentEmail] = useState("");
+  const [studentDepartment, setStudentDepartment] = useState("");
+  const [studentPhoto, setStudentPhoto] = useState("");
+  const [photoError, setPhotoError] = useState(false);
 
   useEffect(() => {
     const email = localStorage.getItem("studentEmail");
     if (!email) return;
+    setStudentEmail(email);
 
     axios
       .get(`http://localhost:8000/api/students/profile/?email=${email}`)
       .then((res) => {
-        if (res.data.student && res.data.student.name) {
-          setStudentName(res.data.student.name);
-        } else if (res.data.student && res.data.student.username) {
-          setStudentName(res.data.student.username);
+        const student = res.data?.student || {};
+        const profilePhoto = res.data?.profile_image || student.profile_image || "";
+
+        if (res.data.student && res.data.student.email) {
+          setStudentEmail(res.data.student.email);
+        }
+        if (student.name) {
+          setStudentName(student.name);
+        } else if (student.username) {
+          setStudentName(student.username);
+        }
+
+        setStudentDepartment(student.department || "Department");
+
+        if (profilePhoto) {
+          const normalizedPhoto = profilePhoto.startsWith("/")
+            ? `http://localhost:8000${profilePhoto}`
+            : profilePhoto;
+          setStudentPhoto(normalizedPhoto);
         }
       })
       .catch((err) => console.log("Failed to load student name:", err));
   }, []);
 
-  const handleLogout = () => {
-    localStorage.clear();
-    window.location.href = "/login";
-  };
+  const avatarInitial = (studentName || "S").trim().charAt(0).toUpperCase();
 
   return (
     <>
       <style>{`
         .topbar-area {
-          background: var(--white);
-          border-bottom: 1px solid var(--border-color);
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+          background: #ffffff;
+          border-bottom: 1px solid #e5e7eb;
           padding: 1rem 2rem;
           display: flex;
           align-items: center;
@@ -43,42 +59,90 @@ const Topbar = () => {
           position: sticky;
           top: 0;
           z-index: 1000;
-          color: var(--text-main);
+          color: #111827;
+          gap: 1rem;
         }
 
         .welcome {
           font-size: 1.1rem;
-          font-weight: 500;
+          font-weight: 600;
+          white-space: nowrap;
         }
 
         .welcome span {
           font-weight: 700;
-          color: var(--primary);
+          color: #0f172a;
         }
 
-        .logout-btn {
-          background: var(--primary);
-          color: var(--white);
-          border: none;
-          border-radius: 8px;
-          padding: 0.6rem 1.2rem;
-          font-size: 0.9rem;
-          font-weight: 600;
-          cursor: pointer;
+        .student-meta {
           display: flex;
           align-items: center;
-          gap: 0.6rem;
-          transition: var(--transition);
+          gap: 0.75rem;
+          padding: 0.45rem 0.7rem;
+          border: 1px solid #dbe2ea;
+          border-radius: 10px;
+          background: #f8fafc;
+          min-width: 250px;
+          max-width: 440px;
         }
 
-        .logout-btn:hover {
-          background: var(--primary-hover);
-          box-shadow: 0 4px 12px -2px rgba(0, 90, 156, 0.3);
-          transform: translateY(-2px);
+        .student-avatar {
+          width: 38px;
+          height: 38px;
+          border-radius: 50%;
+          overflow: hidden;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: #0f172a;
+          color: #ffffff;
+          font-size: 0.95rem;
+          font-weight: 700;
+          flex-shrink: 0;
         }
 
-        .logout-btn i {
-          font-size: 1rem;
+        .student-avatar img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          display: block;
+        }
+
+        .student-text {
+          display: flex;
+          flex-direction: column;
+          min-width: 0;
+          line-height: 1.25;
+        }
+
+        .student-email {
+          font-size: 0.86rem;
+          font-weight: 600;
+          color: #0f172a;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .student-dept {
+          font-size: 0.76rem;
+          font-weight: 500;
+          color: #64748b;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        @media (max-width: 992px) {
+          .topbar-area {
+            padding-right: 3.2rem;
+          }
+
+          .welcome {
+            max-width: 48%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+          }
         }
 
         @media (max-width: 768px) {
@@ -88,17 +152,44 @@ const Topbar = () => {
           .welcome {
             font-size: 1rem;
           }
-          .logout-btn {
-            padding: 0.5rem 1rem;
+
+          .student-meta {
+            min-width: 210px;
+            max-width: 290px;
+          }
+
+          .student-avatar {
+            width: 34px;
+            height: 34px;
             font-size: 0.85rem;
+          }
+
+          .student-email {
+            font-size: 0.8rem;
           }
         }
 
         @media (max-width: 576px) {
           .topbar-area {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 0.8rem;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+          }
+
+          .student-meta {
+            min-width: 0;
+            max-width: 195px;
+            padding: 0.4rem 0.5rem;
+            gap: 0.55rem;
+          }
+
+          .student-avatar {
+            width: 30px;
+            height: 30px;
+            font-size: 0.8rem;
+          }
+
+          .student-dept {
+            font-size: 0.72rem;
           }
         }
       `}</style>
@@ -108,10 +199,28 @@ const Topbar = () => {
           Welcome, <span>{studentName}</span>!
         </div>
 
-        <button className="logout-btn" onClick={handleLogout}>
-          Logout
-          <i className="fas fa-sign-out-alt"></i>
-        </button>
+        <div className="student-meta">
+          <div className="student-avatar">
+            {studentPhoto && !photoError ? (
+              <img
+                src={studentPhoto}
+                alt={studentName}
+                onError={() => setPhotoError(true)}
+              />
+            ) : (
+              <span>{avatarInitial}</span>
+            )}
+          </div>
+
+          <div className="student-text">
+            <div className="student-email" title={studentEmail || "Email unavailable"}>
+              {studentEmail || "Unavailable"}
+            </div>
+            <div className="student-dept" title={studentDepartment || "Department unavailable"}>
+              {studentDepartment || "Department unavailable"}
+            </div>
+          </div>
+        </div>
       </div>
     </>
   );

@@ -940,388 +940,589 @@ const Profile = () => {
 
 
       `}</style>
-      <div className="profile-container">
-        {/* Header + Basic Info */}
-        <div className="profile-header-card">
-          <div className="profile-header">
-            <div style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: "1rem"
-            }}>
-              <div className="avatar" style={{ position: 'relative' }}>
-                {(photoUrl && typeof photoUrl === 'string' && photoUrl.trim() !== '' && !imageError) ? (
-                  <img
-                    src={photoUrl}
-                    alt={`${displayName}'s photo`}
-                    onError={() => setImageError(true)}
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'cover',
-                      borderRadius: '50%',
-                      display: 'block',
-                    }}
-                  />
-                ) : (
-                  <div
-                    className="fallback"
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '5.2rem',
-                      fontWeight: 900,
-                      background: 'linear-gradient(135deg, #4B0082, #6A0DAD)',
-                      color: 'white',
-                      borderRadius: '50%',
-                      textTransform: 'uppercase',
-                      letterSpacing: 2
-                    }}
-                  >
-                    {initials}
-                  </div>
-                )}
-                {loading && (
-                  <div style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    width: '100%',
-                    height: '100%',
-                    background: 'rgba(255,255,255,0.6)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    zIndex: 10,
-                    borderRadius: '50%'
-                  }}>
-                    <div className="spinner-border text-primary" role="status" style={{ width: 40, height: 40 }}>
-                      <span className="visually-hidden">Uploading...</span>
-                    </div>
-                  </div>
-                )}
-                <input
-                  id="student-photo-input"
-                  type="file"
-                  accept="image/*"
-                  style={{ display: 'none' }}
-                  onChange={async e => {
-                    const file = e.target.files && e.target.files[0];
-                    if (file) {
-                      const email = localStorage.getItem("studentEmail");
-                      if (!email) {
-                        alert("No student email found.");
-                        return;
-                      }
-                      const formData = new FormData();
-                      formData.append("profile_image", file);
-                      formData.append("email", email);
-                      try {
-                        const res = await fetch(`http://localhost:8000/api/students/profile/edit/${student.id}/`, {
-                          method: "POST",
-                          headers: {
-                            "X-CSRFToken": getCookie("csrftoken")
-                          },
-                          body: formData,
-                          credentials: "include"
-                        });
-                        if (!res.ok) throw new Error("Upload failed");
-                        await loadProfile();
-                        setImageError(false);
-                      } catch (err) {
-                        alert("Error uploading photo: " + (err.message || "Unknown error"));
-                      }
-                    }
-                  }}
-                />
-              </div>
+      <style>{`
+        .profile-container {
+          max-width: 1320px;
+          width: 100%;
+          padding-top: 0.9rem;
+          background: #ffffff;
+          display: grid;
+          grid-template-columns: minmax(420px, 1fr) minmax(420px, 1fr);
+          gap: 0 1rem;
+          align-items: stretch;
+        }
 
+        .left-stack,
+        .right-stack {
+          display: flex;
+          flex-direction: column;
+          gap: 1rem;
+        }
+
+        .profile-header-card,
+        .profile-card {
+          background: #ffffff;
+          border: 1px solid #cbdcfb;
+          border-radius: 12px;
+          box-shadow: none;
+          padding: 1.05rem 1.05rem;
+          margin-bottom: 0;
+        }
+
+        .profile-header-card,
+        .resume-top-card {
+          min-height: 380px;
+        }
+
+        .profile-header {
+          gap: 1.5rem;
+          align-items: flex-start;
+        }
+
+        .avatar {
+          box-shadow: none;
+          background: #0f172a;
+          width: 104px;
+          height: 104px;
+        }
+
+        .section-title {
+          background: none;
+          -webkit-background-clip: initial;
+          -webkit-text-fill-color: initial;
+          color: #1d4ed8;
+          font-weight: 700;
+          letter-spacing: 0;
+        }
+
+        .info-row strong,
+        .social-link,
+        .modal-title,
+        .modal-form-label {
+          color: #0f172a;
+        }
+
+        .section-heading {
+          color: #1d4ed8;
+          font-size: 1.6rem;
+          font-weight: 800;
+          margin: 0 0 1rem;
+          padding-left: 0.5rem;
+          letter-spacing: 0.2px;
+        }
+
+        .sub-heading {
+          color: #1d4ed8;
+          font-size: 1.2rem;
+          font-weight: 800;
+          margin: 0 0 0.8rem;
+          padding-left: 0.35rem;
+        }
+
+        .section-divider {
+          border-top: 1px solid #dbeafe;
+          margin: 1rem 0;
+        }
+
+        .item-row {
+          background: transparent;
+          border: 1px solid #dbeafe;
+          border-radius: 8px;
+          padding: 1rem;
+          margin-bottom: 0.75rem;
+        }
+
+        .preview-container {
+          border-radius: 8px;
+          box-shadow: none;
+          border: 1px solid #e5e7eb;
+        }
+
+        .preview-container:hover,
+        .action-btn:hover,
+        .action-btn-primary:hover,
+        .action-btn-danger:hover,
+        .action-btn-outline:hover {
+          transform: none;
+          box-shadow: none;
+        }
+
+        .action-btn {
+          transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+          border-radius: 8px;
+        }
+
+        .action-btn-primary {
+          background: #2563eb;
+          border: 1px solid #2563eb;
+          box-shadow: none;
+        }
+
+        .action-btn-primary::before {
+          content: none;
+          animation: none;
+        }
+
+        .action-btn-primary:hover {
+          background: #1d4ed8;
+          border-color: #1d4ed8;
+        }
+
+        .action-btn-outline {
+          color: #1e3a8a;
+          border: 1px solid #93c5fd;
+          background: #ffffff;
+        }
+
+        .action-btn-outline:hover {
+          background: #eff6ff;
+        }
+
+        .action-btn-danger {
+          color: #b91c1c;
+          background: #fff5f5;
+          border: 1px solid #fecaca;
+        }
+
+        .social-link {
+          font-weight: 500;
+          text-decoration: none;
+        }
+
+        .modal-content,
+        .modal-header {
+          box-shadow: none;
+          background: #ffffff;
+          border-color: #e5e7eb;
+        }
+
+        @media (max-width: 768px) {
+          .profile-container {
+            padding-top: 1.1rem;
+            grid-template-columns: 1fr;
+            gap: 0.7rem;
+          }
+
+          .left-stack,
+          .right-stack {
+            gap: 0.8rem;
+          }
+
+          .profile-header-card,
+          .profile-card {
+            padding: 1rem 0.8rem;
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
+          }
+
+          .section-heading {
+            font-size: 1.35rem;
+            padding-left: 0.3rem;
+          }
+
+          .sub-heading {
+            font-size: 1.05rem;
+            padding-left: 0.2rem;
+          }
+
+          .profile-header-card,
+          .resume-top-card {
+            min-height: auto;
+          }
+        }
+
+        @media (min-width: 769px) and (max-width: 1024px) {
+          .profile-header-card,
+          .resume-top-card {
+            min-height: 340px;
+          }
+        }
+      `}</style>
+      <div className="profile-container">
+        <div className="left-stack">
+          {/* Header + Basic Info */}
+          <div className="profile-header-card">
+            <div className="profile-header">
               <div style={{
                 display: "flex",
                 flexDirection: "column",
-                gap: "0.75rem",
                 alignItems: "center",
-                width: "100%",
-                maxWidth: "180px"
+                gap: "1rem",
+                marginTop: "0.6rem"
               }}>
-                <button
-                  className="action-btn action-btn-primary"
-                  style={{ width: "100%", padding: "0.6rem 1.2rem", fontSize: "0.95rem" }}
-                  onClick={() => document.getElementById('student-photo-input').click()}
-                >
-                  <i className="bi bi-camera-fill me-2"></i>
-                  Profile Photo
-                </button>
+                <div className="avatar" style={{ position: 'relative' }}>
+                  {(photoUrl && typeof photoUrl === 'string' && photoUrl.trim() !== '' && !imageError) ? (
+                    <img
+                      src={photoUrl}
+                      alt={`${displayName}'s photo`}
+                      onError={() => setImageError(true)}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        borderRadius: '50%',
+                        display: 'block',
+                      }}
+                    />
+                  ) : (
+                    <div
+                      className="fallback"
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '2rem',
+                        fontWeight: 900,
+                        background: '#0f172a',
+                        color: 'white',
+                        borderRadius: '50%',
+                        textTransform: 'uppercase',
+                        letterSpacing: 2
+                      }}
+                    >
+                      {initials}
+                    </div>
+                  )}
+                  {loading && (
+                    <div style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      width: '100%',
+                      height: '100%',
+                      background: 'rgba(255,255,255,0.6)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      zIndex: 10,
+                      borderRadius: '50%'
+                    }}>
+                      <div className="spinner-border text-primary" role="status" style={{ width: 40, height: 40 }}>
+                        <span className="visually-hidden">Uploading...</span>
+                      </div>
+                    </div>
+                  )}
+                  <input
+                    id="student-photo-input"
+                    type="file"
+                    accept="image/*"
+                    style={{ display: 'none' }}
+                    onChange={async e => {
+                      const file = e.target.files && e.target.files[0];
+                      if (file) {
+                        const email = localStorage.getItem("studentEmail");
+                        if (!email) {
+                          alert("No student email found.");
+                          return;
+                        }
+                        const formData = new FormData();
+                        formData.append("profile_image", file);
+                        formData.append("email", email);
+                        try {
+                          const res = await fetch(`http://localhost:8000/api/students/profile/edit/${student.id}/`, {
+                            method: "POST",
+                            headers: {
+                              "X-CSRFToken": getCookie("csrftoken")
+                            },
+                            body: formData,
+                            credentials: "include"
+                          });
+                          if (!res.ok) throw new Error("Upload failed");
+                          await loadProfile();
+                          setImageError(false);
+                        } catch (err) {
+                          alert("Error uploading photo: " + (err.message || "Unknown error"));
+                        }
+                      }
+                    }}
+                  />
+                </div>
 
-                <button
-                  className="action-btn action-btn-danger"
-                  style={{ width: "100%", padding: "0.6rem 1.2rem", fontSize: "0.95rem" }}
-                  onClick={removeProfilePhoto}
-                  disabled={!hasPhoto}
-                >
-                  <i className="bi bi-trash me-1"></i>
-                  Remove
-                </button>
+                <div style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "0.75rem",
+                  alignItems: "center",
+                  width: "100%",
+                  maxWidth: "180px"
+                }}>
+                  <button
+                    className="action-btn action-btn-primary"
+                    style={{ width: "100%", padding: "0.6rem 1.2rem", fontSize: "0.95rem" }}
+                    onClick={() => document.getElementById('student-photo-input').click()}
+                  >
+                    <i className="bi bi-camera-fill me-2"></i>
+                    Profile Photo
+                  </button>
+
+                  <button
+                    className="action-btn action-btn-danger"
+                    style={{ width: "100%", padding: "0.6rem 1.2rem", fontSize: "0.95rem" }}
+                    onClick={removeProfilePhoto}
+                    disabled={!hasPhoto}
+                  >
+                    <i className="bi bi-trash me-1"></i>
+                    Remove
+                  </button>
+                </div>
               </div>
-            </div>
 
-            <div className="profile-info">
-              <h1 className="section-title" style={{ margin: 0 }}>{displayName}</h1>
-              <div style={{ marginTop: "1.5rem" }}>
-                <div className="info-row">
-                  <div className="label-wrapper">
-                    <i className="bi bi-envelope-fill"></i>
-                    <strong>Email:</strong>
+              <div className="profile-info">
+                <h1 className="section-title" style={{ margin: 0 }}>{displayName}</h1>
+                <div style={{ marginTop: "1.5rem" }}>
+                  <div className="info-row">
+                    <div className="label-wrapper">
+                      <i className="bi bi-envelope-fill"></i>
+                      <strong>Email:</strong>
+                    </div>
+                    <span className="info-value">{student.email || "—"}</span>
                   </div>
-                  <span className="info-value">{student.email || "—"}</span>
-                </div>
-                <div className="info-row">
-                  <div className="label-wrapper">
-                    <i className="bi bi-person-badge-fill"></i>
-                    <strong>Register No:</strong>
+                  <div className="info-row">
+                    <div className="label-wrapper">
+                      <i className="bi bi-person-badge-fill"></i>
+                      <strong>Register No:</strong>
+                    </div>
+                    <span className="info-value">{student.university_reg_no || "—"}</span>
                   </div>
-                  <span className="info-value">{student.university_reg_no || "—"}</span>
-                </div>
-                <div className="info-row">
-                  <div className="label-wrapper">
-                    <i className="bi bi-telephone-fill"></i>
-                    <strong>Phone:</strong>
+                  <div className="info-row">
+                    <div className="label-wrapper">
+                      <i className="bi bi-telephone-fill"></i>
+                      <strong>Phone:</strong>
+                    </div>
+                    <span className="info-value">{student.phone || "Not provided"}</span>
                   </div>
-                  <span className="info-value">{student.phone || "Not provided"}</span>
-                </div>
-                <div className="info-row">
-                  <div className="label-wrapper">
-                    <i className="bi bi-building-fill"></i>
-                    <strong>Department:</strong>
+                  <div className="info-row">
+                    <div className="label-wrapper">
+                      <i className="bi bi-building-fill"></i>
+                      <strong>Department:</strong>
+                    </div>
+                    <span className="info-value">{student.department || "—"}</span>
                   </div>
-                  <span className="info-value">{student.department || "—"}</span>
-                </div>
-                <div className="info-row">
-                  <div className="label-wrapper">
-                    <i className="bi bi-building-fill"></i>
-                    <strong>Passed out year:</strong>
+                  <div className="info-row">
+                    <div className="label-wrapper">
+                      <i className="bi bi-building-fill"></i>
+                      <strong>Passed out year:</strong>
+                    </div>
+                    <span className="info-value">{student.passed_out_year || "—"}</span>
                   </div>
-                  <span className="info-value">{student.passed_out_year || "—"}</span>
                 </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* About Me */}
-        <div className="profile-card">
-          <h3 className="section-title">About Me</h3>
-          <p className="about-text">
-            {profile.about || "No about information added yet."}
-          </p>
-          <button
-            className="action-btn action-btn-primary"
-            onClick={() => openModal("editAbout", { about: profile.about || "" })}
-          >
-            <i className="bi bi-pencil-square me-2"></i> Edit About
-          </button>
-        </div>
+          <div className="profile-card">
+            <h3 className="section-heading">About & Social Links</h3>
 
-        {/* Education */}
-        <div className="profile-card">
-          <h3 className="section-title">Education</h3>
-          {profile.education?.length > 0 ? (
-            profile.education.map((edu) => (
-              <div key={edu.id} className="item-row">
-                <div className="item-content">
-                  <strong>{edu.degree}</strong> – {edu.institution}
-                  <div style={{ color: "#64748b", marginTop: "0.5rem" }}>
-                    {edu.year_of_passing} • CGPA: {edu.cgpa || "—"}
-                  </div>
-                </div>
-                <div className="item-actions">
-                  <button
-                    className="action-btn action-btn-outline"
-                    onClick={() => openModal("editEdu", edu)}
-                  >
-                    <i className="bi bi-pencil-square me-1"></i> Edit
-                  </button>
-                  <button
-                    className="action-btn action-btn-danger"
-                    onClick={() => deleteEducation(edu.id)}
-                  >
-                    <i className="bi bi-trash me-1"></i> Delete
-                  </button>
-                </div>
-              </div>
-            ))
-          ) : (
-            <p style={{ color: "#64748b", fontStyle: "italic", marginBottom: "1.8rem" }}>
-              No education entries added yet.
+            <h4 className="sub-heading">About Me</h4>
+            <p className="about-text">
+              {profile.about || "No about information added yet."}
             </p>
-          )}
-          <button
-            className="action-btn action-btn-primary"
-            onClick={() => openModal("addEdu")}
-          >
-            <i className="bi bi-plus-circle-fill me-2"></i> Add Education
-          </button>
-        </div>
+            <button
+              className="action-btn action-btn-primary"
+              onClick={() => openModal("editAbout", { about: profile.about || "" })}
+            >
+              <i className="bi bi-pencil-square me-2"></i> Edit About
+            </button>
 
-        {/* Certificates */}
-        <div className="profile-card">
-          <h3 className="section-title">Certificates</h3>
-          {profile.certificates?.length > 0 ? (
-            profile.certificates.map((cert) => (
-              <div key={cert.id} className="item-row">
-                <div className="item-content">
-                  <strong style={{ fontSize: "1.15rem", color: "#4B0082" }}>{cert.title}</strong>
-                  <div className="certificate-meta">
-                    {cert.issued_by && (
-                      <span style={{ background: "#f3e8ff", color: "#6A0DAD", padding: "0.35rem 0.9rem", borderRadius: "8px", fontWeight: 600, fontSize: "0.98rem", boxShadow: "0 2px 8px rgba(106,13,173,0.08)" }}>
-                        <i className="bi bi-award me-2" style={{ color: "#6A0DAD" }}></i>
-                        Issued By: {cert.issued_by}
-                      </span>
-                    )}
-                    {cert.year_obtained && (
-                      <span style={{ background: "#f3e8ff", color: "#6A0DAD", padding: "0.35rem 0.9rem", borderRadius: "8px", fontWeight: 600, fontSize: "0.98rem", boxShadow: "0 2px 8px rgba(106,13,173,0.08)" }}>
-                        <i className="bi bi-calendar-event me-2" style={{ color: "#6A0DAD" }}></i>
-                        Year Obtained: {cert.year_obtained}
-                      </span>
-                    )}
-                  </div>
-                  {cert.certificate_file && (
-                    <div style={{ marginTop: "1rem" }}>
-                      <a href={cert.certificate_file} target="_blank" rel="noreferrer">
-                        <div className="preview-container">
-                          <img
-                            src={cert.certificate_file}
-                            alt={cert.title}
-                            style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                            onError={(e) => (e.target.style.display = "none")}
-                          />
-                        </div>
-                      </a>
+            <div className="section-divider"></div>
+
+            <h4 className="sub-heading">Social Links</h4>
+            {profile.social_links &&
+            Object.values(profile.social_links).some(link => link && link.trim()) ? (
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.85rem" }}>
+                {profile.social_links.github && (
+                  <a href={profile.social_links.github} target="_blank" rel="noopener noreferrer" className="social-link">
+                    <i className="bi bi-github social-icon"></i>
+                    GitHub
+                  </a>
+                )}
+                {profile.social_links.linkedin && (
+                  <a href={profile.social_links.linkedin} target="_blank" rel="noopener noreferrer" className="social-link">
+                    <i className="bi bi-linkedin social-icon"></i>
+                    LinkedIn
+                  </a>
+                )}
+                {profile.social_links.portfolio && (
+                  <a href={profile.social_links.portfolio} target="_blank" rel="noopener noreferrer" className="social-link">
+                    <i className="bi bi-globe social-icon"></i>
+                    Portfolio
+                  </a>
+                )}
+                {profile.social_links.twitter && (
+                  <a href={profile.social_links.twitter} target="_blank" rel="noopener noreferrer" className="social-link">
+                    <i className="bi bi-twitter-x social-icon"></i>
+                    Twitter / X
+                  </a>
+                )}
+              </div>
+            ) : (
+              <p style={{ color: "#64748b", fontStyle: "italic", marginBottom: "1rem" }}>
+                No social links added yet.
+              </p>
+            )}
+
+            <button
+              className="action-btn action-btn-primary"
+              style={{ marginTop: "1rem" }}
+              onClick={() => openModal("editSocial", profile.social_links || {})}
+            >
+              <i className="bi bi-pencil-square me-2"></i> Edit Social Links
+            </button>
+          </div>
+
+          <div className="profile-card">
+            <h3 className="section-heading">Education</h3>
+            {profile.education?.length > 0 ? (
+              profile.education.map((edu) => (
+                <div key={edu.id} className="item-row">
+                  <div className="item-content">
+                    <strong>{edu.degree}</strong> – {edu.institution}
+                    <div style={{ color: "#64748b", marginTop: "0.5rem" }}>
+                      {edu.year_of_passing} • CGPA: {edu.cgpa || "—"}
                     </div>
-                  )}
-                </div>
-                <div className="item-actions">
-                  <button
-                    className="action-btn action-btn-outline"
-                    onClick={() => openModal("editCert", cert)}
-                  >
-                    <i className="bi bi-pencil-square me-1"></i> Edit
-                  </button>
-                  <button
-                    className="action-btn action-btn-danger"
-                    onClick={() => deleteCertificate(cert.id)}
-                  >
-                    <i className="bi bi-trash me-1"></i> Delete
-                  </button>
-                </div>
-              </div>
-            ))
-          ) : (
-            <p style={{ color: "#64748b", fontStyle: "italic", marginBottom: "1.8rem" }}>
-              No certificates added yet.
-            </p>
-          )}
-          <button
-            className="action-btn action-btn-primary"
-            onClick={() => openModal("addCert")}
-          >
-            <i className="bi bi-plus-circle-fill me-2"></i> Add Certificate
-          </button>
-        </div>
-
-        {/* Resume */}
-        <div className="profile-card">
-          <h3 className="section-title">Resume</h3>
-          {profile.resume ? (
-            <>
-              <a href={profile.resume} target="_blank" rel="noreferrer">
-                <div className="preview-container">
-                  <div className="preview-pdf">
-                    <i className="bi bi-file-earmark-pdf-fill" style={{ fontSize: "3.2rem" }}></i>
-                    <div>View Resume</div>
-                    <div style={{ fontSize: "0.9rem" }}>(PDF)</div>
+                  </div>
+                  <div className="item-actions">
+                    <button
+                      className="action-btn action-btn-outline"
+                      onClick={() => openModal("editEdu", edu)}
+                    >
+                      <i className="bi bi-pencil-square me-1"></i> Edit
+                    </button>
+                    <button
+                      className="action-btn action-btn-danger"
+                      onClick={() => deleteEducation(edu.id)}
+                    >
+                      <i className="bi bi-trash me-1"></i> Delete
+                    </button>
                   </div>
                 </div>
-              </a>
-              <div className="resume-actions">
-                <button
-                  className="action-btn action-btn-primary"
-                  onClick={() => window.open(profile.resume, '_blank')}
-                >
-                  <i className="bi bi-download me-2"></i> Download
-                </button>
+              ))
+            ) : (
+              <p style={{ color: "#64748b", fontStyle: "italic", marginBottom: "1rem" }}>
+                No education entries added yet.
+              </p>
+            )}
+            <button
+              className="action-btn action-btn-primary"
+              onClick={() => openModal("addEdu")}
+            >
+              <i className="bi bi-plus-circle-fill me-2"></i> Add Education
+            </button>
+          </div>
+        </div>
+
+        <div className="right-stack">
+          <div className="profile-card resume-top-card">
+            <h3 className="section-heading">Resume</h3>
+            {profile.resume ? (
+              <>
+                <a href={profile.resume} target="_blank" rel="noreferrer">
+                  <div className="preview-container">
+                    <div className="preview-pdf">
+                      <i className="bi bi-file-earmark-pdf-fill" style={{ fontSize: "3.2rem" }}></i>
+                      <div>View Resume</div>
+                      <div style={{ fontSize: "0.9rem" }}>(PDF)</div>
+                    </div>
+                  </div>
+                </a>
+                <div className="resume-actions">
+                  <button
+                    className="action-btn action-btn-primary"
+                    style={{ background: "#08203a", borderColor: "#08203a" }}
+                    onClick={() => window.open(profile.resume, '_blank')}
+                  >
+                    <i className="bi bi-download me-2"></i> Download
+                  </button>
+                  <button
+                    className="action-btn action-btn-primary"
+                    onClick={() => openModal("replaceResume")}
+                  >
+                    <i className="bi bi-arrow-repeat me-2"></i> Replace
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <p style={{ color: "#64748b", fontStyle: "italic", marginBottom: "1rem" }}>
+                  No resume uploaded yet.
+                </p>
                 <button
                   className="action-btn action-btn-primary"
                   onClick={() => openModal("replaceResume")}
+                  style={{ width: "100%", marginTop: "0.7rem" }}
                 >
-                  <i className="bi bi-arrow-repeat me-2"></i> Replace
+                  <i className="bi bi-upload me-2"></i> Upload Resume
                 </button>
-              </div>
-            </>
-          ) : (
-            <>
-              <p style={{ color: "#64748b", fontStyle: "italic", marginBottom: "1.8rem" }}>
-                No resume uploaded yet.
+              </>
+            )}
+          </div>
+
+          <div className="profile-card">
+            <h3 className="section-heading">Certificates</h3>
+            {profile.certificates?.length > 0 ? (
+              profile.certificates.map((cert) => (
+                <div key={cert.id} className="item-row">
+                  <div className="item-content">
+                    <strong style={{ fontSize: "1.15rem", color: "#0f172a" }}>{cert.title}</strong>
+                    <div className="certificate-meta">
+                      {cert.issued_by && (
+                        <span style={{ background: "#f8fafc", color: "#334155", padding: "0.35rem 0.9rem", borderRadius: "8px", fontWeight: 600, fontSize: "0.98rem", border: "1px solid #e5e7eb" }}>
+                          <i className="bi bi-award me-2" style={{ color: "#0f172a" }}></i>
+                          Issued By: {cert.issued_by}
+                        </span>
+                      )}
+                      {cert.year_obtained && (
+                        <span style={{ background: "#f8fafc", color: "#334155", padding: "0.35rem 0.9rem", borderRadius: "8px", fontWeight: 600, fontSize: "0.98rem", border: "1px solid #e5e7eb" }}>
+                          <i className="bi bi-calendar-event me-2" style={{ color: "#0f172a" }}></i>
+                          Year Obtained: {cert.year_obtained}
+                        </span>
+                      )}
+                    </div>
+                    {cert.certificate_file && (
+                      <div style={{ marginTop: "1rem" }}>
+                        <a href={cert.certificate_file} target="_blank" rel="noreferrer">
+                          <div className="preview-container">
+                            <img
+                              src={cert.certificate_file}
+                              alt={cert.title}
+                              style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                              onError={(e) => (e.target.style.display = "none")}
+                            />
+                          </div>
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                  <div className="item-actions">
+                    <button
+                      className="action-btn action-btn-outline"
+                      onClick={() => openModal("editCert", cert)}
+                    >
+                      <i className="bi bi-pencil-square me-1"></i> Edit
+                    </button>
+                    <button
+                      className="action-btn action-btn-danger"
+                      onClick={() => deleteCertificate(cert.id)}
+                    >
+                      <i className="bi bi-trash me-1"></i> Delete
+                    </button>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p style={{ color: "#64748b", fontStyle: "italic", marginBottom: "1rem" }}>
+                No certificates added yet.
               </p>
-              <button
-                className="action-btn action-btn-primary"
-                onClick={() => openModal("replaceResume")}
-                style={{ width: "100%", marginTop: "1.5rem" }}
-              >
-                <i className="bi bi-upload me-2"></i> Upload Resume
-              </button>
-            </>
-          )}
-        </div>
-
-        {/* Social Links */}
-        <div className="profile-card">
-          <h3 className="section-title">Social Links</h3>
-          {profile.social_links &&
-          Object.values(profile.social_links).some(link => link && link.trim()) ? (
-            <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-              {profile.social_links.github && (
-                <a href={profile.social_links.github} target="_blank" rel="noopener noreferrer" className="social-link">
-                  <i className="bi bi-github social-icon"></i>
-                  GitHub
-                </a>
-              )}
-              {profile.social_links.linkedin && (
-                <a href={profile.social_links.linkedin} target="_blank" rel="noopener noreferrer" className="social-link">
-                  <i className="bi bi-linkedin social-icon"></i>
-                  LinkedIn
-                </a>
-              )}
-              {profile.social_links.portfolio && (
-                <a href={profile.social_links.portfolio} target="_blank" rel="noopener noreferrer" className="social-link">
-                  <i className="bi bi-globe social-icon"></i>
-                  Portfolio
-                </a>
-              )}
-              {profile.social_links.twitter && (
-                <a href={profile.social_links.twitter} target="_blank" rel="noopener noreferrer" className="social-link">
-                  <i className="bi bi-twitter-x social-icon"></i>
-                  Twitter / X
-                </a>
-              )}
-            </div>
-          ) : (
-            <p style={{ color: "#64748b", fontStyle: "italic", marginBottom: "1.8rem" }}>
-              No social links added yet.
-            </p>
-          )}
-
-          <button
-            className="action-btn action-btn-primary"
-            style={{ marginTop: "1.5rem" }}
-            onClick={() => openModal("editSocial", profile.social_links || {})}
-          >
-            <i className="bi bi-pencil-square me-2"></i> Edit Social Links
-          </button>
+            )}
+            <button
+              className="action-btn action-btn-primary"
+              onClick={() => openModal("addCert")}
+            >
+              <i className="bi bi-plus-circle-fill me-2"></i> Add Certificate
+            </button>
+          </div>
         </div>
       </div>
 {/* ... inside your return ... after the main content ... */}
