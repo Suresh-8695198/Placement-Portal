@@ -39,6 +39,10 @@ export default function CoordinatorDashboard() {
     setDepartment(dept || "Department");
 
     fetchDashboardData();
+
+    // Realtime feel: refresh every 2 minutes
+    const interval = setInterval(fetchDashboardData, 120000);
+    return () => clearInterval(interval);
   }, [navigate]);
 
   const fetchDashboardData = async () => {
@@ -62,7 +66,7 @@ export default function CoordinatorDashboard() {
         totalStudents: statsData.total_students || 0,
         activeJobs: statsData.active_jobs || 0,
         allJobs: statsData.all_jobs || 0,
-        placedStudents: pieData.placed_students || 0,
+        placedStudents: statsData.placed_students || pieData.placed_students || 0,
         approvedJobs: statsData.approved_jobs || 0,
         pendingJobs: statsData.pending_jobs || 0
       });
@@ -81,8 +85,12 @@ export default function CoordinatorDashboard() {
   const pieChartData = [
     { name: "Placed", value: stats.placedStudents, color: "#22d3ee" },
     { name: "In Process", value: stats.approvedJobs, color: "#3b82f6" },
-    { name: "Unplaced", value: Math.max(0, stats.totalStudents - stats.placedStudents - stats.approvedJobs), color: "#a5b4fc" },
     { name: "Pending", value: stats.pendingJobs, color: "#2dd4bf" },
+    { 
+      name: "Unplaced", 
+      value: Math.max(0, stats.totalStudents - stats.placedStudents - stats.approvedJobs - stats.pendingJobs), 
+      color: "#a5b4fc" 
+    },
   ];
 
   if (loading) {

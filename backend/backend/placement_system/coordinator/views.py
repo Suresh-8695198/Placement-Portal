@@ -749,31 +749,48 @@ def coordinator_dashboard_stats(request):
     if not department:
         return JsonResponse({"error": "Department parameter is required"}, status=400)
 
-    total_students = Student.objects.filter(
-        department=department,
-        is_active=True
-    ).count()
+    # Base students query for this department
+    students_qs = Student.objects.filter(department=department, is_active=True)
+    total_students = students_qs.count()
 
     today = date.today()
 
+    # Active Jobs: Approved, Active, Not Expired, and Matching Department
+    # Adding icontains for SQLite string-matching fallback
     active_jobs = Job.objects.filter(
         is_active=True,
         is_approved=True,
         last_date_to_apply__gte=today
     ).filter(
         Q(show_to_all_departments=True) |
-        Q(departments__contains=department)
+        Q(departments__contains=department) |
+        Q(departments__icontains=department)
     ).distinct().count()
 
-    all_jobs = Job.objects.filter(
+    # All Approved Jobs for this department (to show scale/pipeline)
+    all_jobs = Job.objects.filter(is_approved=True).filter(
         Q(show_to_all_departments=True) |
-        Q(departments__contains=department)
+        Q(departments__contains=department) |
+        Q(departments__icontains=department)
     ).distinct().count()
+
+    # Placement Stats for Pie Chart labels used in frontend
+    # 1. Placed Students (Selected)
+    placed_students = students_qs.filter(applications__status='Selected').distinct().count()
+    
+    # 2. In Process (Shortlisted or any active non-selected status)
+    in_process = students_qs.filter(applications__status='Shortlisted').distinct().count()
+    
+    # 3. Pending (Applied)
+    pending_apps = students_qs.filter(applications__status='Applied').distinct().count()
 
     return JsonResponse({
         "total_students": total_students,
         "active_jobs": active_jobs,
         "all_jobs": all_jobs,
+        "placed_students": placed_students,
+        "approved_jobs": in_process,  # Used by frontend for 'In Process' slice
+        "pending_jobs": pending_apps,   # Used by frontend for 'Pending' slice
     })
 
 from django.db.models import Count, Q
@@ -1067,7 +1084,6 @@ from companies.models import Job
 
 @require_GET
 def coordinator_jobs(request):
-
     department = request.GET.get("department")
     programme = request.GET.get("programme")
     graduation_year = request.GET.get("graduation_year")
@@ -1076,26 +1092,31 @@ def coordinator_jobs(request):
     jobs = Job.objects.filter(is_approved=True)
 
     if department:
-        jobs = jobs.filter(eligible_departments__icontains=department)
+        # Match against JSON list of departments using multiple lookups for robustness
+        jobs = jobs.filter(
+            Q(show_to_all_departments=True) |
+            Q(departments__contains=department) |
+            Q(departments__icontains=department)
+        )
 
     if programme:
-        jobs = jobs.filter(eligible_programmes__icontains=programme)
+        jobs = jobs.filter(programmes__icontains=programme)
 
     if graduation_year:
-        jobs = jobs.filter(eligible_years__icontains=graduation_year)
+        jobs = jobs.filter(graduation_years__icontains=graduation_year)
 
     if status == "active":
         jobs = jobs.filter(is_active=True)
 
     results = []
 
-    for job in jobs:
+    for job in jobs.distinct():
         results.append({
             "id": job.id,
             "title": job.title,
             "company": job.company.name if job.company else "",
             "location": job.location,
-            "salary": job.salary,
+            "salary": getattr(job, "salary_range", "N/A"),
             "deadline": job.last_date_to_apply,
             "active": job.is_active
         })
