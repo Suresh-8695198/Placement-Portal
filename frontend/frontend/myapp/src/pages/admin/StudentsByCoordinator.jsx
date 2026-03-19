@@ -116,7 +116,7 @@ export default function StudentsByCoordinator() {
   );
 
   return (
-    <AdminPageLayout title={selectedBatch ? `Batch ${selectedBatch} - ${coordinator?.department || ""}` : `Students Registry`}>
+    <AdminPageLayout title={selectedBatch ? `Batch ${selectedBatch} - ${coordinator?.department || ""}` : `Students Registry`} icon="fas fa-user-graduate">
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;700;800&display=swap');
 

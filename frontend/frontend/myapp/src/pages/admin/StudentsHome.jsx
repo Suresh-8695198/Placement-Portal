@@ -76,7 +76,7 @@ export default function StudentsHome() {
   }, [deptSearch, coordSearch, sortBy, itemsPerPage]);
 
   return (
-    <AdminPageLayout title="Departmental Registry">
+    <AdminPageLayout title="Departmental Registry" icon="fas fa-id-card-alt">
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@600;700;800&display=swap');
 
@@ -183,6 +183,26 @@ export default function StudentsHome() {
         .filter-select-premium:focus {
           border-color: var(--primary-indigo);
           box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+        }
+
+        .select-icon-wrapper {
+          position: relative;
+          min-width: 150px;
+        }
+
+        .select-icon-wrapper i {
+          position: absolute;
+          left: 1.1rem;
+          top: 50%;
+          transform: translateY(-50%);
+          color: var(--primary-indigo);
+          pointer-events: none;
+          z-index: 10;
+        }
+
+        .select-icon-wrapper select {
+          padding-left: 3rem;
+          width: 100%;
         }
 
         .top-pagination-section {
@@ -417,15 +437,18 @@ export default function StudentsHome() {
             />
           </div>
 
-          <select 
-            className="filter-select-premium"
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
-          >
-            <option value="dept-asc">Dept (A-Z)</option>
-            <option value="dept-desc">Dept (Z-A)</option>
-            <option value="name-asc">Coordinator (A-Z)</option>
-          </select>
+          <div className="select-icon-wrapper">
+            <i className="fas fa-sort-amount-down"></i>
+            <select 
+              className="filter-select-premium"
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+            >
+              <option value="dept-asc">Dept (A-Z)</option>
+              <option value="dept-desc">Dept (Z-A)</option>
+              <option value="name-asc">Coordinator (A-Z)</option>
+            </select>
+          </div>
 
           <button className="back-nav-p" onClick={() => {
             setDeptSearch("");
@@ -450,6 +473,15 @@ export default function StudentsHome() {
               <div className="entries-select">
                 <span>Show</span>
                 <select 
+                  className="filter-select"
+                  style={{
+                    padding: '0.4rem 0.75rem',
+                    borderRadius: '0.5rem',
+                    border: '1.5px solid #94a3b8',
+                    fontWeight: 700,
+                    outline: 'none',
+                    background: '#f8fafc'
+                  }}
                   value={itemsPerPage} 
                   onChange={(e) => setItemsPerPage(e.target.value === 'all' ? 'all' : Number(e.target.value))}
                 >
@@ -458,7 +490,7 @@ export default function StudentsHome() {
                   <option value={24}>24 Entries</option>
                   <option value="all">Show All</option>
                 </select>
-                <span>of {filtered.length} records</span>
+                <span style={{fontWeight: 700}}>of {filtered.length} records</span>
               </div>
 
               <div className="pagination-nav">
