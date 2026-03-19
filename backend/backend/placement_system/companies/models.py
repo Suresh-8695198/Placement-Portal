@@ -5,7 +5,7 @@ from django.contrib.auth.hashers import check_password
 
 class Company(models.Model):
     name = models.CharField(max_length=150)
-    email = models.EmailField(unique=True)
+    email = models.EmailField(max_length=191, unique=True)
     password = models.CharField(max_length=255)
     contact = models.CharField(
     max_length=15,
@@ -65,7 +65,7 @@ class Company(models.Model):
 
 class CompanyVerificationRequest(models.Model):
     name = models.CharField(max_length=255)
-    email = models.EmailField(unique=True)
+    email = models.EmailField(max_length=191, unique=True)
     contact = models.CharField(max_length=20)
 
     is_approved = models.BooleanField(default=False)

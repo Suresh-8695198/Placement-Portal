@@ -10,7 +10,7 @@ class Student(models.Model):
     ug_pg = models.CharField(max_length=10, default="Unknown")
     department = models.CharField(max_length=50, default="Unknown")
     programme = models.CharField(max_length=50, default="Unknown")
-    email = models.EmailField(blank=True, null=True, unique=True)
+    email = models.EmailField(max_length=191, blank=True, null=True, unique=True)
     phone = models.CharField(max_length=20, blank=True, null=True)
     password = models.CharField(max_length=128, null=True, blank=True)
     is_active = models.BooleanField(default=True)
