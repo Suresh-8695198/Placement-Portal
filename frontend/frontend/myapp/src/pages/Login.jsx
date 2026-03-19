@@ -230,15 +230,21 @@ const Login = () => {
           outline: none;
         }
 
+        .input-relative {
+          position: relative;
+          width: 100%;
+        }
+
         .input-icon {
           position: absolute;
           left: 1.2rem;
           top: 50%;
-          transform: translateY(15%);
+          transform: translateY(-50%);
           color: #6b7280;
           font-size: 1.3rem;
           pointer-events: none;
           transition: color 0.25s;
+          z-index: 2;
         }
 
         .input-wrapper:focus-within .input-icon {
@@ -249,7 +255,7 @@ const Login = () => {
           position: absolute;
           right: 1.2rem;
           top: 50%;
-          transform: translateY(15%);
+          transform: translateY(-50%);
           background: none;
           border: none;
           color: #6b7280;
@@ -391,38 +397,42 @@ const Login = () => {
             {/* Email */}
             <div className="input-wrapper">
               <label className="form-label">Email address</label>
-              <input
-                type="email"
-                className="form-control"
-                name="email"
-                placeholder="your.name@periyaruniversity.ac.in"
-                value={formData.email}
-                onChange={handleChange}
-                required
-              />
-              <i className="fas fa-envelope input-icon"></i>
+              <div className="input-relative">
+                <input
+                  type="email"
+                  className="form-control"
+                  name="email"
+                  placeholder="your.name@periyaruniversity.ac.in"
+                  value={formData.email}
+                  onChange={handleChange}
+                  required
+                />
+                <i className="fas fa-envelope input-icon"></i>
+              </div>
             </div>
 
             {/* Password */}
             <div className="input-wrapper">
               <label className="form-label">Password</label>
-              <input
-                type={showPassword ? "text" : "password"}
-                className="form-control"
-                name="password"
-                placeholder="Enter your password"
-                value={formData.password}
-                onChange={handleChange}
-                required
-              />
-              <i className="fas fa-lock input-icon"></i>
-              <button
-                type="button"
-                className="eye-btn"
-                onClick={() => setShowPassword(!showPassword)}
-              >
-                <i className={`fas ${showPassword ? "fa-eye-slash" : "fa-eye"}`}></i>
-              </button>
+              <div className="input-relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  className="form-control"
+                  name="password"
+                  placeholder="Enter your password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  required
+                />
+                <i className="fas fa-lock input-icon"></i>
+                <button
+                  type="button"
+                  className="eye-btn"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  <i className={`fas ${showPassword ? "fa-eye-slash" : "fa-eye"}`}></i>
+                </button>
+              </div>
             </div>
 
             <span className="forgot-link" onClick={() => navigate("/forgot-password")}>

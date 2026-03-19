@@ -221,15 +221,21 @@ const CompanyLogin = () => {
           box-shadow: 0 0 0 4px var(--focus-ring);
         }
 
+        .input-relative {
+          position: relative;
+          width: 100%;
+        }
+
         .input-icon {
           position: absolute;
           left: 1.2rem;
           top: 50%;
-          transform: translateY(15%);
+          transform: translateY(-50%);
           color: #64748b;
           font-size: 1.3rem;
           pointer-events: none;
           transition: color 0.25s;
+          z-index: 2;
         }
 
         .input-wrapper:focus-within .input-icon { color: var(--primary-start); }
@@ -238,7 +244,7 @@ const CompanyLogin = () => {
           position: absolute;
           right: 1.2rem;
           top: 50%;
-          transform: translateY(13%);
+          transform: translateY(-50%);
           background: none;
           border: none;
           color: #64748b;
@@ -414,38 +420,42 @@ const CompanyLogin = () => {
           <form onSubmit={handleSubmit}>
             <div className="input-wrapper">
               <label className="form-label">Email Address</label>
-              <i className="fas fa-envelope input-icon"></i>
-              <input
-                type="email"
-                className="form-control"
-                name="email"
-                placeholder="company@business.com"
-                value={form.email}
-                onChange={handleChange}
-                required
-                autoFocus
-              />
+              <div className="input-relative">
+                <i className="fas fa-envelope input-icon"></i>
+                <input
+                  type="email"
+                  className="form-control"
+                  name="email"
+                  placeholder="company@business.com"
+                  value={form.email}
+                  onChange={handleChange}
+                  required
+                  autoFocus
+                />
+              </div>
             </div>
 
             <div className="input-wrapper">
               <label className="form-label">Password</label>
-              <i className="fas fa-lock input-icon"></i>
-              <input
-                type={showPassword ? "text" : "password"}
-                className="form-control"
-                name="password"
-                placeholder="Enter your password"
-                value={form.password}
-                onChange={handleChange}
-                required
-              />
-              <button
-                type="button"
-                className="eye-btn"
-                onClick={() => setShowPassword(!showPassword)}
-              >
-                <i className={`fas ${showPassword ? "fa-eye-slash" : "fa-eye"}`}></i>
-              </button>
+              <div className="input-relative">
+                <i className="fas fa-lock input-icon"></i>
+                <input
+                  type={showPassword ? "text" : "password"}
+                  className="form-control"
+                  name="password"
+                  placeholder="Enter your password"
+                  value={form.password}
+                  onChange={handleChange}
+                  required
+                />
+                <button
+                  type="button"
+                  className="eye-btn"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  <i className={`fas ${showPassword ? "fa-eye-slash" : "fa-eye"}`}></i>
+                </button>
+              </div>
             </div>
 
             <span className="forgot-link" onClick={handleForgotPassword}>

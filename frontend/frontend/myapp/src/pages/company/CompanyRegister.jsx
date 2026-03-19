@@ -209,11 +209,21 @@ const CompanyRegister = () => {
           box-shadow:0 0 0 4px var(--focus-ring);
         }
 
+        .input-relative {
+          position: relative;
+          width: 100%;
+        }
+
         .input-icon {
-          position:absolute; left:1.2rem; top:50%;
-          transform:translateY(15%); color:#64748b;
-          font-size:1.3rem; pointer-events:none;
-          transition:color 0.25s;
+          position: absolute;
+          left: 1.2rem;
+          top: 50%;
+          transform: translateY(-50%);
+          color: #64748b;
+          font-size: 1.3rem;
+          pointer-events: none;
+          transition: color 0.25s;
+          z-index: 2;
         }
 
         .input-wrapper:focus-within .input-icon { color:var(--primary-start); }
@@ -318,31 +328,35 @@ const CompanyRegister = () => {
           <form onSubmit={handleSubmit}>
             <div className="input-wrapper">
               <label className="form-label">Company Email</label>
-              <i className="fas fa-envelope input-icon"></i>
-              <input
-                name="email"
-                type="email"
-                className="form-control"
-                placeholder="company@business.com"
-                value={form.email}
-                onChange={handleChange}
-                required
-                autoFocus
-              />
+              <div className="input-relative">
+                <i className="fas fa-envelope input-icon"></i>
+                <input
+                  name="email"
+                  type="email"
+                  className="form-control"
+                  placeholder="company@business.com"
+                  value={form.email}
+                  onChange={handleChange}
+                  required
+                  autoFocus
+                />
+              </div>
             </div>
 
             <div className="input-wrapper">
               <label className="form-label">Password</label>
-              <i className="fas fa-lock input-icon"></i>
-              <input
-                name="password"
-                type="password"
-                className="form-control"
-                placeholder="Create a strong password"
-                value={form.password}
-                onChange={handleChange}
-                required
-              />
+              <div className="input-relative">
+                <i className="fas fa-lock input-icon"></i>
+                <input
+                  name="password"
+                  type="password"
+                  className="form-control"
+                  placeholder="Create a strong password"
+                  value={form.password}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
             </div>
 
             <button type="submit" className="btn-register" disabled={loading}>

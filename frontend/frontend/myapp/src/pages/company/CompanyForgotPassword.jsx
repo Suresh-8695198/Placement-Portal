@@ -196,6 +196,11 @@ const ForgotPassword = () => {
           box-shadow: 0 0 0 4px rgba(30, 58, 138, 0.1);
         }
 
+        .input-relative {
+          position: relative;
+          width: 100%;
+        }
+
         .input-icon {
           position: absolute;
           left: 1.2rem;
@@ -204,6 +209,7 @@ const ForgotPassword = () => {
           color: #64748b;
           font-size: 1.25rem;
           pointer-events: none;
+          z-index: 2;
         }
 
         .btn-send {
@@ -349,16 +355,18 @@ const ForgotPassword = () => {
           <form onSubmit={handleSubmit}>
             <div className="input-wrapper">
               <label className="form-label">Company Email</label>
-              <i className="fas fa-envelope input-icon"></i>
-              <input
-                type="email"
-                className="form-control"
-                placeholder="company@business.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                autoFocus
-              />
+              <div className="input-relative">
+                <i className="fas fa-envelope input-icon"></i>
+                <input
+                  type="email"
+                  className="form-control"
+                  placeholder="company@business.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  autoFocus
+                />
+              </div>
             </div>
 
             <button type="submit" className="btn-send" disabled={loading}>

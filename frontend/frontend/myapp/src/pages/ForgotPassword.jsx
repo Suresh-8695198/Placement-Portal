@@ -199,6 +199,11 @@ const ForgotPassword = () => {
           outline: none;
         }
 
+        .input-relative {
+          position: relative;
+          width: 100%;
+        }
+
         .input-icon {
           position: absolute;
           left: 1.1rem;
@@ -208,6 +213,7 @@ const ForgotPassword = () => {
           font-size: 1.25rem;
           pointer-events: none;
           transition: color 0.25s;
+          z-index: 2;
         }
 
         .input-wrapper:focus-within .input-icon {
@@ -316,51 +322,18 @@ const ForgotPassword = () => {
             height: 48px;
             padding: 0 2.6rem 0 2.7rem;
           }
+        /* Mobile adjustments — keep consistent centering */
+        @media (max-width: 576px) {
+          .form-control {
+            height: 48px;
+            padding-left: 3rem;
+            font-size: 0.95rem;
+          }
+
           .input-icon {
-            top: 50%;
-            transform: translateY(15%);
+            font-size: 1.18rem;
           }
         }
-
-        .input-icon {
-  position: absolute;
-  left: 1.1rem;
-  top: 50%;
-  transform: translateY(15%);
-  color: #6b7280;
-  font-size: 1.25rem;
-  pointer-events: none;
-  transition: color 0.25s;
-}
-
-.input-wrapper:focus-within .input-icon {
-  color: #4B0082;
-}
-
-/* Ensure the input has enough left padding so text doesn't overlap icon */
-.form-control {
-  height: 50px;
-  padding-left: 3.2rem;           /* ← increased to make space for icon */
-  padding-right: 1.4rem;          /* normal right padding */
-  border: 1px solid #d1d5db;
-  border-radius: 0.85rem;
-  font-size: 0.97rem;
-  background: #f9fafb;
-  transition: all 0.25s ease;
-}
-
-/* Mobile adjustments — keep consistent centering */
-@media (max-width: 576px) {
-  .form-control {
-    height: 48px;
-    padding-left: 3rem;           /* still enough space */
-    font-size: 0.95rem;
-  }
-
-  .input-icon {
-    font-size: 1.18rem;           /* slightly smaller icon on mobile */
-  }
-}
       `}</style>
 
       <div className="forgot-page">
@@ -390,15 +363,17 @@ const ForgotPassword = () => {
           <form onSubmit={handleSubmit}>
             <div className="input-wrapper">
               <label className="form-label">Email Address</label>
-              <input
-                type="email"
-                className="form-control"
-                placeholder="Enter your registered email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-              <i className="fas fa-envelope input-icon"></i>
+              <div className="input-relative">
+                <input
+                  type="email"
+                  className="form-control"
+                  placeholder="Enter your registered email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+                <i className="fas fa-envelope input-icon"></i>
+              </div>
             </div>
 
             <button

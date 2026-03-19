@@ -248,22 +248,28 @@ const ResetPassword = () => {
           box-shadow: 0 0 0 4px var(--focus-ring);
         }
 
+        .input-relative {
+          position: relative;
+          width: 100%;
+        }
+
         .input-icon {
           position: absolute;
           left: 1.2rem;
           top: 50%;
-          transform: translateY(15%);
+          transform: translateY(-50%);
           color: #64748b;
           font-size: 1.3rem;
           pointer-events: none;
           transition: color 0.25s;
+          z-index: 2;
         }
 
         .eye-btn {
           position: absolute;
           right: 1.2rem;
           top: 50%;
-          transform: translateY(15%);
+          transform: translateY(-50%);
           background: none;
           border: none;
           color: #64748b;
@@ -420,43 +426,47 @@ const ResetPassword = () => {
           <form onSubmit={handleSubmit}>
             <div className="input-wrapper">
               <label className="form-label">New Password</label>
-              <i className="fas fa-key input-icon"></i>
-              <input
-                type={showPassword ? "text" : "password"}
-                className="form-control"
-                placeholder="Enter new password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                autoFocus
-              />
-              <button
-                type="button"
-                className="eye-btn"
-                onClick={() => setShowPassword(!showPassword)}
-              >
-                <i className={`fas ${showPassword ? "fa-eye-slash" : "fa-eye"}`}></i>
-              </button>
+              <div className="input-relative">
+                <i className="fas fa-key input-icon"></i>
+                <input
+                  type={showPassword ? "text" : "password"}
+                  className="form-control"
+                  placeholder="Enter new password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  autoFocus
+                />
+                <button
+                  type="button"
+                  className="eye-btn"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  <i className={`fas ${showPassword ? "fa-eye-slash" : "fa-eye"}`}></i>
+                </button>
+              </div>
             </div>
 
             <div className="input-wrapper">
               <label className="form-label">Confirm Password</label>
-              <i className="fas fa-check input-icon"></i>
-              <input
-                type={showConfirmPassword ? "text" : "password"}
-                className="form-control"
-                placeholder="Confirm new password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-              />
-              <button
-                type="button"
-                className="eye-btn"
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              >
-                <i className={`fas ${showConfirmPassword ? "fa-eye-slash" : "fa-eye"}`}></i>
-              </button>
+              <div className="input-relative">
+                <i className="fas fa-check input-icon"></i>
+                <input
+                  type={showConfirmPassword ? "text" : "password"}
+                  className="form-control"
+                  placeholder="Confirm new password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                />
+                <button
+                  type="button"
+                  className="eye-btn"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                >
+                  <i className={`fas ${showConfirmPassword ? "fa-eye-slash" : "fa-eye"}`}></i>
+                </button>
+              </div>
             </div>
 
             <button type="submit" className="btn-reset" disabled={loading}>

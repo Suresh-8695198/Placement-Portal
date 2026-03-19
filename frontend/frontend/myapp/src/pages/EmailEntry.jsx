@@ -198,15 +198,21 @@ export default function EmailEntry() {
         .input-wrapper:focus-within .input-icon {
           color: #556B2F;
         }
+        .input-relative {
+          position: relative;
+          width: 100%;
+        }
+
         .input-icon {
           position: absolute;
           left: 1.1rem;
           top: 50%;
-          transform: translateY(15%);
+          transform: translateY(-50%);
           color: #6b7280;
           font-size: 1.25rem;
           pointer-events: none;
           transition: color 0.25s;
+          z-index: 2;
         }
         .btn-continue {
           width: 100%;
@@ -314,16 +320,18 @@ export default function EmailEntry() {
           <form onSubmit={handleSubmit}>
             <div className="input-wrapper">
               <label className="form-label">Email Address</label>
-              <input
-                type="email"
-                className="form-control"
-                placeholder="abc@gmail.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                autoFocus
-              />
-              <i className="fas fa-envelope input-icon"></i>
+              <div className="input-relative">
+                <input
+                  type="email"
+                  className="form-control"
+                  placeholder="abc@gmail.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  autoFocus
+                />
+                <i className="fas fa-envelope input-icon"></i>
+              </div>
             </div>
 
             <button

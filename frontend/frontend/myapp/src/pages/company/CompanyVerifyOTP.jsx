@@ -196,6 +196,11 @@ const VerifyOTP = () => {
           box-shadow: 0 0 0 4px rgba(30, 58, 138, 0.1);
         }
 
+        .input-relative {
+          position: relative;
+          width: 100%;
+        }
+
         .input-icon {
           position: absolute;
           left: 1.2rem;
@@ -204,6 +209,7 @@ const VerifyOTP = () => {
           color: #64748b;
           font-size: 1.25rem;
           pointer-events: none;
+          z-index: 2;
         }
 
         .btn-verify {
@@ -353,17 +359,19 @@ const VerifyOTP = () => {
           <form onSubmit={handleSubmit}>
             <div className="input-wrapper">
               <label className="form-label">One-Time Password (OTP)</label>
-              <i className="fas fa-key input-icon"></i>
-              <input
-                type="text"
-                className="form-control"
-                placeholder="Enter 6-digit OTP"
-                value={otp}
-                onChange={(e) => setOtp(e.target.value)}
-                required
-                autoFocus
-                maxLength={6}
-              />
+              <div className="input-relative">
+                <i className="fas fa-key input-icon"></i>
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="Enter 6-digit OTP"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value)}
+                  required
+                  autoFocus
+                  maxLength={6}
+                />
+              </div>
             </div>
 
             <button type="submit" className="btn-verify" disabled={loading}>
