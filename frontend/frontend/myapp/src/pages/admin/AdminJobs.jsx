@@ -1,6 +1,6 @@
 
 // src/pages/admin/AdminJobs.jsx
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import AdminPageLayout from "../../components/admin/AdminPageLayout";
 
@@ -21,6 +21,8 @@ export default function AdminJobs() {
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState("");
   const [loading, setLoading] = useState(true);
+  const [entriesPerPage, setEntriesPerPage] = useState(10);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const [departments, setDepartments] = useState([]);
   const [programmes, setProgrammes] = useState([]);
@@ -167,6 +169,20 @@ export default function AdminJobs() {
 
     setFilteredJobs(result);
   }, [searchQuery, filters, jobs]);
+
+  // Paginated jobs
+  const totalPages = Math.ceil(filteredJobs.length / entriesPerPage) || 1;
+  const paginatedJobs = useMemo(() => {
+    const start = (currentPage - 1) * entriesPerPage;
+    return filteredJobs.slice(start, start + entriesPerPage);
+  }, [filteredJobs, currentPage, entriesPerPage]);
+
+  useEffect(() => {
+    setCurrentPage(1); // Reset to first page when search, filter, or tab changes
+  }, [searchQuery, filters, activeTab, entriesPerPage]);
+
+  const handlePrevPage = () => setCurrentPage((prev) => Math.max(prev - 1, 1));
+  const handleNextPage = () => setCurrentPage((prev) => Math.min(prev + 1, totalPages));
 
   // ────────────────────────────────────────────────
   //                 APPROVE / REJECT
@@ -565,6 +581,8 @@ export default function AdminJobs() {
         }
 
         .table tr:last-child td { border-bottom: none; }
+        .table tbody tr:nth-child(even) { background-color: #fcfdfe; }
+        .table tbody tr:hover { background-color: #f1f5f9; }
 
         .job-title-cell {
           font-weight: 600;
@@ -1014,6 +1032,22 @@ export default function AdminJobs() {
             Back
           </button>
 
+
+          <div className="entries-selection d-flex align-items-center gap-2 me-3" style={{fontSize: '0.85rem', fontWeight: '600', color: '#64748b'}}>
+            Show 
+            <select 
+              className="form-select form-select-sm" 
+              style={{width: 'auto', borderRadius: '0.5rem', cursor: 'pointer', border: '1px solid #e2e8f0'}}
+              value={entriesPerPage} 
+              onChange={(e) => setEntriesPerPage(Number(e.target.value))}
+            >
+              <option value={10}>10</option>
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+            </select>
+          </div>
+
           <div className="search-container">
             <i className="fas fa-search search-icon"></i>
             <input
@@ -1219,7 +1253,7 @@ export default function AdminJobs() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredJobs.map((job) => (
+                  {paginatedJobs.map((job) => (
                     <tr key={job.id}>
                       <td data-label="Title" className="job-title-cell">
                         {job.title || "—"}
@@ -1295,6 +1329,40 @@ export default function AdminJobs() {
                   ))}
                 </tbody>
             </table>
+            
+            <div className="pagination-bar d-flex justify-content-between align-items-center p-3 border-top" style={{background: '#f8fafc', borderBottomLeftRadius: '1rem', borderBottomRightRadius: '1rem'}}>
+              <div style={{fontSize: '0.875rem', color: '#64748b'}}>
+                Showing <span>{Math.min((currentPage - 1) * entriesPerPage + 1, filteredJobs.length)}</span> to <span>{Math.min(currentPage * entriesPerPage, filteredJobs.length)}</span> of <span>{filteredJobs.length}</span> entries
+              </div>
+              <div className="d-flex gap-2">
+                <button 
+                  className="btn btn-sm btn-outline-secondary" 
+                  disabled={currentPage === 1}
+                  onClick={handlePrevPage}
+                  style={{borderRadius: '0.5rem', fontWeight: '600', fontSize: '0.8rem', padding: '0.4rem 0.8rem'}}
+                >
+                  <i className="fas fa-chevron-left"></i>
+                </button>
+                {[...Array(totalPages)].map((_, i) => (
+                  <button 
+                    key={i} 
+                    className={`btn btn-sm ${currentPage === i + 1 ? "btn-primary" : "btn-outline-secondary"}`}
+                    onClick={() => setCurrentPage(i + 1)}
+                    style={{borderRadius: '0.5rem', fontWeight: '600', fontSize: '0.8rem', padding: '0.4rem 0.8rem'}}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+                <button 
+                  className="btn btn-sm btn-outline-secondary" 
+                  disabled={currentPage === totalPages}
+                  onClick={handleNextPage}
+                  style={{borderRadius: '0.5rem', fontWeight: '600', fontSize: '0.8rem', padding: '0.4rem 0.8rem'}}
+                >
+                  <i className="fas fa-chevron-right"></i>
+                </button>
+              </div>
+            </div>
           </div>
         )}
 
