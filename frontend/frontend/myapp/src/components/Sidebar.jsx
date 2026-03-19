@@ -112,63 +112,63 @@ const Sidebar = ({ onNavigate, onClose }) => {
         .sidebar-wrapper .nav-link.active {
           color: var(--white) !important;
           font-weight: 700 !important;
-          box-shadow: 0 6px 14px rgba(37, 99, 235, 0.28);
+          box-shadow: 0 4px 12px rgba(17, 24, 39, 0.28);
         }
 
         .sidebar-wrapper .nav-item:nth-child(1) .nav-link.active {
-          background: #2563eb !important;
+          background: #2f6fd6 !important;
         }
 
         .sidebar-wrapper .nav-item:nth-child(2) .nav-link.active {
-          background: #1d4ed8 !important;
+          background: #0e7490 !important;
         }
 
         .sidebar-wrapper .nav-item:nth-child(3) .nav-link.active {
-          background: #1e40af !important;
+          background: #4f46e5 !important;
         }
 
         .sidebar-wrapper .nav-item:nth-child(4) .nav-link.active {
-          background: #2563eb !important;
+          background: #0f766e !important;
         }
 
         .sidebar-wrapper .nav-item:nth-child(5) .nav-link.active {
-          background: #1d4ed8 !important;
+          background: #9a3412 !important;
         }
 
         .sidebar-wrapper .nav-item:nth-child(6) .nav-link.active {
-          background: #1e3a8a !important;
+          background: #047857 !important;
         }
 
         .sidebar-wrapper .nav-item:nth-child(7) .nav-link.active {
-          background: #2563eb !important;
+          background: #7c3aed !important;
         }
 
         .sidebar-wrapper .nav-item:nth-child(1) .nav-link:hover {
-          background: rgba(59, 130, 246, 0.2) !important;
+          background: rgba(47, 111, 214, 0.18) !important;
         }
 
         .sidebar-wrapper .nav-item:nth-child(2) .nav-link:hover {
-          background: rgba(59, 130, 246, 0.2) !important;
+          background: rgba(14, 116, 144, 0.18) !important;
         }
 
         .sidebar-wrapper .nav-item:nth-child(3) .nav-link:hover {
-          background: rgba(59, 130, 246, 0.2) !important;
+          background: rgba(79, 70, 229, 0.18) !important;
         }
 
         .sidebar-wrapper .nav-item:nth-child(4) .nav-link:hover {
-          background: rgba(59, 130, 246, 0.2) !important;
+          background: rgba(15, 118, 110, 0.18) !important;
         }
 
         .sidebar-wrapper .nav-item:nth-child(5) .nav-link:hover {
-          background: rgba(59, 130, 246, 0.2) !important;
+          background: rgba(154, 52, 18, 0.18) !important;
         }
 
         .sidebar-wrapper .nav-item:nth-child(6) .nav-link:hover {
-          background: rgba(59, 130, 246, 0.2) !important;
+          background: rgba(4, 120, 87, 0.18) !important;
         }
 
         .sidebar-wrapper .nav-item:nth-child(7) .nav-link:hover {
-          background: rgba(59, 130, 246, 0.2) !important;
+          background: rgba(124, 58, 237, 0.18) !important;
         }
 
         .sidebar-wrapper .nav-link.active .nav-icon {
