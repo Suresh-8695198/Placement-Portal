@@ -177,68 +177,93 @@ const Projects = () => {
 
       <style>{`
         :root {
-          --primary: #4B0082;
-          --primary-light: #6A0DAD;
-          --light-violet-bg: rgba(139, 92, 246, 0.15);
-          --light-violet-text: #7c3aed;
-          --light-violet-border: rgba(139, 92, 246, 0.3);
+          --primary: #9a3412; /* Matched orange color */
+          --primary-light: #7c2d12;
+          --light-violet-bg: rgba(154, 52, 18, 0.08);
+          --light-violet-text: #9a3412;
+          --light-violet-border: rgba(154, 52, 18, 0.2);
           --text: #1e293b;
           --text-light: #475569;
           --bg-card: #ffffff;
           --border-light: #e2e8f0;
-          --violet-text: #5b21b6;
+          --violet-text: #9a3412;
         }
 
         .projects-page-content {
           max-width: 960px;
           margin: 0 auto;
-          padding: 4rem 1.5rem 3rem;
+          padding: 1.25rem 1.5rem 3rem; /* Further refined top padding */
           background: #ffffff;
           min-height: 100vh;
           box-sizing: border-box;
         }
 
         .projects-header {
-          display: flex;
-          align-items: center;
-          gap: 1.5rem;
-          margin-bottom: 2.5rem;
-          flex-wrap: wrap;
+          margin-bottom: 3.5rem; /* Clean, intentional separation */
         }
 
-        .projects-avatar {
-          width: 110px;
-          height: 110px;
-          border-radius: 50%;
-          background: linear-gradient(135deg, var(--primary), var(--primary-light));
+        .enhanced-banner {
+          background: linear-gradient(135deg, #b45309, #9a3412);
+          border-radius: 0; /* Sharp corners */
+          padding: 1.5rem 2rem;
+          position: relative;
+          overflow: hidden;
           color: white;
-          font-size: 3.8rem;
+          box-shadow: 0 8px 24px rgba(154, 52, 18, 0.15);
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          min-height: 110px;
+        }
+
+        .banner-content {
+          position: relative;
+          z-index: 2;
+          max-width: 65%;
+        }
+
+        .banner-title {
+          font-size: 1.65rem;
+          font-weight: 700; /* Less overbolded */
+          margin-bottom: 0.35rem;
+          letter-spacing: -0.01em;
+          line-height: 1.2;
+          color: white !important;
+        }
+
+        .banner-subtitle {
+          font-size: 0.92rem; /* Reduced font size */
+          opacity: 0.9;
+          margin: 0 !important;
+          font-weight: 400;
+          color: white !important;
+        }
+
+        .primary-btn {
+          background-color: var(--primary);
+          color: white;
+          padding: 0.75rem 1.5rem;
+          border-radius: 0; /* Sharp corners */
+          border: none;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s;
           display: flex;
           align-items: center;
+          gap: 0.5rem;
           justify-content: center;
-          box-shadow: 0 8px 24px rgba(75,0,130,0.25);
-          flex-shrink: 0;
         }
 
-        .section-title {
-          font-size: clamp(1.6rem, 4.5vw, 2.1rem);
-          font-weight: 800;
-          margin: 0;
-          background: linear-gradient(90deg, var(--primary), var(--primary-light));
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-        }
-
-        .subtitle {
-          color: var(--text-light);
-          font-size: 1.05rem;
-          margin-top: 0.4rem;
+        .project-svg-pattern {
+          width: 120px;
+          height: 120px;
+          fill: white;
         }
 
         .projects-card {
           background: var(--bg-card);
           border: 1px solid var(--border-light);
-          border-radius: 16px;
+          border-radius: 0; /* Sharp corners */
           box-shadow: 0 6px 20px rgba(0,0,0,0.06);
           padding: 1.8rem 2rem;
           position: relative;
@@ -276,6 +301,18 @@ const Projects = () => {
           flex-wrap: wrap;
           gap: 1rem;
         }
+
+        .form-actions input, .form-actions textarea, .form-actions select {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border-radius: 0; /* Sharp corners */
+            border: 1px solid #cbd5e1;
+            font-size: 0.95rem;
+            margin-top: 0.5rem;
+            outline: none;
+            transition: all 0.2s;
+            background: #f8fafc;
+          }
 
         .action-btn {
           position: relative;
@@ -320,6 +357,14 @@ const Projects = () => {
 
         .action-btn-danger:hover {
           background: rgba(139, 92, 246, 0.25);
+        }
+
+        .add-project-form {
+          background: #ffffff;
+          padding: 1.5rem;
+          border-radius: 0; /* Sharp corners */
+          border: 1px solid #e2e8f0;
+          margin-bottom: 2rem;
         }
 
         .project-item {
@@ -553,14 +598,24 @@ const Projects = () => {
       <div className="projects-page-content">
         {/* Header */}
         <div className="projects-header">
-          <div className="projects-avatar">
-            <i className="bi bi-folder-fill"></i>
-          </div>
-          <div>
-            <h1 className="section-title">My Projects</h1>
-            <p className="subtitle">
-              Showcase your work, technologies, and achievements
-            </p>
+          <div className="enhanced-banner">
+            <div className="banner-content">
+              <h1 className="banner-title">My Projects</h1>
+              <p className="banner-subtitle">
+                Showcase your work, technologies, and achievements to the world.
+              </p>
+            </div>
+            
+            <div className="banner-visual" style={{ opacity: 0.2 }}>
+              <svg viewBox="0 0 100 100" className="project-svg-pattern">
+                {/* Modern Laptop/Tech SVG */}
+                <rect x="15" y="20" width="70" height="45" rx="4" fill="white" opacity="0.6" />
+                <rect x="25" y="30" width="50" height="25" rx="1" fill="#9a3412" opacity="0.3" />
+                <rect x="40" y="65" width="20" height="15" fill="white" opacity="0.4" />
+                <rect x="10" y="80" width="80" height="5" rx="2" fill="white" opacity="0.6" />
+                <path d="M45 40 L55 40 M45 45 L55 45" stroke="white" strokeWidth="2" opacity="0.5" />
+              </svg>
+            </div>
           </div>
         </div>
 

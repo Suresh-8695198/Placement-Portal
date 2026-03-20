@@ -1,43 +1,45 @@
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
+
+const initialFormState = {
+  domain: "",
+  company: "",
+  start_date: "",
+  end_date: "",
+  description: "",
+};
 
 const Internship = () => {
   const [internships, setInternships] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loadingList, setLoadingList] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [modalMode, setModalMode] = useState("add");
+  const [activeId, setActiveId] = useState(null);
+  const [form, setForm] = useState(initialFormState);
+  
+  // New features: Search, Pagination, Show Entries
+  const [searchQuery, setSearchQuery] = useState("");
+  const [entriesPerPage, setEntriesPerPage] = useState(5);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const email = localStorage.getItem("studentEmail");
 
-  const [form, setForm] = useState({
-    domain: "",
-    company: "",
-    start_date: "",
-    end_date: "",
-    description: "",
-  });
-
-  const [editForm, setEditForm] = useState({
-    id: null,
-    domain: "",
-    company: "",
-    start_date: "",
-    end_date: "",
-    description: "",
-  });
-
   useEffect(() => {
     document.body.style.overflow = showModal ? "hidden" : "auto";
+    return () => {
+      document.body.style.overflow = "auto";
+    };
   }, [showModal]);
 
-  // ================= LOAD =================
   const loadInternships = async () => {
     if (!email) {
       setError("No email found. Please login again.");
       return;
     }
 
-    setLoading(true);
+    setLoadingList(true);
     setError(null);
 
     try {
@@ -46,14 +48,14 @@ const Internship = () => {
       );
 
       if (!res.ok) throw new Error("Failed to load internships");
-
       const data = await res.json();
       setInternships(Array.isArray(data) ? data : []);
+      setCurrentPage(1);
     } catch (err) {
-      console.error("Internships load error:", err);
-      setError("Could not load internships");
+      console.error("Internship load error:", err);
+      setError("Could not load internships.");
     } finally {
-      setLoading(false);
+      setLoadingList(false);
     }
   };
 
@@ -61,23 +63,50 @@ const Internship = () => {
     loadInternships();
   }, []);
 
-  // ================= ADD =================
-  const handleAddChange = (e) => {
+  const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const submitAdd = async () => {
+  const openAddModal = () => {
+    setModalMode("add");
+    setActiveId(null);
+    setForm(initialFormState);
+    setError(null);
+    setShowModal(true);
+  };
+
+  const openEditModal = (intern) => {
+    setModalMode("edit");
+    setActiveId(intern.id);
+    setForm({
+      domain: intern.domain || "",
+      company: intern.company || "",
+      start_date: intern.start_date || "",
+      end_date: intern.end_date || "",
+      description: intern.description || "",
+    });
+    setError(null);
+    setShowModal(true);
+  };
+
+  const closeModal = () => {
+    if (submitting) return;
+    setShowModal(false);
+    setForm(initialFormState);
+    setActiveId(null);
+  };
+
+  const submitModal = async () => {
     if (!form.domain.trim() || !form.company.trim() || !form.start_date) {
-      setError("Domain, Company and Start Date are required");
+      setError("Domain, company, and start date are required.");
       return;
     }
 
-    setLoading(true);
+    setSubmitting(true);
     setError(null);
 
     const payload = {
-      email,
       domain: form.domain.trim(),
       company: form.company.trim(),
       start_date: form.start_date,
@@ -85,92 +114,40 @@ const Internship = () => {
       description: form.description.trim(),
     };
 
+    const url =
+      modalMode === "add"
+        ? "http://localhost:8000/api/students/internship/add/"
+        : `http://localhost:8000/api/students/internship/edit/${activeId}/`;
+
+    const body =
+      modalMode === "add"
+        ? JSON.stringify({ email, ...payload })
+        : JSON.stringify(payload);
+
     try {
-      const res = await fetch("http://localhost:8000/api/students/internship/add/", {
+      const res = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body,
       });
 
-      if (!res.ok) throw new Error("Failed to add internship");
+      if (!res.ok) {
+        throw new Error(modalMode === "add" ? "Add failed" : "Update failed");
+      }
 
-      setForm({
-        domain: "",
-        company: "",
-        start_date: "",
-        end_date: "",
-        description: "",
-      });
-
-      loadInternships();
+      closeModal();
+      await loadInternships();
     } catch (err) {
-      setError("Failed to add internship");
+      setError(modalMode === "add" ? "Failed to add internship." : "Failed to update internship.");
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
 
-  // ================= EDIT =================
-  const openEdit = (intern) => {
-    setEditForm({
-      id: intern.id,
-      domain: intern.domain || "",
-      company: intern.company || "",
-      start_date: intern.start_date || "",
-      end_date: intern.end_date || "",
-      description: intern.description || "",
-    });
-    setShowModal(true);
-  };
-
-  const handleEditChange = (e) => {
-    const { name, value } = e.target;
-    setEditForm((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const submitEdit = async () => {
-    if (!editForm.domain.trim() || !editForm.company.trim() || !editForm.start_date) {
-      setError("Domain, Company and Start Date are required");
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-
-    const payload = {
-      domain: editForm.domain.trim(),
-      company: editForm.company.trim(),
-      start_date: editForm.start_date,
-      end_date: editForm.end_date || null,
-      description: editForm.description.trim(),
-    };
-
-    try {
-      const res = await fetch(
-        `http://localhost:8000/api/students/internship/edit/${editForm.id}/`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        }
-      );
-
-      if (!res.ok) throw new Error("Failed to update internship");
-
-      setShowModal(false);
-      loadInternships();
-    } catch (err) {
-      setError("Failed to update internship");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // ================= DELETE =================
   const deleteInternship = async (id) => {
-    if (!window.confirm("Delete this internship?")) return;
+    if (!window.confirm("Delete this internship record?")) return;
 
-    setLoading(true);
+    setSubmitting(true);
     setError(null);
 
     try {
@@ -179,638 +156,596 @@ const Internship = () => {
         { method: "DELETE" }
       );
 
-      if (!res.ok) throw new Error("Failed to delete internship");
-
-      loadInternships();
+      if (!res.ok) throw new Error("Delete failed");
+      await loadInternships();
     } catch (err) {
-      setError("Could not delete internship");
+      setError("Could not delete internship.");
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
 
+  // Memoized Filtered & Paginated Internships
+  const filteredData = useMemo(() => {
+    return internships.filter(item => 
+      `${item.domain} ${item.company} ${item.description}`.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [internships, searchQuery]);
+
+  const totalPages = Math.ceil(filteredData.length / (entriesPerPage === "All" ? filteredData.length : entriesPerPage));
+  const currentEntries = useMemo(() => {
+    if (entriesPerPage === "All") return filteredData;
+    const start = (currentPage - 1) * entriesPerPage;
+    return filteredData.slice(start, start + Number(entriesPerPage));
+  }, [filteredData, currentPage, entriesPerPage]);
+
+  const handlePageChange = (p) => {
+    if (p >= 1 && p <= totalPages) setCurrentPage(p);
+  };
+
   return (
-    <>
-      <link
-        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-        rel="stylesheet"
-        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
-        crossOrigin="anonymous"
-      />
-      <link
-        rel="stylesheet"
-        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
-      />
+    <div className="internship-module">
+      <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
 
       <style>{`
-        :root {
-          --primary: #4B0082;
-          --primary-light: #6A0DAD;
-          --light-violet-bg: rgba(139, 92, 246, 0.15);
-          --light-violet-text: #7c3aed;
-          --light-violet-border: rgba(139, 92, 246, 0.3);
-          --text: #1e293b;
-          --text-light: #475569;
-          --bg-card: #ffffff;
-          --border-light: #e2e8f0;
-          --violet-text: #5b21b6;
-        }
-
-        .internships-page-content {
-          max-width: 960px;
-          margin: 0 auto;
-          padding: 4rem 1.5rem 2rem;
-          background: #ffffff;
-          color: var(--text);
+        .internship-module {
+          font-family: 'Outfit', sans-serif;
+          color: #1e293b;
+          padding: 2.5rem;
+          background: #f8fafc;
           min-height: 100vh;
-          box-sizing: border-box;
         }
 
-        .internships-header {
+        .module-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          margin-bottom: 2.5rem;
+          gap: 2rem;
+        }
+
+        .header-left h1 {
+          font-size: 2.25rem;
+          font-weight: 800;
+          color: #0f172a;
+          margin: 0;
+          letter-spacing: -0.025em;
+        }
+
+        .header-left p {
+          color: #64748b;
+          font-size: 1.1rem;
+          margin-top: 0.5rem;
+        }
+
+        .btn-add {
+          background: #1e1b4b;
+          color: white;
+          padding: 0.75rem 1.5rem;
+          border-radius: 10px;
+          font-weight: 600;
+          border: none;
           display: flex;
           align-items: center;
-          gap: 1.5rem;
-          margin-bottom: 2.5rem;
-          flex-wrap: wrap;
+          gap: 0.6rem;
+          transition: all 0.2s;
+          box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
         }
 
-        .internships-avatar {
-          width: 110px;
-          height: 110px;
-          border-radius: 50%;
-          background: linear-gradient(135deg, var(--primary), var(--primary-light));
-          color: white;
-          font-size: 3.8rem;
-          font-weight: bold;
+        .btn-add:hover {
+          background: #312e81;
+          transform: translateY(-1px);
+        }
+
+        /* Filter & Controls */
+        .controls-card {
+          background: white;
+          padding: 1.25rem;
+          border-radius: 12px;
+          border: 1px solid #e2e8f0;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 1.5rem;
+          margin-bottom: 2rem;
+          box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+
+        .search-box {
+          position: relative;
+          flex: 1;
+          max-width: 450px;
+        }
+
+        .search-box i {
+          position: absolute;
+          left: 1rem;
+          top: 50%;
+          transform: translateY(-50%);
+          color: #94a3b8;
+        }
+
+        .search-box input {
+          width: 100%;
+          padding: 0.75rem 1rem 0.75rem 2.75rem;
+          border-radius: 8px;
+          border: 1px solid #cbd5e1;
+          background: #f8fafc;
+          outline: none;
+          transition: border-color 0.2s;
+        }
+
+        .search-box input:focus {
+          border-color: #1e1b4b;
+          background: white;
+        }
+
+        .entries-control {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          color: #64748b;
+          font-size: 0.9rem;
+          font-weight: 500;
+        }
+
+        .entries-control select {
+          padding: 0.5rem 2rem 0.5rem 0.75rem;
+          border-radius: 6px;
+          border: 1px solid #cbd5e1;
+          background: #f8fafc;
+        }
+
+        /* Grid */
+        .items-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+          gap: 1.75rem;
+        }
+
+        .intern-card {
+          background: white;
+          border-radius: 12px;
+          border: 1px solid #e2e8f0;
+          padding: 1.75rem;
+          display: flex;
+          flex-direction: column;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          position: relative;
+        }
+
+        .intern-card:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 12px 20px -8px rgba(0, 0, 0, 0.1);
+          border-color: #cbd5e1;
+        }
+
+        .card-category {
+          font-size: 0.75rem;
+          font-weight: 700;
+          color: #3730a3;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          background: #eef2ff;
+          padding: 0.25rem 0.75rem;
+          border-radius: 9999px;
+          width: fit-content;
+          margin-bottom: 1rem;
+        }
+
+        .card-title {
+          font-size: 1.25rem;
+          font-weight: 700;
+          color: #0f172a;
+          margin: 0;
+        }
+
+        .card-company {
+          font-size: 1rem;
+          font-weight: 600;
+          color: #475569;
+          margin: 0.25rem 0 1rem;
+        }
+
+        .card-meta {
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+          font-size: 0.875rem;
+          color: #64748b;
+          margin-bottom: 1.25rem;
+        }
+
+        .card-meta i {
+          color: #1e1b4b;
+        }
+
+        .card-description {
+          font-size: 0.95rem;
+          line-height: 1.6;
+          color: #334155;
+          margin-bottom: 1.5rem;
+          display: -webkit-box;
+          -webkit-line-clamp: 4;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+          flex-grow: 1;
+        }
+
+        .card-actions {
+          display: flex;
+          gap: 0.75rem;
+          padding-top: 1.25rem;
+          border-top: 1px solid #f1f5f9;
+        }
+
+        .btn-icon {
+          width: 40px;
+          height: 40px;
           display: flex;
           align-items: center;
           justify-content: center;
-          box-shadow: 0 8px 24px rgba(75,0,130,0.25);
-          flex-shrink: 0;
+          border-radius: 8px;
+          border: 1px solid #e2e8f0;
+          background: white;
+          color: #64748b;
+          transition: all 0.2s;
         }
 
-        .section-title {
-          font-size: clamp(1.6rem, 4.5vw, 2.1rem);
-          font-weight: 800;
-          margin: 0;
-          background: linear-gradient(90deg, var(--primary), var(--primary-light));
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
+        .btn-icon:hover {
+          background: #f8fafc;
+          border-color: #cbd5e1;
+          color: #0f172a;
         }
 
-        .internships-card {
-          background: var(--bg-card);
-          border: 1px solid var(--border-light);
+        .btn-icon.delete:hover {
+          background: #fef2f2;
+          border-color: #fecaca;
+          color: #ef4444;
+        }
+
+        /* Pagination */
+        .pagination-footer {
+          margin-top: 3rem;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding-top: 1.5rem;
+          border-top: 1px solid #e2e8f0;
+        }
+
+        .page-info {
+          font-size: 0.9rem;
+          color: #64748b;
+        }
+
+        .page-nav {
+          display: flex;
+          gap: 0.5rem;
+        }
+
+        .nav-btn {
+          width: 36px;
+          height: 36px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 8px;
+          border: 1px solid #e2e8f0;
+          background: white;
+          font-weight: 600;
+          color: #475569;
+          transition: all 0.2s;
+        }
+
+        .nav-btn:hover:not(:disabled) {
+          border-color: #1e1b4b;
+          color: #1e1b4b;
+        }
+
+        .nav-btn.active {
+          background: #1e1b4b;
+          color: white;
+          border-color: #1e1b4b;
+        }
+
+        .nav-btn:disabled {
+          opacity: 0.4;
+          cursor: not-allowed;
+        }
+
+        /* Modal styling */
+        .modal-overlay {
+          position: fixed;
+          inset: 0;
+          background: rgba(15, 23, 42, 0.6);
+          backdrop-filter: blur(4px);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 9999;
+          padding: 1.5rem;
+        }
+
+        .modal-container {
+          background: white;
+          width: 100%;
+          max-width: 650px;
           border-radius: 16px;
-          box-shadow: 0 6px 20px rgba(0,0,0,0.06);
-          padding: 1.8rem 2rem;
-          position: relative;
-          box-sizing: border-box;
+          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+          overflow: hidden;
         }
 
-        .form-group {
+        .modal-header {
+          padding: 1.5rem 2rem;
+          border-bottom: 1px solid #f1f5f9;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+
+        .modal-header h2 {
+          font-size: 1.5rem;
+          font-weight: 700;
+          margin: 0;
+        }
+
+        .modal-body {
+          padding: 2rem;
           display: grid;
           grid-template-columns: 1fr 1fr;
-          gap: 1.2rem;
-          margin-bottom: 1.4rem;
+          gap: 1.5rem;
         }
 
         .form-group.full {
           grid-column: 1 / -1;
         }
 
-        input, textarea {
-          width: 100%;
-          padding: 0.85rem 1.4rem;
-          border: 1px solid #d1d5db;
-          border-radius: 12px;
-          font-size: 1rem;
-          transition: all 0.2s ease;
-          box-sizing: border-box;
+        .form-group label {
+          display: block;
+          font-size: 0.875rem;
+          font-weight: 600;
+          margin-bottom: 0.5rem;
+          color: #475569;
         }
 
-        input:focus, textarea:focus {
-          border-color: var(--primary);
-          box-shadow: 0 0 0 3px rgba(75,0,130,0.15);
+        .form-group input, .form-group textarea {
+          width: 100%;
+          padding: 0.75rem 1rem;
+          border-radius: 8px;
+          border: 1px solid #cbd5e1;
           outline: none;
         }
 
-        textarea {
-          min-height: 140px;
-          resize: vertical;
-        }
-
-        .form-actions {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 1rem;
-          margin-top: 1.4rem;
-        }
-
-        .action-btn {
-          position: relative;
-          overflow: hidden;
-          border-radius: 10px;
-          padding: 0.75rem 1.5rem;
-          font-size: 1rem;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.3s ease;
-          min-width: 160px;
-          text-align: center;
-          border: none;
-        }
-
-        .action-btn-primary {
-          background: linear-gradient(135deg, var(--primary), var(--primary-light));
-          color: white;
-          box-shadow: 0 4px 12px rgba(75,0,130,0.25);
-        }
-
-        .action-btn-primary:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 8px 20px rgba(75,0,130,0.4);
-        }
-
-        .action-btn-primary::before {
-          content: '';
-          position: absolute;
-          top: -50%;
-          left: -100%;
-          width: 50%;
-          height: 200%;
-          background: linear-gradient(
-            120deg,
-            transparent,
-            rgba(255, 255, 255, 0.45),
-            transparent
-          );
-          transform: skewX(-25deg);
-          animation: shine 3.2s linear infinite;
-        }
-
-        @keyframes shine {
-          0%   { left: -100%; }
-          100% { left: 150%; }
-        }
-
-        .action-btn-outline {
-          background: white;
-          color: var(--primary);
-          border: 1px solid var(--primary);
-        }
-
-        .action-btn-outline:hover {
-          background: var(--light-violet-bg);
-        }
-
-        .action-btn-danger {
-          background: var(--light-violet-bg);
-          color: var(--light-violet-text);
-          border: 1px solid var(--light-violet-border);
-        }
-
-        .action-btn-danger:hover {
-          background: rgba(139, 92, 246, 0.25);
-          transform: translateY(-1px);
-        }
-
-        .internship-item {
-          padding: 1.4rem;
-          background: #f8fafc;
-          border: 1px solid #e2e8f0;
-          border-radius: 12px;
-          margin-bottom: 1.4rem;
-        }
-
-        .internship-content {
-          margin-bottom: 1.2rem;
-        }
-
-        .internship-title {
-          font-size: 1.25rem;
-          font-weight: 700;
-          color: var(--violet-text);
-          margin-bottom: 0.4rem;
-        }
-
-        .internship-company {
-          font-size: 1.05rem;
-          color: var(--text-light);
-          margin-bottom: 0.3rem;
-        }
-
-        .internship-dates {
-          font-size: 0.95rem;
-          color: #64748b;
-          font-style: italic;
-          margin-bottom: 0.8rem;
-        }
-
-        .internship-description {
-          line-height: 1.6;
-          color: var(--text);
-          white-space: pre-wrap;
-        }
-
-        .internship-actions {
-          display: flex;
-          flex-direction: row;
-          gap: 1rem;
-          flex-wrap: wrap;
-          margin-top: 1.2rem;
-        }
-
-        .loading-overlay {
-          position: absolute;
-          inset: 0;
-          background: rgba(255,255,255,0.7);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          border-radius: 16px;
-          z-index: 10;
-          color: var(--primary);
-          font-weight: 600;
-        }
-
-        .error-message {
-          color: #dc2626;
-          background: rgba(220,38,38,0.08);
-          padding: 0.8rem 1.2rem;
-          border-radius: 12px;
-          margin-bottom: 1.5rem;
-        }
-
-        .no-internships {
-          color: #64748b;
-          font-style: italic;
-          text-align: center;
-          padding: 2.5rem 1rem;
-          font-size: 1.1rem;
-        }
-
-        /* ────────────────────────────────────────
-           Compact Edit Modal (same as Projects)
-        ──────────────────────────────────────── */
-        .modal-content {
-          border-radius: 16px;
-          border: none;
-          box-shadow: 0 12px 40px rgba(75, 0, 130, 0.22);
-        }
-
-        .modal-header {
-          background: linear-gradient(135deg, rgba(75,0,130,0.06), rgba(106,13,173,0.06));
-          border-bottom: 1px solid #e2e8f0;
-          padding: 1.2rem 1.5rem;
-        }
-
-        .modal-title {
-          font-size: 1.32rem;
-          font-weight: 700;
-          color: var(--violet-text);
-        }
-
-        .modal-body {
-          padding: 1.3rem 1.5rem;
+        .form-group input:focus, .form-group textarea:focus {
+          border-color: #1e1b4b;
+          box-shadow: 0 0 0 4px rgba(30, 27, 75, 0.05);
         }
 
         .modal-footer {
-          padding: 1rem 1.5rem;
-          border-top: 1px solid #e2e8f0;
-          background: #fafbfc;
+          padding: 1.5rem 2rem;
+          background: #f8fafc;
+          display: flex;
+          justify-content: flex-end;
+          gap: 1rem;
         }
 
-        .modal-form-label {
+        .btn-cancel {
+          background: white;
+          border: 1px solid #cbd5e1;
+          padding: 0.75rem 1.5rem;
+          border-radius: 8px;
           font-weight: 600;
-          color: var(--violet-text);
-          margin-bottom: 0.45rem;
-          font-size: 0.96rem;
         }
 
-        input.form-control,
-        textarea.form-control {
-          border-radius: 10px;
-          padding: 0.7rem 1.2rem;
-          font-size: 0.98rem;
+        .btn-submit {
+          background: #1e1b4b;
+          color: white;
+          border: none;
+          padding: 0.75rem 1.5rem;
+          border-radius: 8px;
+          font-weight: 600;
         }
 
-        textarea {
-          min-height: 110px;
-        }
-
-        /* Responsive Styles */
-        @media (max-width: 1024px) {
-          .internships-page-content {
-            padding: 2.5rem 0.5rem 1.5rem;
-          }
-          .internships-card {
-            padding: 1.2rem 0.7rem;
-          }
+        .empty-state {
+          grid-column: 1 / -1;
+          padding: 4rem;
+          text-align: center;
+          background: white;
+          border: 2px dashed #e2e8f0;
+          border-radius: 12px;
         }
 
         @media (max-width: 768px) {
-          .internships-page-content {
-            padding: 2rem 0.2rem 1rem;
-            min-height: unset;
-          }
-          .internships-header {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 1rem;
-          }
-          .internships-avatar {
-            width: 70px;
-            height: 70px;
-            font-size: 2.1rem;
-          }
-          .form-group {
-            grid-template-columns: 1fr;
-            gap: 0.7rem;
-          }
-          .internship-actions {
-            flex-direction: column;
-            gap: 0.8rem;
-          }
-          .modal-dialog {
-            margin: 0.5rem;
-          }
-          .internship-item {
-            padding: 0.8rem 0.7rem;
-          }
-        }
-
-        @media (max-width: 480px) {
-          .internships-page-content {
-            padding: 1rem 0.1rem 0.5rem;
-          }
-          .internships-header {
-            gap: 0.5rem;
-          }
-          .internships-avatar {
-            width: 48px;
-            height: 48px;
-            font-size: 1.2rem;
-          }
-          .section-title {
-            font-size: 1.1rem;
-          }
-          .internships-card {
-            padding: 0.7rem 0.2rem;
-          }
-          .action-btn {
-            padding: 0.5rem 0.7rem;
-            font-size: 0.85rem;
-            min-width: 90px;
-          }
-          .form-actions {
-            gap: 0.5rem;
-          }
-        }
-
-        .internship-description {
-          line-height: 1.6;
-          color: var(--text);
-          white-space: pre-wrap;
-          word-break: break-word;
-          display: -webkit-box;
-          -webkit-line-clamp: 5;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          max-height: 8.5rem;
-        }
-
-        .internship-description::after {
-          content: "...";
-          color: var(--primary-light);
-          font-weight: 500;
-        }
-
-        .internship-item:hover .internship-description {
-          -webkit-line-clamp: unset;
-          max-height: none;
+          .internship-module { padding: 1.5rem 1rem; }
+          .module-header { flex-direction: column; align-items: stretch; }
+          .controls-card { flex-direction: column; align-items: stretch; }
+          .modal-body { grid-template-columns: 1fr; }
         }
       `}</style>
 
-      <div className="internships-page-content">
-        {/* Header */}
-        <div className="internships-header">
-          <div className="internships-avatar">
-            <i className="bi bi-briefcase-fill"></i>
-          </div>
-          <div>
-            <h1 className="section-title">My Internships</h1>
-            <p style={{ color: "var(--text-light)", marginTop: "0.5rem", fontSize: "1.05rem" }}>
-              Showcase your professional experiences and achievements
-            </p>
-          </div>
+      <header className="module-header">
+        <div className="header-left">
+          <h1>My Internships</h1>
+          <p>Document and manage your professional internship experiences.</p>
         </div>
+        <button className="btn-add" onClick={openAddModal}>
+          <i className="bi bi-plus-lg"></i>
+          Add Experience
+        </button>
+      </header>
 
-        {/* Main card */}
-        <div className="internships-card" style={{ position: "relative" }}>
-          {loading && (
-            <div className="loading-overlay">
-              {showModal ? "Updating..." : "Saving..."}
-            </div>
-          )}
-
-          {error && <div className="error-message">{error}</div>}
-
-          {/* Add Form */}
-          <div className="form-group">
-            <input
-              name="domain"
-              placeholder="Domain / Role (e.g. Full-Stack Development)"
-              value={form.domain}
-              onChange={handleAddChange}
-            />
-            <input
-              name="company"
-              placeholder="Company Name"
-              value={form.company}
-              onChange={handleAddChange}
-            />
-          </div>
-
-          <div className="form-group">
-            <input
-              type="date"
-              name="start_date"
-              value={form.start_date}
-              onChange={handleAddChange}
-            />
-            <input
-              type="date"
-              name="end_date"
-              value={form.end_date}
-              onChange={handleAddChange}
-            />
-          </div>
-
-          <div className="form-group full">
-            <textarea
-              name="description"
-              placeholder="Describe your responsibilities, projects, and achievements..."
-              value={form.description}
-              onChange={handleAddChange}
-            />
-          </div>
-
-          <div className="form-actions">
-            <button
-              className="action-btn action-btn-primary"
-              onClick={submitAdd}
-              disabled={loading}
-            >
-              <i className="bi bi-plus-circle me-2"></i> Add Internship
-            </button>
-          </div>
-
-          <hr style={{ margin: "2.5rem 0", borderColor: "#e2e8f0" }} />
-
-          {/* List of internships */}
-          {internships.length === 0 ? (
-            <div className="no-internships">
-              No internships added yet. Start building your professional journey!
-            </div>
-          ) : (
-            internships.map((intern) => (
-              <div key={intern.id} className="internship-item">
-                <div className="internship-content">
-                  <div className="internship-title">{intern.domain}</div>
-                  <div className="internship-company">at {intern.company}</div>
-                  <div className="internship-dates">
-                    {intern.start_date} — {intern.end_date || "Present"}
-                  </div>
-                  {intern.description && (
-                    <div className="internship-description">
-                      {intern.description}
-                    </div>
-                  )}
-                </div>
-
-                <div className="internship-actions">
-                  <button
-                    className="action-btn action-btn-outline"
-                    onClick={() => openEdit(intern)}
-                  >
-                    <i className="bi bi-pencil-square me-1"></i> Edit
-                  </button>
-                  <button
-                    className="action-btn action-btn-danger"
-                    onClick={() => deleteInternship(intern.id)}
-                  >
-                    <i className="bi bi-trash me-1"></i> Delete
-                  </button>
-                </div>
-              </div>
-            ))
-          )}
+      <div className="controls-card">
+        <div className="search-box">
+          <i className="bi bi-search"></i>
+          <input 
+            type="text" 
+            placeholder="Search by role, company or description..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+        
+        <div className="entries-control">
+          <span>Show</span>
+          <select 
+            value={entriesPerPage} 
+            onChange={(e) => {
+              setEntriesPerPage(e.target.value === "All" ? "All" : Number(e.target.value));
+              setCurrentPage(1);
+            }}
+          >
+            <option value={5}>5 entries</option>
+            <option value={10}>10 entries</option>
+            <option value={25}>25 entries</option>
+            <option value="All">All</option>
+          </select>
         </div>
       </div>
 
-      {/* Edit Modal - Now same style as Projects */}
+      <div className="items-grid">
+        {loadingList ? (
+          <div className="empty-state">Loading your records...</div>
+        ) : currentEntries.length === 0 ? (
+          <div className="empty-state">
+            <i className="bi bi-journal-x" style={{ fontSize: '3rem', color: '#cbd5e1' }}></i>
+            <h3 style={{ marginTop: '1rem' }}>No internship records found</h3>
+            <p>Start by adding your first internship experience to showcase your career growth.</p>
+          </div>
+        ) : (
+          currentEntries.map((intern) => (
+            <div key={intern.id} className="intern-card">
+              <div className="card-category">Internship</div>
+              <h3 className="card-title">{intern.domain}</h3>
+              <p className="card-company">{intern.company}</p>
+              
+              <div className="card-meta">
+                <span><i className="bi bi-calendar3 me-2"></i> {intern.start_date} — {intern.end_date || "Present"}</span>
+              </div>
+
+              {intern.description && (
+                <p className="card-description">{intern.description}</p>
+              )}
+
+              <div className="card-actions">
+                <button 
+                  className="btn-icon" 
+                  onClick={() => openEditModal(intern)}
+                  title="Edit Record"
+                >
+                  <i className="bi bi-pencil"></i>
+                </button>
+                <button 
+                  className="btn-icon delete" 
+                  onClick={() => deleteInternship(intern.id)}
+                  title="Delete Record"
+                >
+                  <i className="bi bi-trash"></i>
+                </button>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {entriesPerPage !== "All" && totalPages > 1 && (
+        <footer className="pagination-footer">
+          <div className="page-info">
+            Showing <span>{Math.min((currentPage - 1) * entriesPerPage + 1, filteredData.length)}</span> to <span>{Math.min(currentPage * entriesPerPage, filteredData.length)}</span> of <span>{filteredData.length}</span> experiences
+          </div>
+          <nav className="page-nav">
+            <button 
+              className="nav-btn" 
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+            >
+              <i className="bi bi-chevron-left"></i>
+            </button>
+            
+            {[...Array(totalPages)].map((_, i) => (
+              <button 
+                key={i + 1}
+                className={`nav-btn ${currentPage === i + 1 ? 'active' : ''}`}
+                onClick={() => handlePageChange(i + 1)}
+              >
+                {i + 1}
+              </button>
+            )).slice(Math.max(0, currentPage - 3), Math.min(totalPages, currentPage + 2))}
+
+            <button 
+              className="nav-btn" 
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+            >
+              <i className="bi bi-chevron-right"></i>
+            </button>
+          </nav>
+        </footer>
+      )}
+
       {showModal && (
-        <div
-          className="modal fade show"
-          style={{ display: "block", backgroundColor: "rgba(0,0,0,0.55)" }}
-          tabIndex="-1"
-        >
-          <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">
-                  <i className="bi bi-pencil-square me-2"></i> Edit Internship
-                </h5>
-                <button
-                  type="button"
-                  className="btn-close"
-                  onClick={() => setShowModal(false)}
-                ></button>
+        <div className="modal-overlay">
+          <div className="modal-container">
+            <div className="modal-header">
+              <h2>{modalMode === "add" ? "Add New Experience" : "Edit Experience"}</h2>
+              <button onClick={closeModal} style={{ background: 'none', border: 'none', fontSize: '1.5rem' }}>
+                <i className="bi bi-x-lg"></i>
+              </button>
+            </div>
+            
+            <div className="modal-body">
+              <div className="form-group">
+                <label>Domain / Role *</label>
+                <input 
+                  type="text" 
+                  name="domain" 
+                  value={form.domain} 
+                  onChange={handleChange} 
+                  placeholder="e.g. Full Stack Developer"
+                />
               </div>
-
-              <div className="modal-body">
-                <div className="mb-3">
-                  <label className="modal-form-label">Domain / Role *</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    name="domain"
-                    value={editForm.domain}
-                    onChange={handleEditChange}
-                  />
-                </div>
-
-                <div className="mb-3">
-                  <label className="modal-form-label">Company Name *</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    name="company"
-                    value={editForm.company}
-                    onChange={handleEditChange}
-                  />
-                </div>
-
-                <div className="row g-3 mb-3">
-                  <div className="col-md-6">
-                    <label className="modal-form-label">Start Date *</label>
-                    <input
-                      type="date"
-                      className="form-control"
-                      name="start_date"
-                      value={editForm.start_date}
-                      onChange={handleEditChange}
-                    />
-                  </div>
-                  <div className="col-md-6">
-                    <label className="modal-form-label">End Date</label>
-                    <input
-                      type="date"
-                      className="form-control"
-                      name="end_date"
-                      value={editForm.end_date}
-                      onChange={handleEditChange}
-                    />
-                  </div>
-                </div>
-
-                <div className="mb-3">
-                  <label className="modal-form-label">Description</label>
-                  <textarea
-                    className="form-control"
-                    name="description"
-                    rows="5"
-                    value={editForm.description}
-                    onChange={handleEditChange}
-                  />
-                </div>
+              <div className="form-group">
+                <label>Company *</label>
+                <input 
+                  type="text" 
+                  name="company" 
+                  value={form.company} 
+                  onChange={handleChange} 
+                  placeholder="Organization or Startup name"
+                />
               </div>
-
-              <div className="modal-footer">
-                <button
-                  type="button"
-                  className="action-btn action-btn-outline px-4"
-                  onClick={() => setShowModal(false)}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  className="action-btn action-btn-primary px-5"
-                  onClick={submitEdit}
-                  disabled={loading}
-                >
-                  {loading ? "Saving..." : "Save Changes"}
-                </button>
+              <div className="form-group">
+                <label>Start date *</label>
+                <input type="date" name="start_date" value={form.start_date} onChange={handleChange} />
               </div>
+              <div className="form-group">
+                <label>End date (Optional)</label>
+                <input type="date" name="end_date" value={form.end_date} onChange={handleChange} />
+              </div>
+              <div className="form-group full">
+                <label>Description (Optional)</label>
+                <textarea 
+                  name="description" 
+                  value={form.description} 
+                  onChange={handleChange} 
+                  rows="4"
+                  placeholder="Describe your key achievements, technologies used, and responsibilities."
+                />
+              </div>
+            </div>
+
+            <div className="modal-footer">
+              <button className="btn-cancel" onClick={closeModal}>Cancel</button>
+              <button className="btn-submit" onClick={submitModal} disabled={submitting}>
+                {submitting ? "Processing..." : modalMode === "add" ? "Save Experience" : "Update Experience"}
+              </button>
             </div>
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 };
 
-export default Internship;
+export default Internship;

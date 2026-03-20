@@ -264,6 +264,11 @@ export default function AdminSidebar() {
               <i className="fas fa-chart-pie nav-icon"></i>
               <span className="section-label">Reports</span>
             </NavLink>
+
+            <NavLink to="/admin/offer-letters" className={({ isActive }) => `section-link ${isActive ? "active" : ""}`}>
+              <i className="fas fa-file-contract nav-icon" style={{ color: '#10b981' }}></i>
+              <span className="section-label">Offer Letters</span>
+            </NavLink>
           </div>
 
           {/* Logout Footer stays at bottom */}

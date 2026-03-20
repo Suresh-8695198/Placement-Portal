@@ -480,13 +480,14 @@ def register(request):
         return JsonResponse({"error": "Already registered"}, status=400)
 
     Student.objects.create(
-        username=req.username,
+        name=req.username, # Using username from request as name
         email=req.email,
         password=make_password(data["password"]),
         department=req.department,
-        year=req.year,
-        contact=req.contact,
-        is_verified=True,   # already approved
+        passed_out_year=req.year,
+        phone=req.contact,
+        university_reg_no=data.get("university_reg_no", f"REG-{req.id}"), # Fallback if not in data
+        is_verified=True,
         is_active=True
     )
 

@@ -19,6 +19,7 @@ import EligibleCompanies from "./pages/EligibleCompanies";
 import ApplicationStatus from "./pages/ApplicationStatus";
 import ApplyJob from "./pages/ApplyJob";
 import StudentAnnouncements from "./pages/StudentAnnouncements";
+import OfferLetters from "./pages/OfferLetters";
 
 /* ───────── Admin ───────── */
 import AdminLayout from "./pages/admin/AdminLayout";
@@ -43,6 +44,7 @@ import StudentsByCoordinator from "./pages/admin/StudentsByCoordinator";
 import AdminReports from "./pages/admin/AdminReports";
 import DepartmentReport from "./pages/admin/DepartmentReport";
 import AdminCompanyJobs from "./pages/admin/AdminCompanyJobs";
+import AdminOfferLetters from "./pages/admin/AdminOfferLetters";
 
 /* ───────── Company ───────── */
 import CompanyLogin from "./pages/company/CompanyLogin";
@@ -119,6 +121,7 @@ function App() {
         {/* If you have company profile viewable by students */}
         <Route path="company-profile" element={<CompanyProfile />} /> 
         <Route path="announcements" element={<StudentAnnouncements />} />
+        <Route path="offer-letters" element={<OfferLetters />} />
       </Route>
 
       {/* ─── Admin Routes ─── */}
@@ -155,6 +158,7 @@ function App() {
         <Route path="/admin/reports" element={<AdminReports />} />
         <Route path="/admin/reports/:department/:batch" element={<DepartmentReport />} />
         <Route path="/admin/announcements" element={<Announcements />} />
+        <Route path="/admin/offer-letters" element={<AdminOfferLetters />} />
 
         {/* Add more admin sub-routes here when needed */}
         

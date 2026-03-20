@@ -1,18 +1,26 @@
 
-
-// src/pages/StudentJobs.jsx
-import React, { useState, useEffect } from 'react';
+// src/pages/EligibleCompanies.jsx
+import React, { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
 const API_BASE = 'http://localhost:8000/companies';
 
-export default function StudentJobs() {
+export default function EligibleCompanies() {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [showAll, setShowAll] = useState(false); // false = Active only, true = All jobs
+
+  // Pagination & Entries states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [entriesPerPage, setEntriesPerPage] = useState(6);
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [filters, setFilters] = useState({
+    jobType: '',
+    location: '',
+  });
 
   const navigate = useNavigate();
   const studentEmail = localStorage.getItem('studentEmail');
@@ -23,40 +31,27 @@ export default function StudentJobs() {
       return;
     }
     fetchJobs();
-  }, [navigate, studentEmail, showAll]); // Re-fetch when toggle changes
-const fetchJobs = async () => {
-  try {
-    setLoading(true);
-    setError(null);
+  }, [navigate, studentEmail, showAll]);
 
-    const params = { email: studentEmail };
-params.status = showAll ? 'all' : 'active'; // <-- use this instead of params.all
-
-    const res = await axios.get(`${API_BASE}/jobs/active/`, {
-      params,
-      withCredentials: true,
-    });
-
-    // Debug the full response
-    console.log(`Fetched ${showAll ? 'All' : 'Active'} jobs response:`, res.data);
-
-    // Safely get jobs array (handle missing/wrong format)
-    const receivedJobs = res.data.jobs || res.data || []; 
-    console.log(`Parsed jobs count: ${receivedJobs.length}`);
-
-    setJobs(receivedJobs);
-  } catch (err) {
-    console.error('Failed to fetch jobs:', err);
-    setError('Failed to load jobs. Please try again later.');
-  } finally {
-    setLoading(false);
-  }
-};
-  const filteredJobs = jobs.filter((job) =>
-    `${job.title || ''} ${job.company || ''} ${job.description || ''} ${(job.skills || []).join(' ')}`
-      .toLowerCase()
-      .includes(searchQuery.toLowerCase())
-  );
+  const fetchJobs = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const params = { email: studentEmail, status: showAll ? 'all' : 'active' };
+      const res = await axios.get(`${API_BASE}/jobs/active/`, {
+        params,
+        withCredentials: true,
+      });
+      const receivedJobs = res.data.jobs || res.data || [];
+      setJobs(receivedJobs);
+      setCurrentPage(1); // Reset to page 1 on new data
+    } catch (err) {
+      console.error('Failed to fetch jobs:', err);
+      setError('Failed to load jobs. Please try again later.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleApplyClick = (jobId) => {
     navigate(`/dashboard/apply/${jobId}`);
@@ -67,13 +62,11 @@ params.status = showAll ? 'all' : 'active'; // <-- use this instead of params.al
       alert('Company website information not available.');
       return;
     }
-
     try {
       const res = await axios.get(`${API_BASE.replace('/companies', '')}/companies/website/`, {
         params: { email: companyEmail },
         withCredentials: true,
       });
-
       if (res.data.success && res.data.website) {
         let url = res.data.website.trim();
         if (!url.match(/^https?:\/\//i)) url = `https://${url}`;
@@ -87,325 +80,810 @@ params.status = showAll ? 'all' : 'active'; // <-- use this instead of params.al
     }
   };
 
+  // Memoized filtered jobs
+  const filteredJobs = useMemo(() => {
+    return jobs.filter((job) => {
+      const query = searchQuery.toLowerCase();
+      const matchesSearch = `${job.title || ''} ${job.company || ''} ${job.description || ''} ${(job.skills || []).join(' ')}`
+        .toLowerCase()
+        .includes(query);
+      
+      const matchesType = !filters.jobType || (job.job_type || '').toLowerCase() === filters.jobType.toLowerCase();
+      const matchesLocation = !filters.location || (job.job_location || '').toLowerCase().includes(filters.location.toLowerCase());
+
+      return matchesSearch && matchesType && matchesLocation;
+    });
+  }, [jobs, searchQuery, filters]);
+
+  // Pagination Logic
+  const totalEntries = filteredJobs.length;
+  const totalPages = Math.ceil(totalEntries / (entriesPerPage === 'All' ? totalEntries : entriesPerPage));
+  const currentEntries = useMemo(() => {
+    if (entriesPerPage === 'All') return filteredJobs;
+    const startIndex = (currentPage - 1) * entriesPerPage;
+    return filteredJobs.slice(startIndex, startIndex + Number(entriesPerPage));
+  }, [filteredJobs, currentPage, entriesPerPage]);
+
+  const handlePageChange = (pageNum) => {
+    if (pageNum >= 1 && pageNum <= totalPages) {
+      setCurrentPage(pageNum);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
   if (loading) {
     return (
-      <div className="d-flex justify-content-center align-items-center min-vh-100">
-        <div className="spinner-border text-primary" style={{ width: '3.5rem', height: '3.5rem' }} role="status">
+      <div className="d-flex justify-content-center align-items-center min-vh-100 bg-white">
+        <div className="spinner-border text-dark" style={{ width: '2rem', height: '2rem' }} role="status">
           <span className="visually-hidden">Loading...</span>
         </div>
       </div>
     );
   }
 
-  if (error) {
-    return (
-      <div className="text-center py-5">
-        <div className="text-danger fs-4 fw-medium mb-4">{error}</div>
-        {error.includes('Session') && (
-          <button className="btn btn-primary px-5 py-3 fs-5" onClick={() => navigate('/login')}>
-            Go to Login
-          </button>
-        )}
-      </div>
-    );
-  }
-
   return (
-    <>
-      <link
-        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-        rel="stylesheet"
-        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
-        crossOrigin="anonymous"
-      />
+    <div className="eligible-companies-container">
+      <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
 
       <style>{`
-        /* Your existing styles — unchanged */
-        :root {
-          --primary: #4B0082;
-          --primary-light: #6A0DAD;
-          --light-violet-bg: rgba(139, 92, 246, 0.15);
-          --text: #1e293b;
-          --text-light: #475569;
-          --bg-card: #ffffff;
-          --border-light: #e2e8f0;
-          --violet-text: #5b21b6;
-        }
-        .student-jobs-page {
-          background: #ffffff;
+        .eligible-companies-container {
+          background-color: #ffffff; /* pure white background */
           min-height: 100vh;
-          padding: 4rem 1.5rem 2rem;
-          box-sizing: border-box;
+          font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+          color: #1e293b;
+          padding: 1rem 2.5rem; /* Reduced top padding */
         }
-        .section-title {
-          font-size: clamp(1.8rem, 5vw, 2.4rem);
-          font-weight: 800;
-          background: linear-gradient(90deg, var(--primary), var(--primary-light));
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          margin-bottom: 0.5rem;
+
+        .page-header {
+          margin-bottom: 3.5rem; /* Pronounced margin for a premium spacious feel */
         }
-        .search-container { max-width: 520px; }
-        .form-control {
-          border-radius: 12px;
-          padding: 0.8rem 1.4rem;
-          font-size: 1.05rem;
-          border: 1px solid #d1d5db;
-          box-sizing: border-box;
-        }
-        .form-control:focus {
-          border-color: var(--primary);
-          box-shadow: 0 0 0 0.3rem rgba(75,0,130,0.18);
-        }
-        .job-card {
-          border-radius: 16px;
-          border: 1px solid var(--border-light);
-          box-shadow: 0 6px 20px rgba(0,0,0,0.07);
-          transition: all 0.28s ease;
-          height: 100%;
-          display: flex;
-          flex-direction: column;
-        }
-        .job-card:hover {
-          transform: translateY(-8px);
-          box-shadow: 0 14px 36px rgba(0,0,0,0.12);
-        }
-        .job-title {
-          font-size: 1.35rem;
-          font-weight: 700;
-          color: var(--violet-text);
-          margin-bottom: 0.5rem;
-        }
-        .company-name {
-          font-size: 1.1rem;
-          font-weight: 600;
-          color: var(--violet-text);
-        }
-        .job-meta {
-          font-size: 0.95rem;
-          color: var(--text-light);
-        }
-        .job-description {
-          font-size: 0.96rem;
-          line-height: 1.65;
-          color: var(--text-light);
-          flex-grow: 1;
-          display: -webkit-box;
-          -webkit-line-clamp: 4;
-          -webkit-box-orient: vertical;
+
+        .enhanced-banner {
+          background: linear-gradient(135deg, #b45309, #9a3412);
+          border-radius: 0; /* Removed rounded corners as requested */
+          padding: 1.5rem 2rem; 
+          position: relative;
           overflow: hidden;
-        }
-        .action-btn {
-          border-radius: 10px;
-          padding: 0.8rem 1.6rem;
-          font-weight: 600;
-          min-width: 165px;
-          font-size: 1rem;
-        }
-        .action-btn-primary {
-          background: linear-gradient(135deg, var(--primary), var(--primary-light));
           color: white;
-          border: none;
+          box-shadow: 0 8px 24px rgba(154, 52, 18, 0.15);
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          min-height: 110px; 
         }
-        .action-btn-outline {
-          background: white;
-          color: var(--primary);
-          border: 1px solid var(--primary);
+
+        .banner-content {
+          position: relative;
+          z-index: 2;
+          max-width: 65%;
         }
-        .action-btn-outline:hover {
-          background: var(--light-violet-bg);
+
+        .banner-title {
+          font-size: 1.65rem; 
+          font-weight: 700; /* Less overbolded, more professional */
+          margin-bottom: 0.35rem;
+          letter-spacing: -0.01em;
+          line-height: 1.2;
         }
-        .action-btn-outline:disabled {
-          opacity: 0.55;
-          cursor: not-allowed;
+
+        .banner-subtitle {
+          font-size: 0.92rem; /* Reduced font size */
+          opacity: 0.9;
+          margin: 0;
+          font-weight: 400;
         }
-        .no-jobs {
-          background: white;
-          border: 1px solid var(--border-light);
-          border-radius: 16px;
-          padding: 3.5rem 2.5rem;
-          text-align: center;
-          color: var(--text-light);
-          font-size: 1.15rem;
-        }
-        .jobs-header-avatar {
-          width: 110px;
-          height: 110px;
-          border-radius: 50%;
-          background: linear-gradient(135deg, var(--primary), var(--primary-light));
-          color: white;
-          font-size: 3.8rem;
+
+        .banner-visual {
+          position: absolute;
+          right: -10px;
+          top: 0;
+          bottom: 0;
+          width: 30%;
+          opacity: 0.15;
+          pointer-events: none;
+          z-index: 1;
           display: flex;
           align-items: center;
           justify-content: center;
-          box-shadow: 0 8px 24px rgba(75,0,130,0.28);
         }
-        .skills-tag {
-          background: var(--light-violet-bg);
-          color: var(--violet-text);
-          padding: 0.35rem 0.85rem;
-          border-radius: 0.5rem;
-          font-size: 0.92rem;
+
+        .company-svg-pattern {
+          width: 120px;
+          height: 120px;
+          fill: white;
+        }
+
+        /* Control Bar Styles */
+        .controls-bar {
+          background: white;
+          padding: 0.85rem 1.25rem;
+          border-radius: 0; /* Sharp corners */
+          box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+          border: 1px solid #e2e8f0;
+          display: flex;
+          flex-wrap: wrap;
+          align-items: center;
+          justify-content: space-between;
+          gap: 2.5rem; 
+          margin-bottom: 2rem; 
+        }
+        
+
+        .controls-left {
+          display: flex;
+          align-items: center;
+          gap: 2.5rem; /* Significant gap to ensure it is clearly visible */
+          flex-grow: 1;
+        }
+
+        .search-wrapper {
+          position: relative;
+          flex-basis: 350px; /* Base width */
+          flex-grow: 0; /* Stop it from eating up all space and hiding gaps */
+        }
+
+        .search-wrapper i {
+          position: absolute;
+          left: 1rem;
+          top: 50%;
+          transform: translateY(-50%);
+          color: #94a3b8;
+          font-size: 1.1rem;
+        }
+
+        .search-input {
+          width: 100%;
+          padding: 0.75rem 1rem 0.75rem 2.75rem;
+          border-radius: 0; /* Sharp corners */
+          border: 1px solid #cbd5e1;
+          font-size: 0.95rem;
+          transition: all 0.2s;
+          background: #f8fafc;
+        }
+
+        .search-input:focus {
+          outline: none;
+          background: white;
+          border-color: #9a3412;
+          box-shadow: 0 0 0 3px rgba(154, 52, 18, 0.1);
+        }
+
+        .advanced-filter-btn {
+          display: flex;
+          align-items: center;
+          gap: 0.6rem;
+          padding: 0.65rem 1.25rem;
+          background: #f1f5f9;
+          border: 1px solid #e2e8f0;
+          border-radius: 0; /* Sharp corners */
+          color: #475569;
           font-weight: 500;
-          border: 1px solid rgba(75, 0, 130, 0.2);
+          font-size: 0.9rem;
+          transition: all 0.2s;
+          white-space: nowrap;
         }
-        .toggle-btn {
-          padding: 0.6rem 1.4rem;
-          border-radius: 50px;
+
+        .advanced-filter-btn:hover {
+          background: #e2e8f0;
+          color: #1e293b;
+        }
+
+        .advanced-filter-btn.active {
+          background: rgba(154, 52, 18, 0.08);
+          color: #9a3412;
+          border-color: rgba(154, 52, 18, 0.2);
+        }
+
+        /* Advanced Filters Panel */
+        .advanced-filters-panel {
+          background: white;
+          border: 1px solid #e2e8f0;
+          border-radius: 0; /* Sharp corners */
+          padding: 1.25rem;
+          margin-bottom: 2.5rem; /* Balanced with banner spacing */
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+          gap: 1.25rem;
+          box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+          animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+          from { opacity: 0; transform: translateY(-10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+
+        .filter-group {
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
+        }
+
+        .filter-group label {
+          font-size: 0.85rem;
+          font-weight: 700;
+          color: #64748b;
+          text-transform: uppercase;
+          letter-spacing: 0.025em;
+        }
+
+        .filter-control {
+          padding: 0.6rem 0.75rem;
+          border-radius: 0; /* Sharp corners */
+          border: 1px solid #cbd5e1;
+          background: #f8fafc;
+          font-size: 0.9rem;
+          color: #1e293b;
+          width: 100%;
+          cursor: pointer;
+        }
+
+        .filter-control:focus {
+          outline: none;
+          border-color: #9a3412;
+          box-shadow: 0 0 0 3px rgba(154, 52, 18, 0.1);
+        }
+
+        .controls-right {
+          display: flex;
+          align-items: center;
+          gap: 1.5rem;
+          flex-wrap: wrap;
+        }
+
+        .entries-select {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          font-size: 0.9rem;
+          color: #64748b;
+          font-weight: 500;
+        }
+
+        .entries-select select {
+          padding: 0.5rem 2rem 0.5rem 0.75rem;
+          border-radius: 0; /* Sharp corners */
+          border: 1px solid #cbd5e1;
+          background: #f8fafc;
+          cursor: pointer;
+        }
+
+        /* Filter Tabs */
+        .filter-tabs {
+          display: flex;
+          background: #f1f5f9;
+          padding: 0.25rem;
+          border-radius: 0; /* Sharp corners */
+        }
+
+        .tab-btn {
+          padding: 0.5rem 1.25rem;
+          border-radius: 0; /* Sharp corners */
+          font-size: 0.875rem;
           font-weight: 600;
-          transition: all 0.3s;
+          border: none;
+          background: transparent;
+          color: #64748b;
+          transition: all 0.2s;
         }
-        .toggle-btn.active {
-          background: var(--primary);
+
+        .tab-btn.active {
+          background: #9a3412; /* Active tab matches sidebar orange */
           color: white;
-          box-shadow: 0 4px 12px rgba(75,0,130,0.3);
+          box-shadow: 0 4px 12px rgba(154, 52, 18, 0.3);
         }
-        .toggle-btn:hover:not(.active) {
-          background: var(--light-violet-bg);
+
+        /* Job Grid Styles */
+        .jobs-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+          gap: 1.75rem;
+          margin-bottom: 2.5rem;
         }
-        /* Responsive Styles */
-        @media (max-width: 1024px) { .student-jobs-page { padding: 2.5rem 0.5rem 1.5rem; } }
+
+        .job-card {
+          background: white;
+          border-radius: 0; /* Sharp corners */
+          border: 1px solid #e2e8f0;
+          padding: 1.75rem;
+          display: flex;
+          flex-direction: column;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          position: relative;
+          overflow: hidden;
+        }
+
+        .job-card::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 4px;
+          background: #9a3412; /* Matched orange */
+          opacity: 0;
+          transition: opacity 0.3s;
+        }
+
+        .job-card:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 12px 20px -8px rgba(0, 0, 0, 0.1);
+          border-color: #cbd5e1;
+        }
+
+        .job-card:hover::before {
+          opacity: 1;
+        }
+
+        .job-badge {
+          display: inline-flex;
+          align-items: center;
+          padding: 0.25rem 0.75rem;
+          background: rgba(154, 52, 18, 0.1);
+          color: #9a3412; /* Matched orange */
+          border-radius: 9999px;
+          font-size: 0.75rem;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.025em;
+          margin-bottom: 1rem;
+        }
+
+        .job-title {
+          font-size: 1.35rem;
+          font-weight: 700;
+          color: #0f172a;
+          margin-bottom: 0.5rem;
+          line-height: 1.2;
+        }
+
+        .company-name {
+          font-size: 1.05rem;
+          font-weight: 600;
+          color: #1e1b4b;
+          margin-bottom: 1.25rem;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+        }
+
+        .job-info-list {
+          list-style: none;
+          padding: 0;
+          margin: 0 0 1.5rem 0;
+          display: flex;
+          flex-wrap: wrap;
+          gap: 1rem;
+        }
+
+        .job-info-item {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          font-size: 0.875rem;
+          color: #64748b;
+          background: #f8fafc;
+          padding: 0.4rem 0.75rem;
+          border-radius: 6px;
+          border: 1px solid #f1f5f9;
+        }
+
+        .job-info-item i {
+          color: #9a3412; /* Matched orange */
+        }
+
+        .job-description {
+          font-size: 0.95rem;
+          line-height: 1.6;
+          color: #475569;
+          margin-bottom: 1.5rem;
+          display: -webkit-box;
+          -webkit-line-clamp: 3;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+          flex-grow: 1;
+        }
+
+        .skills-container {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 0.5rem;
+          margin-bottom: 1.75rem;
+        }
+
+        .skill-tag {
+          font-size: 0.75rem;
+          font-weight: 600;
+          background: #f1f5f9;
+          color: #475569;
+          padding: 0.25rem 0.6rem;
+          border-radius: 4px;
+        }
+
+        .card-actions {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 1rem;
+          margin-top: auto;
+        }
+
+        .btn-action {
+          padding: 0.75rem 1rem;
+          border-radius: 8px;
+          font-size: 0.9rem;
+          font-weight: 600;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.5rem;
+          transition: all 0.2s;
+          cursor: pointer;
+        }
+
+        .btn-outline {
+          background: white;
+          color: #9a3412;
+          border: 1.5px solid #9a3412;
+        }
+
+        .btn-outline:hover:not(:disabled) {
+          background: rgba(154, 52, 18, 0.05);
+          box-shadow: 0 2px 4px rgba(154, 52, 18, 0.1);
+        }
+
+        .btn-outline:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+          border-color: #cbd5e1;
+          color: #94a3b8;
+        }
+
+        .btn-primary {
+          background: #9a3412;
+          color: white;
+          border: 1.5px solid #9a3412;
+        }
+
+        .btn-primary:hover {
+          background: #7c2d12;
+          border-color: #7c2d12;
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(154, 52, 18, 0.3);
+        }
+
+        /* Pagination Styles */
+        .pagination-container {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 1.5rem 0;
+          border-top: 1px solid #e2e8f0;
+        }
+
+        .pagination-info {
+          font-size: 0.9rem;
+          color: #64748b;
+        }
+
+        .pagination-info span {
+          font-weight: 600;
+          color: #0f172a;
+        }
+
+        .pagination-nav {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+        }
+
+        .page-link {
+          width: 38px;
+          height: 38px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 8px;
+          border: 1px solid #e2e8f0;
+          background: white;
+          color: #475569;
+          font-size: 0.9rem;
+          font-weight: 600;
+          transition: all 0.2s;
+          cursor: pointer;
+        }
+
+        .page-link:hover:not(.active):not(:disabled) {
+          background: #f8fafc;
+          border-color: #cbd5e1;
+          color: #0f172a;
+        }
+
+        .page-link.active {
+          background: #1e1b4b;
+          color: white;
+          border-color: #1e1b4b;
+        }
+
+        .page-link:disabled {
+          opacity: 0.4;
+          cursor: not-allowed;
+        }
+
+        .empty-state {
+          text-align: center;
+          padding: 5rem 2rem;
+          background: white;
+          border-radius: 12px;
+          border: 1px dashed #cbd5e1;
+        }
+
+        .empty-state i {
+          font-size: 3.5rem;
+          color: #cbd5e1;
+          margin-bottom: 1.5rem;
+          display: block;
+        }
+
+        .empty-state h3 {
+          font-size: 1.5rem;
+          font-weight: 700;
+          color: #0f172a;
+          margin-bottom: 0.75rem;
+        }
+
+        .empty-state p {
+          color: #64748b;
+          max-width: 400px;
+          margin: 0 auto;
+        }
+
+        /* Responsive */
         @media (max-width: 768px) {
-          .student-jobs-page { padding: 1.2rem 0.2rem 1rem; }
-          .jobs-header-avatar { width: 70px; height: 70px; font-size: 2.1rem; }
-          .section-title { font-size: 1.2rem; }
-          .job-card { padding: 1rem 0.7rem; }
-          .action-btn { padding: 0.6rem 1rem; font-size: 0.92rem; min-width: 100px; }
-        }
-        @media (max-width: 576px) {
-          .student-jobs-page { padding: 0.7rem 0.1rem 0.5rem; }
-          .jobs-header-avatar { width: 48px; height: 48px; font-size: 1.2rem; }
-          .section-title { font-size: 1rem; }
-          .job-card { padding: 0.5rem 0.2rem; }
-          .action-btn { padding: 0.45rem 0.7rem; font-size: 0.85rem; min-width: 70px; }
+          .eligible-companies-container { padding: 1.5rem 1rem; }
+          .jobs-grid { grid-template-columns: 1fr; }
+          .controls-bar { flex-direction: column; align-items: stretch; }
+          .search-wrapper { max-width: none; }
+          .header-title-section { flex-direction: column; align-items: flex-start; text-align: left; }
+          .pagination-container { flex-direction: column; gap: 1.5rem; text-align: center; }
         }
       `}</style>
 
-      <div className="student-jobs-page container">
-        <div className="d-flex flex-column flex-md-row align-items-md-center justify-content-between mb-5 gap-4">
-          <div className="d-flex align-items-center gap-4">
-            <div className="jobs-header-avatar">
-              <i className="bi bi-briefcase-fill"></i>
-            </div>
-            <div>
-              <h1 className="section-title mb-1">
-                {showAll ? "All Jobs for Your Department" : "Active Jobs for Your Department"}
-              </h1>
-              <p className="text-muted mb-0 fs-5">
-                {showAll 
-                  ? "All jobs ever posted visible to your department" 
-                  : "Currently active opportunities matching your department"}
-              </p>
-            </div>
+      <header className="page-header">
+        <div className="enhanced-banner">
+          <div className="banner-content">
+            <h1 className="banner-title">{showAll ? "All Career Opportunities" : "Available Positions"}</h1>
+            <p className="banner-subtitle">
+              Explorer and discover roles that match your academic profile and professional skills.
+            </p>
           </div>
+          
+          <div className="banner-visual" style={{ opacity: 0.2 }}>
+            <svg viewBox="0 0 100 100" className="company-svg-pattern">
+              {/* Modern Business/Growth SVG */}
+              <rect x="10" y="40" width="25" height="45" rx="2" fill="white" opacity="0.4" />
+              <rect x="40" y="20" width="30" height="65" rx="2" fill="white" opacity="0.6" />
+              <rect x="75" y="50" width="15" height="35" rx="2" fill="white" opacity="0.3" />
+              <path d="M45 35 L55 35 M45 45 L55 45 M45 55 L55 55 M45 65 L55 65" stroke="white" strokeWidth="2" opacity="0.5" />
+              <circle cx="82" cy="30" r="8" fill="white" opacity="0.4" />
+              <path d="M5 90 L95 90" stroke="white" strokeWidth="2" opacity="0.5" />
+            </svg>
+          </div>
+        </div>
 
-          <div className="d-flex gap-3 flex-wrap align-items-center">
-            <button
-              className={`btn toggle-btn ${!showAll ? 'active' : ''}`}
-              onClick={() => setShowAll(false)}
-            >
-              Active Jobs
-            </button>
-            <button
-              className={`btn toggle-btn ${showAll ? 'active' : ''}`}
-              onClick={() => setShowAll(true)}
-            >
-              All Jobs
-            </button>
-
-            <div className="search-container" style={{ minWidth: '280px' }}>
+        <div className="controls-bar">
+          <div className="controls-left">
+            <div className="search-wrapper">
+              <i className="bi bi-search"></i>
               <input
                 type="text"
-                className="form-control shadow-sm"
-                placeholder="Search by title, company, skills..."
+                className="search-input"
+                placeholder="Search by title, company, or skills..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
+
+            <button 
+              className={`advanced-filter-btn ${showAdvanced ? 'active' : ''}`}
+              onClick={() => setShowAdvanced(!showAdvanced)}
+            >
+              <i className={`bi bi-filter${showAdvanced ? '-left' : ''}`}></i>
+              {showAdvanced ? 'Hide Filters' : 'Advanced Filters'}
+            </button>
+
+            <div className="filter-tabs">
+              <button
+                className={`tab-btn ${!showAll ? "active" : ""}`}
+                onClick={() => setShowAll(false)}
+              >
+                Active
+              </button>
+              <button
+                className={`tab-btn ${showAll ? "active" : ""}`}
+                onClick={() => setShowAll(true)}
+              >
+                Historical
+              </button>
+            </div>
+          </div>
+
+          <div className="controls-right">
+            <div className="entries-select">
+              <span>Show</span>
+              <select
+                value={entriesPerPage}
+                onChange={(e) => {
+                  setEntriesPerPage(e.target.value === 'All' ? 'All' : Number(e.target.value));
+                  setCurrentPage(1);
+                }}
+              >
+                <option value={6}>6 items</option>
+                <option value={12}>12 items</option>
+                <option value={24}>24 items</option>
+                <option value="All">All</option>
+              </select>
+            </div>
           </div>
         </div>
 
-        {filteredJobs.length === 0 ? (
-          <div className="no-jobs mx-auto" style={{ maxWidth: '700px' }}>
-            {searchQuery 
-              ? 'No matching jobs found. Try different keywords.' 
-              : showAll 
-                ? 'No jobs have ever been posted for your department yet.' 
-                : 'No active job openings right now. Check back soon!'}
-          </div>
-        ) : (
-          <div className="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
-            {filteredJobs.map((job) => (
-              <div className="col" key={job.id}>
-                <div className="job-card p-4">
-                  <h3 className="job-title">{job.title || 'Untitled Position'}</h3>
-                  <div className="company-name mb-2">{job.company || 'Company not specified'}</div>
+        {showAdvanced && (
+          <div className="advanced-filters-panel">
+            <div className="filter-group">
+              <label>Job Type</label>
+              <select 
+                className="filter-control"
+                value={filters.jobType}
+                onChange={(e) => setFilters({ ...filters, jobType: e.target.value })}
+              >
+                <option value="">All Types</option>
+                <option value="Full-time">Full-time</option>
+                <option value="Internship">Internship</option>
+                <option value="Contract">Contract</option>
+                <option value="Part-time">Part-time</option>
+              </select>
+            </div>
 
-                  <div className="job-meta d-flex flex-wrap gap-3 mb-3">
-                    <span>{job.job_location || 'Location not specified'}</span>
-                    <span>•</span>
-                    <span>{job.job_type || 'Full-time'}</span>
-                  </div>
+            <div className="filter-group">
+              <label>Location Preference</label>
+              <select 
+                className="filter-control"
+                value={filters.location}
+                onChange={(e) => setFilters({ ...filters, location: e.target.value })}
+              >
+                <option value="">Any Location</option>
+                <option value="Remote">Remote</option>
+                <option value="On-site">On-site</option>
+                <option value="Hybrid">Hybrid</option>
+              </select>
+            </div>
 
-                  <div className="job-details mb-3">
-                    {job.salary_range && <p className="mb-1"><strong>Salary:</strong> {job.salary_range}</p>}
-                    {job.last_date_to_apply && (
-                      <p className={`mb-1 ${new Date(job.last_date_to_apply) < new Date() ? 'text-danger' : ''}`}>
-                        <strong>Apply by:</strong> {job.last_date_to_apply}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="mb-4">
-                    {Array.isArray(job.skills) && job.skills.length > 0 ? (
-                      <>
-                        <h6 className="fw-semibold mb-2" style={{ color: '#000000' }}>
-                          Required Skills:
-                        </h6>
-                        <div className="d-flex flex-wrap gap-2">
-                          {job.skills.map((skill, idx) => (
-                            <span key={idx} className="skills-tag">
-                              {skill}
-                            </span>
-                          ))}
-                        </div>
-                      </>
-                    ) : (
-                      <small className="text-muted fst-italic">
-                        No specific skills listed
-                      </small>
-                    )}
-                  </div>
-
-                  <p className="job-description mb-4">
-                    {job.description || 'No description available.'}
-                  </p>
-
-                  <div className="job-actions mt-auto d-flex flex-column gap-3">
-                    <button
-                      className="action-btn action-btn-outline"
-                      onClick={() => handleViewCompanyWebsite(job.company_email)}
-                      disabled={!job.company_email}
-                    >
-                      <i className="bi bi-box-arrow-up-right me-2"></i>
-                      View Company Website
-                    </button>
-
-                    <button
-                      className="action-btn action-btn-primary"
-                      onClick={() => handleApplyClick(job.id)}
-                    >
-                      <i className="bi bi-send-fill me-2"></i>
-                      Apply Now
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
+            <div className="filter-group" style={{ justifyContent: 'flex-end', flexDirection: 'row', gap: '0.75rem' }}>
+              <button 
+                className="btn-action btn-outline" 
+                style={{ padding: '0.5rem 1rem', height: 'fit-content', marginTop: 'auto' }}
+                onClick={() => setFilters({ jobType: '', location: '' })}
+              >
+                <i className="bi bi-arrow-counterclockwise"></i>
+                Reset
+              </button>
+            </div>
           </div>
         )}
-      </div>
-    </>
+      </header>
+
+      {currentEntries.length === 0 ? (
+        <div className="empty-state">
+          <i className="bi bi-search"></i>
+          <h3>No positions found</h3>
+          <p>We couldn't find any opportunities matching your current filters. Try adjusting your search or switching tabs.</p>
+        </div>
+      ) : (
+        <>
+          <div className="jobs-grid">
+            {currentEntries.map((job) => (
+              <article className="job-card" key={job.id}>
+                <div className="job-badge">{job.job_type || "Full-Time"}</div>
+
+                <h3 className="job-title">{job.title || 'Untitled Position'}</h3>
+                <div className="company-name">
+                  <i className="bi bi-building"></i>
+                  {job.company || 'Company not specified'}
+                </div>
+
+                <ul className="job-info-list">
+                  <li className="job-info-item">
+                    <i className="bi bi-geo-alt"></i>
+                    {job.job_location || 'Remote'}
+                  </li>
+                  {job.salary_range && (
+                    <li className="job-info-item">
+                      <i className="bi bi-currency-dollar"></i>
+                      {job.salary_range}
+                    </li>
+                  )}
+                  {job.last_date_to_apply && (
+                    <li className="job-info-item">
+                      <i className="bi bi-calendar-event"></i>
+                      Ends: {new Date(job.last_date_to_apply).toLocaleDateString()}
+                    </li>
+                  )}
+                </ul>
+
+                <p className="job-description">
+                  {job.description || 'No detailed description provided for this position.'}
+                </p>
+
+                {job.skills && job.skills.length > 0 && (
+                  <div className="skills-container">
+                    {job.skills.slice(0, 4).map((skill, idx) => (
+                      <span key={idx} className="skill-tag">{skill}</span>
+                    ))}
+                    {job.skills.length > 4 && (
+                      <span className="skill-tag">+{job.skills.length - 4} more</span>
+                    )}
+                  </div>
+                )}
+
+                <div className="card-actions">
+                  <button
+                    className="btn-action btn-outline"
+                    onClick={() => handleViewCompanyWebsite(job.company_email)}
+                    disabled={!job.company_email}
+                  >
+                    Details
+                  </button>
+                  <button
+                    className="btn-action btn-primary"
+                    onClick={() => handleApplyClick(job.id)}
+                  >
+                    Apply Now
+                  </button>
+                </div>
+              </article>
+            ))}
+          </div>
+
+          {entriesPerPage !== 'All' && totalPages > 1 && (
+            <div className="pagination-container">
+              <div className="pagination-info">
+                Showing <span>{Math.min((currentPage - 1) * entriesPerPage + 1, totalEntries)}</span> to <span>{Math.min(currentPage * entriesPerPage, totalEntries)}</span> of <span>{totalEntries}</span> entries
+              </div>
+
+              <nav className="pagination-nav">
+                <button
+                  className="page-link"
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                >
+                  <i className="bi bi-chevron-left"></i>
+                </button>
+
+                {[...Array(totalPages)].map((_, idx) => (
+                  <button
+                    key={idx + 1}
+                    className={`page-link ${currentPage === idx + 1 ? 'active' : ''}`}
+                    onClick={() => handlePageChange(idx + 1)}
+                  >
+                    {idx + 1}
+                  </button>
+                )).slice(
+                  Math.max(0, currentPage - 3),
+                  Math.min(totalPages, currentPage + 2)
+                )}
+
+                <button
+                  className="page-link"
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                >
+                  <i className="bi bi-chevron-right"></i>
+                </button>
+              </nav>
+            </div>
+          )}
+        </>
+      )}
+    </div>
   );
-}
+};

@@ -52,4 +52,6 @@ urlpatterns = [
     ),
 
     path('jobs/by-company/', views.get_jobs_by_company_email, name='get_jobs_by_company_email'),
+    path('upload-offer-letter/', views.upload_offer_letter, name='upload_offer_letter'),
+    path('offer-letters/', views.get_offer_letters, name='offer_letters'),
 ]

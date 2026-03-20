@@ -8,7 +8,7 @@
 
 
 // src/pages/ApplicationStatus.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
@@ -16,11 +16,19 @@ const API_BASE = 'http://localhost:8000';
 
 export default function ApplicationStatus() {
   const [applications, setApplications] = useState([]);
-  const [filteredApps, setFilteredApps] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  
+  // Filter States
   const [searchText, setSearchText] = useState('');
-  const [statusFilter, setStatusFilter] = useState(null);
+  const [statusFilter, setStatusFilter] = useState('All');
+  const [sortBy, setSortBy] = useState('Newest');
+  const [dateFilter, setDateFilter] = useState('All time');
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  
+  // Pagination States
+  const [currentPage, setCurrentPage] = useState(1);
+  const [entriesPerPage, setEntriesPerPage] = useState(10);
 
   const navigate = useNavigate();
   const studentEmail = localStorage.getItem('studentEmail');
@@ -33,22 +41,15 @@ export default function ApplicationStatus() {
     fetchApplications();
   }, [navigate, studentEmail]);
 
-  useEffect(() => {
-    applyFilters();
-  }, [applications, searchText, statusFilter]);
-
   const fetchApplications = async () => {
     try {
       setLoading(true);
       setError(null);
-
       const res = await axios.get(
         `${API_BASE}/api/students/applications/my/?email=${studentEmail}`
       );
-
       const apps = res.data.applications || [];
       setApplications(apps);
-      setFilteredApps(apps);
     } catch (err) {
       console.error('Failed to fetch applications:', err);
       setError('Could not load your applications. Please try again later.');
@@ -57,7 +58,7 @@ export default function ApplicationStatus() {
     }
   };
 
-  const applyFilters = () => {
+  const filteredApps = useMemo(() => {
     let result = [...applications];
 
     if (searchText.trim()) {
@@ -69,525 +70,547 @@ export default function ApplicationStatus() {
       );
     }
 
-    if (statusFilter) {
+    if (statusFilter !== 'All') {
       result = result.filter(
         (app) => (app.status || '').toLowerCase() === statusFilter.toLowerCase()
       );
     }
 
-    setFilteredApps(result);
-  };
+    if (dateFilter !== 'All time') {
+      const now = new Date();
+      result = result.filter((app) => {
+        const appDate = new Date(app.applied_at);
+        if (isNaN(appDate.getTime())) return true;
+        if (dateFilter === 'Last 7 days') {
+          const sevenDaysAgo = new Date(now.setDate(now.getDate() - 7));
+          return appDate >= sevenDaysAgo;
+        }
+        if (dateFilter === 'Last 30 days') {
+          const thirtyDaysAgo = new Date(now.setDate(now.getDate() - 30));
+          return appDate >= thirtyDaysAgo;
+        }
+        return true;
+      });
+    }
 
-  const toggleStatusFilter = (status) => {
-    setStatusFilter((prev) => (prev === status ? null : status));
+    result.sort((a, b) => {
+      if (sortBy === 'Newest') return new Date(b.applied_at) - new Date(a.applied_at);
+      if (sortBy === 'Oldest') return new Date(a.applied_at) - new Date(b.applied_at);
+      if (sortBy === 'Company A-Z') return (a.company || '').localeCompare(b.company || '');
+      if (sortBy === 'Company Z-A') return (b.company || '').localeCompare(a.company || '');
+      return 0;
+    });
+
+    return result;
+  }, [applications, searchText, statusFilter, sortBy, dateFilter]);
+
+  const totalEntries = filteredApps.length;
+  const indexOfLastApp = currentPage * entriesPerPage;
+  const indexOfFirstApp = indexOfLastApp - entriesPerPage;
+  const currentApps = filteredApps.slice(indexOfFirstApp, indexOfLastApp);
+  const totalPages = Math.ceil(totalEntries / entriesPerPage);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchText, statusFilter, sortBy, dateFilter, entriesPerPage]);
+
+  const handlePageChange = (pageNum) => {
+    if (pageNum >= 1 && pageNum <= totalPages) {
+      setCurrentPage(pageNum);
+    }
   };
 
   if (loading) {
     return (
-      <div className="d-flex justify-content-center align-items-center min-vh-100">
-        <div className="spinner-border text-primary" style={{ width: '3rem', height: '3rem' }} role="status">
+      <div className="d-flex justify-content-center align-items-center min-vh-100 bg-white">
+        <div className="spinner-border text-success" style={{ width: '3rem', height: '3rem', borderWidth: '0.2rem' }} role="status">
           <span className="visually-hidden">Loading...</span>
         </div>
       </div>
     );
   }
 
-  if (error) {
-    return (
-      <div className="text-center py-5">
-        <div className="text-danger fs-4 fw-medium mb-4">{error}</div>
-      </div>
-    );
-  }
-
   return (
-    <>
-      <link
-        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-        rel="stylesheet"
-        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
-        crossOrigin="anonymous"
-      />
-      <link
-        rel="stylesheet"
-        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
-      />
+    <div className="modern-status-container">
+      <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+      <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
 
       <style>{`
         :root {
-          --primary: #4B0082;
-          --primary-light: #6A0DAD;
-          --light-violet-bg: rgba(139, 92, 246, 0.15);
-          --light-violet-text: #7c3aed;
-          --light-violet-border: rgba(139, 92, 246, 0.3);
-          --text: #1e293b;
-          --text-light: #475569;
-          --bg-card: #ffffff;
-          --border-light: #e2e8f0;
-          --violet-text: #5b21b6;
+          --brand-green: #047857; /* Emerald-700, matching active sidebar */
+          --brand-green-hover: #065f46;
+          --bg-main: #f3f4f6;
+          --border-ui: #e5e7eb;
+          --text-deep: #111827;
+          --text-muted: #6b7280;
         }
 
-        .app-status-page {
-          max-width: 1200px;
-          margin: 0 auto;
-          padding: 4rem 1.5rem 3rem;
-          background: #ffffff;
+        .modern-status-container {
+          font-family: 'Inter', sans-serif;
+          background-color: var(--bg-main);
           min-height: 100vh;
-          box-sizing: border-box;
+          padding: 0.25rem 1.5rem;
         }
 
-        .status-header {
-          display: flex;
-          align-items: center;
-          gap: 1.5rem;
-          margin-bottom: 2.5rem;
-          flex-wrap: wrap;
+        .page-wrapper {
+          max-width: 1400px;
+          margin: 0 auto;
         }
 
-        .status-avatar {
-          width: 100px;
-          height: 100px;
-          border-radius: 50%;
-          background: linear-gradient(135deg, var(--primary), var(--primary-light));
-          color: white;
-          font-size: 3.2rem;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          box-shadow: 0 8px 24px rgba(75,0,130,0.28);
-          flex-shrink: 0;
-        }
-
-        .section-title {
-          font-size: clamp(1.8rem, 5vw, 2.4rem);
-          font-weight: 800;
-          margin: 0;
-          background: linear-gradient(90deg, var(--primary), var(--primary-light));
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-        }
-
-        .subtitle {
-          color: var(--text-light);
-          font-size: 1.05rem;
-          margin-top: 0.4rem;
-        }
-
-        .action-btn {
-          background: linear-gradient(135deg, var(--primary), var(--primary-light));
-          color: white;
-          border: none;
-          border-radius: 10px;
-          padding: 0.7rem 1.4rem;
-          font-size: 0.96rem;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.3s ease;
-          box-shadow: 0 4px 12px rgba(75,0,130,0.25);
-        }
-
-        .action-btn:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 8px 20px rgba(75,0,130,0.4);
-        }
-
-        .refresh-btn {
+        /* --- Header Card Section --- */
+        .header-card {
           background: white;
-          color: var(--primary);
-          border: 1px solid var(--primary);
-        }
-
-        .refresh-btn:hover:not(:disabled) {
-          background: var(--light-violet-bg);
-        }
-
-        .browse-btn {
-          padding: 0.8rem 1.6rem;
-          font-size: 1rem;
-        }
-
-        .filter-controls {
-          background: var(--light-violet-bg);
-          border: 1px solid var(--light-violet-border);
-          border-radius: 12px;
-          padding: 1.2rem;
+          border-radius: 0;
+          overflow: hidden;
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+          border: 1px solid var(--border-ui);
           margin-bottom: 2rem;
         }
 
-        .search-input {
-          padding: 0.65rem 1.1rem;
-          border: 1px solid #d1d5db;
-          border-radius: 8px;
-          font-size: 0.97rem;
-          width: 100%;
-          max-width: 400px;
-        }
-
-        .search-input:focus {
-          border-color: var(--primary);
-          box-shadow: 0 0 0 3px rgba(139,92,246,0.15);
-        }
-
-        .status-btn {
-          padding: 0.55rem 1.2rem;
-          font-size: 0.9rem;
-          font-weight: 600;
-          border-radius: 999px;
-          border: 1px solid;
-          transition: all 0.2s;
-          min-width: 105px;
-        }
-
-        .status-btn:hover {
-          transform: translateY(-1px);
-        }
-
-        .status-btn.active {
+        .header-top-block {
+          background-color: var(--brand-green);
+          padding: 2.5rem 2.5rem;
           color: white;
-          box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+          position: relative;
+          overflow: hidden;
         }
 
-        .status-btn-shortlisted { background: #fefce8; color: #ca8a04; border-color: #fde047; }
-        .status-btn-shortlisted.active { background: #facc15; color: #713f12; }
-        .status-btn-selected   { background: #ecfdf5; color: #15803d; border-color: #86efac; }
-        .status-btn-selected.active   { background: #22c55e; color: white; }
-        .status-btn-rejected   { background: #fee2e2; color: #dc2626; border-color: #fca5a5; }
-        .status-btn-rejected.active   { background: #ef4444; color: white; }
+        .header-top-block h1 {
+          font-size: 1.75rem;
+          font-weight: 700;
+          margin-bottom: 0.5rem;
+          letter-spacing: -0.01em;
+        }
 
-        .status-card {
-          background: var(--bg-card);
-          border: 1px solid var(--border-light);
-          border-radius: 16px;
-          box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+        .header-top-block p {
+          font-size: 0.925rem;
+          opacity: 0.9;
+          max-width: 600px;
+          margin-bottom: 0;
+        }
+
+        .header-decoration {
+          position: absolute;
+          right: 3%;
+          bottom: -20%;
+          opacity: 0.15;
+          font-size: 12rem;
+          transform: rotate(-15deg);
+          pointer-events: none;
+        }
+
+        /* --- Filter Row Toolbar --- */
+        .filter-toolbar {
+          padding: 1rem 2.5rem;
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+          flex-wrap: wrap;
+          background: #fafafa;
+        }
+
+        .search-box {
+          position: relative;
+          flex: 1;
+          min-width: 300px;
+        }
+
+        .search-box i {
+          position: absolute;
+          left: 1rem;
+          top: 50%;
+          transform: translateY(-50%);
+          color: #9ca3af;
+        }
+
+        .search-box input {
+          width: 100%;
+          padding: 0.65rem 1rem 0.65rem 2.8rem;
+          border: 1px solid var(--border-ui);
+          border-radius: 0;
+          font-size: 0.95rem;
+          transition: border-color 0.2s;
+        }
+
+        .search-box input:focus {
+          outline: none;
+          border-color: var(--brand-green);
+          background: white;
+        }
+
+        .toolbar-btn {
+          padding: 0.65rem 1.25rem;
+          border-radius: 0;
+          border: 1px solid var(--border-ui);
+          background: #f1f5f9;
+          font-weight: 600;
+          font-size: 0.9rem;
+          color: #4b5563;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          transition: all 0.2s;
+        }
+
+        .toolbar-btn:hover {
+          background: #e2e8f0;
+          color: var(--text-deep);
+        }
+
+        .toolbar-btn.active.btn-all {
+          background-color: #fbbf24; /* Professional Amber-400 */
+          color: #000000;
+          border-color: #fbbf24;
+        }
+
+        .toolbar-btn.active.btn-applied {
+          background-color: #2563eb;
+          color: white;
+          border-color: #2563eb;
+        }
+
+        .toolbar-btn.active.btn-selected {
+          background-color: var(--brand-green);
+          color: white;
+          border-color: var(--brand-green);
+        }
+
+        .entries-section {
+          margin-left: auto;
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          color: var(--text-muted);
+          font-size: 0.9rem;
+        }
+
+        .entries-select {
+          padding: 0.45rem 0.6rem;
+          border: 1px solid var(--border-ui);
+          border-radius: 0;
+          background: white;
+          font-weight: 600;
+        }
+
+        /* --- Advanced Filters Panel --- */
+        .advanced-panel {
+          padding: 1.5rem 2.5rem;
+          border-top: 1px solid var(--border-ui);
+          background: #ffffff;
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+          gap: 1.5rem;
+        }
+
+        .adv-filter-group label {
+          display: block;
+          font-size: 0.8rem;
+          font-weight: 700;
+          color: var(--text-muted);
+          text-transform: uppercase;
+          margin-bottom: 0.5rem;
+        }
+
+        .adv-filter-group select {
+          width: 100%;
+          padding: 0.6rem;
+          border-radius: 0;
+          border: 1px solid var(--border-ui);
+        }
+
+        /* --- Table Body --- */
+        .table-card {
+          background: white;
+          border-radius: 0;
+          border: 1px solid var(--border-ui);
           overflow: hidden;
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
         }
 
         .status-table {
           width: 100%;
-          border-collapse: separate;
-          border-spacing: 0;
-          min-width: 720px;
+          border-collapse: collapse;
         }
 
         .status-table th {
-          background: var(--light-violet-bg);
-          color: var(--violet-text);
-          font-weight: 700;
+          background: #f9fafb;
+          padding: 1.25rem 2rem;
+          font-size: 0.8rem;
+          font-weight: 600;
+          color: var(--text-muted);
+          text-transform: uppercase;
           text-align: left;
-          padding: 1rem 1.1rem;
-          font-size: 0.98rem;
-          border-bottom: 2px solid var(--border-light);
+          border-bottom: 2px solid var(--border-ui);
         }
 
         .status-table td {
-          padding: 1rem 1.1rem;
-          font-size: 0.94rem;
-          color: var(--text);
-          border-bottom: 1px solid #f1f5f9;
+          padding: 1.25rem 2rem;
+          font-size: 0.9rem;
+          border-bottom: 1px solid var(--border-ui);
           vertical-align: middle;
         }
 
-        .status-table tbody tr:hover {
-          background: #f8fafc;
+        .app-job-cell {
+          display: flex;
+          flex-direction: column;
         }
 
-        .status-badge {
-          display: inline-block;
-          padding: 0.38rem 0.9rem;
-          border-radius: 999px;
-          font-size: 0.84rem;
-          font-weight: 600;
-          min-width: 90px;
+        .app-company { font-weight: 700; color: var(--text-deep); }
+        .app-title { font-size: 0.85rem; color: var(--text-muted); }
+
+        .badge-status {
+          padding: 0.4rem 0.8rem;
+          border-radius: 0;
+          font-size: 0.75rem;
+          font-weight: 700;
+          display: inline-flex;
+          align-items: center;
+          gap: 0.4rem;
+        }
+
+        .badge-selected { background: #dcfce7; color: #166534; }
+        .badge-shortlisted { background: #fef9c3; color: #854d0e; }
+        .badge-rejected { background: #fee2e2; color: #991b1b; }
+        .badge-applied { background: #e0e7ff; color: #3730a3; }
+        .badge-pending { background: #f3f4f6; color: #4b5563; }
+
+        /* --- Pagination --- */
+        .pagination-footer {
+          padding: 1.25rem 2rem;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          background: #f9fafb;
+          border-top: 1px solid var(--border-ui);
+        }
+
+        .page-btn {
+          width: 32px;
+          height: 32px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 0;
+          border: 1px solid var(--border-ui);
+          background: white;
+          font-size: 0.9rem;
+          font-weight: 500;
+          margin: 0 0.2rem;
+          transition: 0.2s;
+        }
+
+        .page-btn.active {
+          background-color: var(--brand-green);
+          color: white;
+          border-color: var(--brand-green);
+        }
+
+        .page-btn:hover:not(.active):not(:disabled) {
+          background: #f3f4f6;
+        }
+
+        /* --- Empty State --- */
+        .empty-state {
+          padding: 6rem 1rem;
           text-align: center;
-          border: 1px solid;
         }
 
-        .status-rejected   { background: #fee2e2; color: #dc2626; border-color: #fca5a5; }
-        .status-shortlisted { background: #fefce8; color: #ca8a04; border-color: #fde047; }
-        .status-selected   { background: #ecfdf5; color: #15803d; border-color: #86efac; }
-        .status-pending,
-        .status-applied,
-        .status-default    { background: #f3f4f6; color: #4b5563; border-color: #d1d5db; }
-
-        .cover-letter-cell {
-          max-width: 300px;
-          white-space: pre-wrap;
-          word-break: break-word;
-          color: var(--text-light);
-          font-size: 0.92rem;
+        .empty-icon {
+          font-size: 3.5rem;
+          color: #d1d5db;
+          margin-bottom: 1rem;
         }
 
-        .no-apps-box {
-          background: var(--bg-card);
-          border: 1px solid var(--border-light);
-          border-radius: 16px;
-          padding: 3.5rem 2rem;
-          text-align: center;
-          box-shadow: 0 6px 20px rgba(0,0,0,0.06);
-        }
-
-        /* ─── Responsive ─── */
         @media (max-width: 1024px) {
-          .app-status-page {
-            padding: 3rem 1rem 2rem;
-          }
-        }
-
-        @media (max-width: 768px) {
-          .app-status-page {
-            padding: 2.5rem 0.8rem 2rem;
-          }
-
-          .status-header {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 1.2rem;
-          }
-
-          .status-avatar {
-            width: 80px;
-            height: 80px;
-            font-size: 2.6rem;
-          }
-
-          .section-title {
-            font-size: 2.1rem;
-          }
-
-          .filter-controls {
-            padding: 1rem;
-          }
-
-          .search-input {
-            max-width: 100%;
-          }
-
-          .status-btn {
-            min-width: 95px;
-            padding: 0.5rem 1rem;
-            font-size: 0.88rem;
-          }
-
-          .action-btn {
-            padding: 0.65rem 1.3rem;
-            font-size: 0.94rem;
-          }
-        }
-
-        @media (max-width: 576px) {
-          .app-status-page {
-            padding: 2rem 0.6rem 1.5rem;
-          }
-
-          .status-avatar {
-            width: 70px;
-            height: 70px;
-            font-size: 2.2rem;
-          }
-
-          .section-title {
-            font-size: 1.85rem;
-          }
-
-          .subtitle {
-            font-size: 0.98rem;
-          }
-
-          .filter-controls .d-flex {
+          .filter-toolbar {
             flex-direction: column;
             align-items: stretch;
-            gap: 0.9rem;
+            padding: 1.5rem;
           }
-
-          .status-btn {
-            width: 100%;
-            min-width: unset;
-          }
-
-          .action-btn,
-          .refresh-btn,
-          .browse-btn {
-            width: 100%;
-            padding: 0.75rem;
-            font-size: 0.97rem;
-          }
-
-          .status-table th,
-          .status-table td {
-            padding: 0.9rem 0.8rem;
-            font-size: 0.9rem;
-          }
-
-          .status-badge {
-            min-width: 80px;
-            padding: 0.35rem 0.8rem;
-            font-size: 0.82rem;
-          }
-
-          .cover-letter-cell {
-            max-width: 220px;
-          }
-
-          .no-apps-box {
-            padding: 2.8rem 1.5rem;
-          }
+          .entries-section { margin-left: 0; padding-top: 1rem; border-top: 1px solid var(--border-ui); }
+          .header-top-block { padding: 2rem; }
         }
-
-        @media (max-width: 400px) {
-          .section-title {
-            font-size: 1.65rem;
-          }
-
-          .status-avatar {
-            width: 60px;
-            height: 60px;
-            font-size: 1.9rem;
-          }
-        }
-
-        .refresh-btn {
-  background: white;
-  color: var(--primary);
-  border: 1px solid var(--primary);
-  border-radius: 10px;
-  padding: 0.7rem 1.4rem;
-  font-size: 0.96rem;
-  font-weight: 600;
-  box-shadow: 0 2px 8px rgba(75,0,130,0.12);
-  transition: all 0.25s ease;
-}
-
-.refresh-btn:hover:not(:disabled) {
-  background: var(--light-violet-bg);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(75,0,130,0.2);
-}
-
-.refresh-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
       `}</style>
 
-      <div className="app-status-page">
-        <button className="action-btn mb-4" onClick={() => navigate(-1)}>
-          <i className="bi bi-arrow-left-circle-fill me-2"></i> Back
-        </button>
-
-        <div className="status-header">
-          <div className="status-avatar">
-            <i className="bi bi-list-check"></i>
+      <div className="page-wrapper">
+        <div className="header-card">
+          <div className="header-top-block">
+            <h1>My Applications</h1>
+            <p>Explorer and discover roles that match your academic profile and professional skills. Track your journey with real-time updates.</p>
+            <i className="bi bi-graph-up-arrow header-decoration"></i>
           </div>
-          <div>
-            <h1 className="section-title">My Applications</h1>
-            <p className="subtitle">Track the status of your job applications</p>
-          </div>
-        </div>
 
-        <div className="filter-controls">
-          <div className="d-flex flex-column flex-sm-row gap-3 align-items-sm-center">
-            <input
-              type="text"
-              className="search-input"
-              placeholder="Search by job title or company..."
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-            />
+          <div className="filter-toolbar">
+            <div className="search-box">
+              <i className="bi bi-search"></i>
+              <input 
+                type="text" 
+                placeholder="Search by title, company, or skills..." 
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+              />
+            </div>
 
-            <div className="d-flex gap-2 flex-wrap">
-              <button
-                className={`status-btn status-btn-shortlisted ${statusFilter === 'shortlisted' ? 'active' : ''}`}
-                onClick={() => toggleStatusFilter('shortlisted')}
+            <button 
+              className={`toolbar-btn ${showAdvanced ? 'active' : ''}`}
+              onClick={() => setShowAdvanced(!showAdvanced)}
+            >
+              <i className="bi bi-sliders"></i>
+              Advanced Filters
+            </button>
+
+            <div className="d-flex gap-2">
+              <button 
+                className={`toolbar-btn btn-all ${statusFilter === 'All' ? 'active' : ''}`}
+                onClick={() => setStatusFilter('All')}
               >
-                Shortlisted
+                All
               </button>
-              <button
-                className={`status-btn status-btn-selected ${statusFilter === 'selected' ? 'active' : ''}`}
-                onClick={() => toggleStatusFilter('selected')}
+              <button 
+                className={`toolbar-btn btn-applied ${statusFilter === 'Applied' ? 'active' : ''}`}
+                onClick={() => setStatusFilter('Applied')}
+              >
+                Applied
+              </button>
+              <button 
+                className={`toolbar-btn btn-selected ${statusFilter === 'Selected' ? 'active' : ''}`}
+                onClick={() => setStatusFilter('Selected')}
               >
                 Selected
               </button>
-              <button
-                className={`status-btn status-btn-rejected ${statusFilter === 'rejected' ? 'active' : ''}`}
-                onClick={() => toggleStatusFilter('rejected')}
-              >
-                Rejected
-              </button>
             </div>
 
-            <button
-              className="refresh-btn ms-sm-auto"
-              onClick={fetchApplications}
-              disabled={loading}
-            >
-              <i className="bi bi-arrow-repeat me-2"></i>
-              {loading ? 'Refreshing...' : 'Refresh'}
-            </button>
+            <div className="entries-section">
+              <span>Show</span>
+              <select 
+                className="entries-select" 
+                value={entriesPerPage}
+                onChange={(e) => setEntriesPerPage(parseInt(e.target.value))}
+              >
+                <option value={6}>6 items</option>
+                <option value={10}>10 items</option>
+                <option value={25}>25 items</option>
+              </select>
+              <span><i className="bi bi-chevron-down ms-1" style={{ fontSize: '0.7rem' }}></i></span>
+            </div>
           </div>
+
+          {showAdvanced && (
+            <div className="advanced-panel">
+              <div className="adv-filter-group">
+                <label>Sort Applications</label>
+                <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+                  <option value="Newest">Newest First</option>
+                  <option value="Oldest">Oldest First</option>
+                  <option value="Company A-Z">Company (A-Z)</option>
+                  <option value="Company Z-A">Company (Z-A)</option>
+                </select>
+              </div>
+              <div className="adv-filter-group">
+                <label>Time Period</label>
+                <select value={dateFilter} onChange={(e) => setDateFilter(e.target.value)}>
+                  <option value="All time">All time</option>
+                  <option value="Last 7 days">Last 7 days</option>
+                  <option value="Last 30 days">Last 30 days</option>
+                </select>
+              </div>
+              <div className="adv-filter-group">
+                <label>History</label>
+                <select onChange={(e) => setStatusFilter(e.target.value === 'History' ? 'Rejected' : 'All')}>
+                  <option value="Active">Active Only</option>
+                  <option value="History">Archived/Rejected</option>
+                </select>
+              </div>
+            </div>
+          )}
         </div>
 
-        {applications.length === 0 ? (
-          <div className="no-apps-box">
-            <h2 style={{ fontSize: '1.9rem', fontWeight: 700, color: 'var(--violet-text)', marginBottom: '1.2rem' }}>
-              No applications yet
-            </h2>
-            <p style={{ color: 'var(--text-light)', marginBottom: '2rem', maxWidth: '520px', margin: '0 auto 1.5rem' }}>
-              You haven't applied to any jobs yet. Start exploring opportunities now!
-            </p>
-            <button className="action-btn browse-btn" onClick={() => navigate('/dashboard/companies')}>
-              <i className="bi bi-search me-2"></i> Browse Available Jobs
-            </button>
-          </div>
-        ) : (
-          <div className="status-card">
-            <div className="table-responsive">
-              <table className="status-table">
-                <thead>
-                  <tr>
-                    <th>Job Title</th>
-                    <th>Company</th>
-                    <th>Applied On</th>
-                    <th>Status</th>
-                    <th>Cover Letter</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredApps.length === 0 ? (
-                    <tr>
-                      <td colSpan="5" className="text-center py-4 text-muted">
-                        No applications match your search or filter
+        <div className="table-card">
+          <div className="table-responsive">
+            <table className="status-table">
+              <thead>
+                <tr>
+                  <th>Position & Company</th>
+                  <th>Application Date</th>
+                  <th>Status</th>
+                  <th>Details</th>
+                </tr>
+              </thead>
+              <tbody>
+                {currentApps.length > 0 ? (
+                  currentApps.map((app, index) => (
+                    <tr key={app.id || index}>
+                      <td>
+                        <div className="app-job-cell">
+                          <span className="app-company">{app.company || 'Unknown Company'}</span>
+                          <span className="app-title">{app.job_title || 'Software Trainee'}</span>
+                        </div>
+                      </td>
+                      <td>
+                        <div className="d-flex align-items-center gap-2 text-muted">
+                          <i className="bi bi-calendar-event"></i>
+                          <span>{app.applied_at ? new Date(app.applied_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A'}</span>
+                        </div>
+                      </td>
+                      <td>
+                        <span className={`badge-status badge-${(app.status || 'pending').toLowerCase()}`}>
+                          <i className={`bi ${getStatusIcon(app.status)}`}></i>
+                          {app.status || 'Applied'}
+                        </span>
+                      </td>
+                      <td>
+                        <button className="btn btn-sm btn-link text-success fw-bold p-0 text-decoration-none">
+                          View details
+                        </button>
                       </td>
                     </tr>
-                  ) : (
-                    filteredApps.map((app, index) => (
-                      <tr key={app.id || app.job_id || index}>
-                        <td>{app.job_title || 'Untitled Job'}</td>
-                        <td>{app.company || 'Unknown Company'}</td>
-                        <td>{app.applied_at || 'N/A'}</td>
-                        <td>
-                          <span className={`status-badge status-${(app.status || 'pending').toLowerCase()}`}>
-                            {app.status || 'Pending'}
-                          </span>
-                        </td>
-                        <td className="cover-letter-cell">
-                          {app.cover_letter ? (
-                            <div title={app.cover_letter}>
-                              {app.cover_letter.substring(0, 120)}
-                              {app.cover_letter.length > 120 ? '...' : ''}
-                            </div>
-                          ) : (
-                            'No cover letter'
-                          )}
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="4">
+                      <div className="empty-state">
+                        <i className="bi bi-folder2-open empty-icon"></i>
+                        <h4 className="fw-bold">No Records Found</h4>
+                        <p className="text-muted">Adjust your filters or search keywords to find your applications.</p>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
-        )}
+
+          {totalEntries > entriesPerPage && (
+            <div className="pagination-footer">
+              <span className="text-muted small">Showing {indexOfFirstApp + 1}-{Math.min(indexOfLastApp, totalEntries)} of {totalEntries} results</span>
+              <div className="pagination-nav">
+                <button className="page-link page-btn" onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1}>
+                  <i className="bi bi-chevron-left"></i>
+                </button>
+                {[...Array(totalPages)].map((_, i) => (
+                  <button key={i + 1} className={`page-btn ${currentPage === i + 1 ? 'active' : ''}`} onClick={() => handlePageChange(i + 1)}>
+                    {i + 1}
+                  </button>
+                ))}
+                <button className="page-link page-btn" onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages}>
+                  <i className="bi bi-chevron-right"></i>
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
-    </>
+    </div>
   );
 }
+
+function getStatusIcon(status) {
+  const s = (status || '').toLowerCase();
+  if (s === 'selected') return 'bi-check-circle-fill';
+  if (s === 'shortlisted') return 'bi-star-fill';
+  if (s === 'rejected') return 'bi-x-circle-fill';
+  if (s === 'applied') return 'bi-send-fill';
+  return 'bi-clock-history';
+}
+

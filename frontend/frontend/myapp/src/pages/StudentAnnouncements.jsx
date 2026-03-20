@@ -1,40 +1,92 @@
-
-
-
-import React, { useEffect, useState } from "react";
+// src/pages/StudentAnnouncements.jsx
+import React, { useEffect, useState, useMemo } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const API_BASE = "http://127.0.0.1:8000";
 
 export default function StudentAnnouncements() {
   const [messages, setMessages] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchText, setSearchText] = useState('');
+  const [sortBy, setSortBy] = useState('Newest');
+  
+  // Pagination States
+  const [currentPage, setCurrentPage] = useState(1);
+  const [entriesPerPage, setEntriesPerPage] = useState(6);
+
+  const navigate = useNavigate();
   const studentEmail = localStorage.getItem("studentEmail");
 
   useEffect(() => {
-    if (!studentEmail) return;
+    if (!studentEmail) {
+      navigate('/login');
+      return;
+    }
     fetchMessages();
-  }, [studentEmail]);
+  }, [studentEmail, navigate]);
 
   const fetchMessages = async () => {
     try {
+      setLoading(true);
       const res = await axios.get(`${API_BASE}/coordinator/student-messages/`, {
         params: { email: studentEmail },
       });
       setMessages(res.data.messages || []);
     } catch (err) {
       console.error("Error fetching announcements:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Filtered and Sorted Messages
+  const filteredMessages = useMemo(() => {
+    let result = [...messages];
+
+    if (searchText.trim()) {
+      const term = searchText.toLowerCase().trim();
+      result = result.filter(
+        (m) =>
+          (m.title || '').toLowerCase().includes(term) ||
+          (m.message || '').toLowerCase().includes(term) ||
+          (m.sent_by || '').toLowerCase().includes(term)
+      );
+    }
+
+    result.sort((a, b) => {
+      if (sortBy === 'Newest') return new Date(b.date) - new Date(a.date);
+      if (sortBy === 'Oldest') return new Date(a.date) - new Date(b.date);
+      if (sortBy === 'Title A-Z') return (a.title || '').localeCompare(b.title || '');
+      return 0;
+    });
+
+    return result;
+  }, [messages, searchText, sortBy]);
+
+  // Pagination Logic
+  const totalEntries = filteredMessages.length;
+  const indexOfLastMsg = currentPage * entriesPerPage;
+  const indexOfFirstMsg = indexOfLastMsg - entriesPerPage;
+  const currentMessages = filteredMessages.slice(indexOfFirstMsg, indexOfLastMsg);
+  const totalPages = Math.ceil(totalEntries / entriesPerPage);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchText, sortBy, entriesPerPage]);
+
+  const handlePageChange = (pageNum) => {
+    if (pageNum >= 1 && pageNum <= totalPages) {
+      setCurrentPage(pageNum);
     }
   };
 
   // Format date to Indian local time (IST)
   const formatDateIST = (dateString) => {
     if (!dateString) return "—";
-
     try {
       const date = new Date(dateString);
-
       if (isNaN(date.getTime())) return dateString;
-
       return date.toLocaleString("en-IN", {
         timeZone: "Asia/Kolkata",
         day: "numeric",
@@ -45,243 +97,359 @@ export default function StudentAnnouncements() {
         hour12: true,
       });
     } catch (err) {
-      console.warn("Invalid date format:", dateString);
       return dateString || "—";
     }
   };
 
+  if (loading) {
+    return (
+      <div className="d-flex justify-content-center align-items-center min-vh-100 bg-white">
+        <div className="spinner-border" style={{ width: '3rem', height: '3rem', color: '#7c3aed', borderWidth: '0.2rem' }} role="status">
+          <span className="visually-hidden">Loading...</span>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <>
-      <link
-        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-        rel="stylesheet"
-        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
-        crossOrigin="anonymous"
-      />
-      <link
-        rel="stylesheet"
-        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
-      />
+    <div className="modern-announce-container">
+      <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+      <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
 
       <style>{`
         :root {
-          --primary: #4B0082;
-          --primary-light: #6A0DAD;
-          --light-violet-bg: rgba(139, 92, 246, 0.15);
-          --light-violet-text: #7c3aed;
-          --light-violet-border: rgba(139, 92, 246, 0.3);
-          --text: #1e293b;
-          --text-light: #475569;
-          --bg-card: #ffffff;
-          --border-light: #e2e8f0;
-          --violet-text: #5b21b6;
+          --brand-purple: #7c3aed;
+          --brand-purple-light: #8b5cf6;
+          --bg-main: #f8fafc;
+          --border-ui: #e2e8f0;
+          --text-deep: #0f172a;
+          --text-muted: #64748b;
         }
 
-        .announcements-page {
-          max-width: 1200px;
-          margin: 0 auto;
-          padding: 4rem 1.5rem 3rem;
-          background: #ffffff;
+        .modern-announce-container {
+          font-family: 'Inter', sans-serif;
+          background-color: var(--bg-main);
           min-height: 100vh;
+          padding: 0.25rem 1.5rem 2rem;
+          color: var(--text-deep);
         }
 
-        .announce-header {
-          display: flex;
-          align-items: center;
-          gap: 1.5rem;
-          margin-bottom: 2.8rem;
-          flex-wrap: wrap;
+        .page-wrapper {
+          max-width: 1400px;
+          margin: 0 auto;
         }
 
-        .announce-avatar {
-          width: 90px;
-          height: 90px;
-          border-radius: 50%;
-          background: linear-gradient(135deg, var(--primary), var(--primary-light));
+        /* --- Header Card --- */
+        .header-card {
+          background: white;
+          border-radius: 0;
+          border: 1px solid var(--border-ui);
+          box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+          margin-bottom: 2rem;
+          overflow: hidden;
+        }
+
+        .header-banner {
+          background: var(--brand-purple);
+          padding: 2.5rem 2.5rem;
           color: white;
-          font-size: 2.8rem;
+          position: relative;
+        }
+
+        .header-banner h1 {
+          font-size: 1.75rem;
+          font-weight: 800;
+          margin-bottom: 0.5rem;
+          letter-spacing: -0.02em;
+        }
+
+        .header-banner p {
+          font-size: 0.95rem;
+          opacity: 0.9;
+          margin-bottom: 0;
+          max-width: 700px;
+        }
+
+        .banner-icon {
+          position: absolute;
+          right: 40px;
+          bottom: -20px;
+          font-size: 10rem;
+          opacity: 0.1;
+          transform: rotate(-10deg);
+        }
+
+        /* --- Toolbar --- */
+        .toolbar {
+          padding: 1rem 2.5rem;
+          background: #fafafa;
           display: flex;
           align-items: center;
-          justify-content: center;
-          box-shadow: 0 8px 24px rgba(75,0,130,0.28);
+          gap: 1rem;
+          flex-wrap: wrap;
+          border-top: 1px solid var(--border-ui);
         }
 
-        .section-title {
-          font-size: clamp(2rem, 5vw, 2.6rem);
-          font-weight: 800;
-          margin: 0;
-          background: linear-gradient(90deg, var(--primary), var(--primary-light));
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
+        .search-container {
+          position: relative;
+          flex: 1;
+          min-width: 280px;
         }
 
-        .subtitle {
-          color: var(--text-light);
-          font-size: 1.05rem;
-          margin-top: 0.4rem;
+        .search-container i {
+          position: absolute;
+          left: 1rem;
+          top: 50%;
+          transform: translateY(-50%);
+          color: var(--text-muted);
         }
 
+        .search-input {
+          width: 100%;
+          padding: 0.65rem 1rem 0.65rem 2.6rem;
+          border: 1px solid var(--border-ui);
+          border-radius: 0;
+          font-size: 0.95rem;
+        }
+
+        .search-input:focus {
+          outline: none;
+          border-color: var(--brand-purple);
+        }
+
+        .toolbar-select {
+          padding: 0.65rem 1rem;
+          border: 1px solid var(--border-ui);
+          border-radius: 0;
+          font-weight: 600;
+          font-size: 0.9rem;
+          background: white;
+          cursor: pointer;
+        }
+
+        .entries-info {
+          margin-left: auto;
+          font-size: 0.85rem;
+          color: var(--text-muted);
+        }
+
+        /* --- Grid & Cards --- */
         .announcement-grid {
           display: grid;
-          grid-template-columns: repeat(2, 1fr);
-          gap: 1.6rem;
+          grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+          gap: 1.5rem;
+          margin-bottom: 2rem;
         }
 
-        @media (max-width: 992px) {
-          .announcement-grid {
-            grid-template-columns: 1fr;
-          }
-        }
-
-        .announce-card {
-          background: var(--bg-card);
-          border: 1px solid var(--border-light);
-          border-radius: 16px;
-          box-shadow: 0 6px 20px rgba(0,0,0,0.06);
-          overflow: hidden;
-          transition: transform 0.25s ease, box-shadow 0.25s ease;
+        .msg-card {
+          background: white;
+          border: 1px solid var(--border-ui);
+          border-radius: 0;
           display: flex;
           flex-direction: column;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+          transition: all 0.2s;
           height: 100%;
         }
 
-        .announce-card:hover {
-          transform: translateY(-4px);
-          box-shadow: 0 14px 32px rgba(75,0,130,0.14);
+        .msg-card:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 10px 20px rgba(0,0,0,0.06);
+          border-color: var(--brand-purple-light);
         }
 
-        .announce-header-inner {
-          background: var(--light-violet-bg);
-          padding: 1.3rem 1.6rem;
-          border-bottom: 1px solid var(--light-violet-border);
+        .msg-card-header {
+          padding: 1.5rem 1.75rem;
+          border-bottom: 1px solid #f1f5f9;
+          position: relative;
         }
 
-        .announce-title {
-          margin: 0;
-          font-size: 1.32rem;
+        .msg-card-header::before {
+          content: "";
+          position: absolute;
+          left: 0;
+          top: 0;
+          bottom: 0;
+          width: 4px;
+          background: var(--brand-purple);
+        }
+
+        .msg-card-title {
+          font-size: 1.15rem;
           font-weight: 700;
-          color: var(--violet-text);
+          margin: 0;
+          color: var(--text-deep);
         }
 
-        .announce-body {
-          padding: 1.6rem;
-          color: var(--text);
-          font-size: 1rem;
-          line-height: 1.62;
+        .msg-card-body {
+          padding: 1.75rem;
           flex: 1;
-          overflow: hidden;
         }
 
-        .announce-message {
+        .msg-text {
+          font-size: 0.925rem;
+          line-height: 1.6;
+          color: #334155;
           white-space: pre-wrap;
           word-break: break-word;
-          overflow-wrap: break-word;
-          hyphens: auto;
-          max-height: 340px;
-          overflow-y: auto;
         }
 
-        .announce-footer {
-          padding: 1rem 1.6rem;
+        .msg-card-footer {
+          padding: 1.25rem 1.75rem;
           background: #f8fafc;
-          border-top: 1px solid var(--border-light);
-          font-size: 0.92rem;
-          color: var(--text-light);
+          border-top: 1px solid #f1f5f9;
           display: flex;
           justify-content: space-between;
           align-items: center;
-          flex-wrap: wrap;
-          gap: 0.8rem;
-          margin-top: auto;
+          font-size: 0.85rem;
+          color: var(--text-muted);
         }
 
-        .meta-item {
+        .meta {
           display: flex;
           align-items: center;
-          gap: 0.55rem;
+          gap: 0.5rem;
         }
 
-        .no-messages-box {
-          background: var(--bg-card);
-          border: 1px solid var(--border-light);
-          border-radius: 16px;
-          padding: 4.5rem 2.5rem;
+        /* --- Pagination --- */
+        .pagination-bar {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 1.5rem 0;
+          border-top: 1px solid var(--border-ui);
+        }
+
+        .page-btn {
+          width: 36px;
+          height: 36px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border: 1px solid var(--border-ui);
+          border-radius: 0;
+          background: white;
+          cursor: pointer;
+          transition: 0.2s;
+          font-weight: 500;
+        }
+
+        .page-btn.active {
+          background: var(--brand-purple);
+          color: white;
+          border-color: var(--brand-purple);
+        }
+
+        .page-btn:hover:not(.active):not(:disabled) {
+          background: #f1f5f9;
+        }
+
+        /* --- Empty State --- */
+        .empty-view {
+          padding: 6rem 2rem;
           text-align: center;
-          box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+          background: white;
+          border: 1px solid var(--border-ui);
         }
 
-        .no-messages-title {
-          font-size: 2rem;
-          font-weight: 700;
-          color: var(--violet-text);
-          margin-bottom: 1.2rem;
-        }
-
-        /* Responsive adjustments */
         @media (max-width: 768px) {
-          .announcements-page { padding: 3rem 1rem 2.5rem; }
-          .announce-avatar { width: 80px; height: 80px; font-size: 2.4rem; }
-          .section-title { font-size: 2.2rem; }
-        }
-
-        @media (max-width: 576px) {
-          .announce-header { flex-direction: column; align-items: flex-start; }
-          .announce-avatar { width: 70px; height: 70px; font-size: 2.1rem; }
-          .section-title { font-size: 2rem; }
-          .announce-body { font-size: 0.98rem; }
-          .announce-footer { flex-direction: column; align-items: flex-start; gap: 0.7rem; }
+          .announcement-grid { grid-template-columns: 1fr; }
+          .toolbar { flex-direction: column; align-items: stretch; }
+          .entries-info { margin-left: 0; text-align: center; }
         }
       `}</style>
 
-      <div className="announcements-page">
-        <div className="announce-header">
-          <div className="announce-avatar">
-            <i className="bi bi-megaphone-fill"></i>
+      <div className="page-wrapper">
+        <div className="header-card">
+          <div className="header-banner">
+            <h1>Department Announcements</h1>
+            <p>Stay informed with the latest updates, important notices, and official messages from your department coordinator.</p>
+            <i className="bi bi-megaphone banner-icon"></i>
           </div>
-          <div>
-            <h1 className="section-title">Department Announcements</h1>
-            <p className="subtitle">
-              Important updates and notices from your department coordinator
-            </p>
+
+          <div className="toolbar">
+            <div className="search-container">
+              <i className="bi bi-search"></i>
+              <input 
+                type="text" 
+                className="search-input" 
+                placeholder="Search announcements..." 
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+              />
+            </div>
+
+            <select className="toolbar-select" value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+              <option value="Newest">Newest First</option>
+              <option value="Oldest">Oldest First</option>
+              <option value="Title A-Z">Title (A-Z)</option>
+            </select>
+
+            <select className="toolbar-select" value={entriesPerPage} onChange={(e) => setEntriesPerPage(parseInt(e.target.value))}>
+              <option value={6}>6 items per page</option>
+              <option value={12}>12 items per page</option>
+              <option value={24}>24 items per page</option>
+            </select>
+
+            <div className="entries-info">
+              Showing {totalEntries > 0 ? indexOfFirstMsg + 1 : 0} to {Math.min(indexOfLastMsg, totalEntries)} of {totalEntries} results
+            </div>
           </div>
         </div>
 
-        {messages.length === 0 ? (
-          <div className="no-messages-box">
-            <h2 className="no-messages-title">No Announcements Yet</h2>
-            <p style={{ color: "var(--text-light)", marginBottom: "2rem" }}>
-              Stay tuned! Important department updates and notices will appear here when available.
-            </p>
-          </div>
-        ) : (
-          <div className="announcement-grid">
-            {messages.map((msg) => (
-              <div key={msg.id} className="announce-card">
-                <div className="announce-header-inner">
-                  <h4 className="announce-title">{msg.title || "Announcement"}</h4>
-                </div>
-
-                <div className="announce-body">
-                  <div className="announce-message">
-                    {msg.message || "—"}
+        {currentMessages.length > 0 ? (
+          <>
+            <div className="announcement-grid">
+              {currentMessages.map((msg) => (
+                <div key={msg.id} className="msg-card">
+                  <div className="msg-card-header">
+                    <h2 className="msg-card-title">{msg.title || "Announcement"}</h2>
+                  </div>
+                  <div className="msg-card-body">
+                    <div className="msg-text">{msg.message || "—"}</div>
+                  </div>
+                  <div className="msg-card-footer">
+                    <div className="meta">
+                      <i className="bi bi-person-circle"></i>
+                      <span>{msg.sent_by || "Coordinator"}</span>
+                    </div>
+                    <div className="meta">
+                      <i className="bi bi-calendar-check"></i>
+                      <span>{formatDateIST(msg.date)}</span>
+                    </div>
                   </div>
                 </div>
+              ))}
+            </div>
 
-                <div className="announce-footer">
-                  <div className="meta-item">
-                    <i className="bi bi-person-circle"></i>
-                    <span>Sent by: {msg.sent_by || "Coordinator"}</span>
-                  </div>
-                  <div className="meta-item">
-                    <i className="bi bi-calendar-event"></i>
-                    <span>{formatDateIST(msg.date)}</span>
-                  </div>
+            {totalEntries > entriesPerPage && (
+              <div className="pagination-bar">
+                <span className="text-muted small">Page {currentPage} of {totalPages}</span>
+                <div className="d-flex gap-1">
+                  <button className="page-btn" disabled={currentPage === 1} onClick={() => handlePageChange(currentPage - 1)}>
+                    <i className="bi bi-chevron-left"></i>
+                  </button>
+                  {[...Array(totalPages)].map((_, i) => (
+                    <button key={i + 1} className={`page-btn ${currentPage === i + 1 ? 'active' : ''}`} onClick={() => handlePageChange(i + 1)}>
+                      {i + 1}
+                    </button>
+                  ))}
+                  <button className="page-btn" disabled={currentPage === totalPages} onClick={() => handlePageChange(currentPage + 1)}>
+                    <i className="bi bi-chevron-right"></i>
+                  </button>
                 </div>
               </div>
-            ))}
+            )}
+          </>
+        ) : (
+          <div className="empty-view">
+            <i className="bi bi-chat-dots-fill text-muted mb-3" style={{ fontSize: '3rem' }}></i>
+            <h3 className="fw-bold">No announcements found</h3>
+            <p className="text-muted">There are currently no announcements matching your search criteria.</p>
           </div>
         )}
       </div>
-    </>
+    </div>
   );
 }

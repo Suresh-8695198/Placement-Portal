@@ -166,6 +166,32 @@ class JobApplication(models.Model):
     class Meta:
         unique_together = ['student', 'job']
 
+
     def __str__(self):
         return f"{self.student.name} → {self.job.title}"
+
+
+class OfferLetter(models.Model):
+    student = models.ForeignKey(
+        'students.Student',
+        on_delete=models.CASCADE,
+        related_name='offer_letters'
+    )
+    company = models.ForeignKey(
+        'Company',
+        on_delete=models.CASCADE,
+        related_name='sent_offer_letters'
+    )
+    job = models.ForeignKey(
+        Job,
+        on_delete=models.CASCADE,
+        related_name='offer_letters'
+    )
+    offer_letter = models.FileField(upload_to='offer_letters/')
+    message = models.TextField(blank=True, null=True)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    is_viewed_by_student = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"Offer Letter: {self.student.name} - {self.company.name}"
 

@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 
 const API_BASE = 'http://localhost:8000';
@@ -26,7 +26,7 @@ export default function ApplyJob() {
 
     checkIfApplied();
     fetchJobDetails();
-  }, [jobId, navigate]);
+  }, [jobId, navigate, studentEmail]);
 
   const checkIfApplied = async () => {
     try {
@@ -71,10 +71,6 @@ export default function ApplyJob() {
       return;
     }
 
-    if (!window.confirm('Are you sure you want to submit your application?')) {
-      return;
-    }
-
     setSubmitting(true);
 
     try {
@@ -97,18 +93,82 @@ export default function ApplyJob() {
 
   if (loading) {
     return (
-      <div className="d-flex justify-content-center align-items-center min-vh-100">
-        <div className="spinner-border text-primary" style={{ width: '3.5rem', height: '3.5rem' }} role="status">
-          <span className="visually-hidden">Loading...</span>
-        </div>
+      <div className="apply-loading-screen">
+        <div className="apply-spinner"></div>
+        <style>{`
+          .apply-loading-screen {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 80vh;
+          }
+          .apply-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #6d28d9;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+          }
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        `}</style>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="text-center py-5 text-danger fs-4 fw-medium">
-        {error}
+      <div className="apply-error-container">
+        <div className="apply-error-card">
+          <i className="fas fa-exclamation-circle text-danger"></i>
+          <h2>Oops! Something went wrong</h2>
+          <p>{error}</p>
+          <button onClick={() => navigate(-1)} className="btn-back-error">
+            Go Back to Jobs
+          </button>
+        </div>
+        <style>{`
+          .apply-error-container {
+            display: flex;
+            justify-content: center;
+            padding: 4rem 1rem;
+          }
+          .apply-error-card {
+            background: white;
+            padding: 2.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 450px;
+            border: 1px solid #fee2e2;
+          }
+          .apply-error-card i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+          }
+          .apply-error-card h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #111827;
+            margin-bottom: 0.5rem;
+          }
+          .apply-error-card p {
+            color: #6b7280;
+            margin-bottom: 1.5rem;
+          }
+          .btn-back-error {
+            background: #6d28d9;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+          }
+        `}</style>
       </div>
     );
   }
@@ -116,389 +176,450 @@ export default function ApplyJob() {
   if (!job) return null;
 
   return (
-    <>
+    <div className="job-apply-page">
+      <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+
       <style>{`
-        :root {
-          --primary: #4B0082;
-          --primary-light: #6A0DAD;
-          --light-violet-bg: rgba(139, 92, 246, 0.15);
-          --light-violet-text: #7c3aed;
-          --light-violet-border: rgba(139, 92, 246, 0.3);
-          --text: #1e293b;
-          --text-light: #475569;
-          --bg-card: #ffffff;
-          --border-light: #e2e8f0;
-          --violet-text: #5b21b6;
-        }
-
-        .apply-page-content {
-          max-width: 1100px;
-          margin: 0 auto;
-          padding: 2rem 1rem;
-          background: #ffffff;
-          color: var(--text);
+        .job-apply-page {
+          background-color: #f9fafb;
           min-height: 100vh;
-          box-sizing: border-box;
+          font-family: 'Inter', sans-serif;
+          color: #111827;
+          padding: 2rem 1.5rem;
         }
 
-        .apply-header {
+        .apply-container {
+          max-width: 1200px;
+          margin: 0 auto;
+        }
+
+        /* Breadcrumb */
+        .apply-breadcrumb {
           display: flex;
           align-items: center;
-          gap: 1.4rem;
-          margin-bottom: 2.5rem;
-          flex-wrap: wrap;
+          gap: 0.5rem;
+          margin-bottom: 2rem;
+          font-size: 0.9rem;
+          color: #6b7280;
         }
 
-        .apply-avatar {
-          width: 90px;
-          height: 90px;
-          border-radius: 50%;
-          background: linear-gradient(135deg, var(--primary), var(--primary-light));
+        .apply-breadcrumb a {
+          color: #6d28d9;
+          text-decoration: none;
+          font-weight: 500;
+          transition: color 0.2s;
+        }
+
+        .apply-breadcrumb a:hover {
+          color: #4c1d95;
+          text-decoration: underline;
+        }
+
+        /* Header Section */
+        .apply-hero {
+          background: white;
+          border: 1px solid #e5e7eb;
+          border-radius: 12px;
+          padding: 2.5rem;
+          margin-bottom: 2rem;
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .hero-left h1 {
+          font-family: 'Outfit', sans-serif;
+          font-size: 2rem;
+          font-weight: 700;
+          color: #111827;
+          margin-bottom: 0.5rem;
+        }
+
+        .hero-left .job-company {
+          font-size: 1.1rem;
+          color: #6d28d9;
+          font-weight: 600;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+        }
+
+        .hero-badge {
+          display: inline-flex;
+          align-items: center;
+          padding: 0.35rem 0.85rem;
+          background: #f5f3ff;
+          color: #6d28d9;
+          border-radius: 9999px;
+          font-size: 0.8rem;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.025em;
+          border: 1px solid #ddd6fe;
+        }
+
+        /* Main Content Grid */
+        .apply-grid {
+          display: grid;
+          grid-template-columns: 1fr 400px;
+          gap: 2rem;
+          align-items: start;
+        }
+
+        .apply-content-card {
+          background: white;
+          border: 1px solid #e5e7eb;
+          border-radius: 12px;
+          padding: 2.5rem;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .section-header {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          margin-bottom: 1.5rem;
+          color: #111827;
+        }
+
+        .section-header i {
+          color: #6d28d9;
+          font-size: 1.25rem;
+        }
+
+        .section-header h2 {
+          font-family: 'Outfit', sans-serif;
+          font-size: 1.25rem;
+          font-weight: 600;
+          margin: 0;
+        }
+
+        /* Quick Info Bar */
+        .job-quick-info {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+          gap: 1rem;
+          background: #f9fafb;
+          border: 1px solid #f3f4f6;
+          border-radius: 10px;
+          padding: 1.5rem;
+          margin-bottom: 2rem;
+        }
+
+        .info-item {
+          display: flex;
+          flex-direction: column;
+          gap: 0.25rem;
+        }
+
+        .info-item .label {
+          font-size: 0.75rem;
+          font-weight: 600;
+          color: #6b7280;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+        }
+
+        .info-item .value {
+          font-size: 0.95rem;
+          font-weight: 600;
+          color: #111827;
+        }
+
+        .info-item i {
+          color: #6d28d9;
+          margin-right: 0.4rem;
+          font-size: 0.85rem;
+        }
+
+        /* Description */
+        .job-description-text {
+          line-height: 1.6;
+          color: #374151;
+          font-size: 1rem;
+        }
+
+        .description-paragraph {
+          margin-bottom: 1.25rem;
+        }
+
+        /* Sidebar Form */
+        .apply-sidebar {
+          position: sticky;
+          top: 2rem;
+        }
+
+        .sidebar-card {
+          background: white;
+          border: 1px solid #e5e7eb;
+          border-radius: 12px;
+          padding: 2rem;
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        .form-group {
+          margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+          display: block;
+          font-size: 0.9rem;
+          font-weight: 600;
+          color: #374151;
+          margin-bottom: 0.75rem;
+        }
+
+        .form-textarea {
+          width: 100%;
+          min-height: 200px;
+          padding: 1rem;
+          border: 1px solid #d1d5db;
+          border-radius: 8px;
+          font-family: inherit;
+          font-size: 0.95rem;
+          color: #111827;
+          resize: vertical;
+          background: #ffffff;
+          transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .form-textarea:focus {
+          outline: none;
+          border-color: #6d28d9;
+          box-shadow: 0 0 0 3px rgba(109, 40, 217, 0.1);
+        }
+
+        .btn-submit {
+          width: 100%;
+          padding: 0.85rem;
+          background: #6d28d9;
           color: white;
-          font-size: 2.8rem;
+          border: none;
+          border-radius: 8px;
+          font-size: 1rem;
+          font-weight: 600;
+          cursor: pointer;
+          transition: background-color 0.2s, transform 0.1s;
           display: flex;
           align-items: center;
           justify-content: center;
-          box-shadow: 0 6px 18px rgba(75,0,130,0.25);
-          flex-shrink: 0;
+          gap: 0.75rem;
         }
 
-        .section-title {
-          font-size: clamp(1.8rem, 5vw, 2.4rem);
-          font-weight: 800;
-          margin: 0;
-          background: linear-gradient(90deg, var(--primary), var(--primary-light));
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
+        .btn-submit:hover:not(:disabled) {
+          background: #5b21b6;
         }
 
-        .back-action-btn {
-          background: linear-gradient(135deg, var(--primary), var(--primary-light));
-          color: white;
-          border: none;
-          border-radius: 12px;
-          padding: 0.7rem 1.5rem;
-          font-size: 1.05rem;
-          font-weight: 600;
-          cursor: pointer;
-          display: inline-flex;
-          align-items: center;
-          gap: 0.7rem;
-          transition: all 0.3s ease;
-          box-shadow: 0 4px 12px rgba(75,0,130,0.25);
-          margin-bottom: 2rem;
+        .btn-submit:active:not(:disabled) {
+          transform: scale(0.98);
         }
 
-        .back-action-btn:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 8px 20px rgba(75,0,130,0.4);
+        .btn-submit:disabled {
+          background: #9ca3af;
+          cursor: not-allowed;
         }
 
-        .back-action-btn::before {
-          content: '';
-          position: absolute;
-          top: -50%;
-          left: -100%;
-          width: 50%;
-          height: 200%;
-          background: linear-gradient(
-            120deg,
-            transparent,
-            rgba(255, 255, 255, 0.45),
-            transparent
-          );
-          transform: skewX(-25deg);
-          animation: shine 3.2s linear infinite;
-        }
-
-        @keyframes shine {
-          0%   { left: -100%; }
-          100% { left: 150%; }
-        }
-
-        .apply-card {
-          background: var(--bg-card);
-          border: 1px solid var(--border-light);
-          border-radius: 16px;
-          box-shadow: 0 6px 20px rgba(0,0,0,0.06);
-          padding: 2rem;
-        }
-
-        .job-meta-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-          gap: 1.8rem;
-          margin-bottom: 2rem;
-        }
-
-        .meta-block h3 {
-          font-size: 1.28rem;
-          font-weight: 700;
-          color: var(--violet-text);
-          margin-bottom: 0.9rem;
-        }
-
-        .meta-block p {
-          margin: 0.5rem 0;
-          color: var(--text-light);
-        }
-
-        .meta-block strong {
-          color: var(--text);
-        }
-
-        .job-description {
-          line-height: 1.65;
-          color: var(--text);
-          margin-bottom: 2.2rem;
-        }
-
-        .already-applied-box {
-          background: var(--light-violet-bg);
-          border: 1px solid var(--light-violet-border);
-          border-radius: 16px;
-          padding: 2.5rem 1.8rem;
+        /* Already Applied State */
+        .status-applied {
           text-align: center;
+          padding: 1rem 0;
         }
 
-        .already-applied-box h3 {
-          color: var(--light-violet-text);
-          font-weight: 700;
+        .status-applied i {
+          font-size: 2.5rem;
+          color: #059669;
           margin-bottom: 1rem;
         }
 
-        textarea.form-textarea {
-          width: 100%;
-          padding: 1rem 1.4rem;
-          border: 1px solid #d1d5db;
-          border-radius: 12px;
-          background: white;
-          font-size: 1.02rem;
-          color: var(--text);
-          resize: vertical;
-          min-height: 180px;
-          transition: all 0.25s ease;
+        .status-applied h3 {
+          font-size: 1.15rem;
+          font-weight: 700;
+          margin-bottom: 0.5rem;
         }
 
-        textarea.form-textarea:focus {
-          border-color: var(--primary);
-          box-shadow: 0 0 0 4px rgba(75,0,130,0.15);
-          outline: none;
+        .status-applied p {
+          font-size: 0.9rem;
+          color: #6b7280;
+          margin-bottom: 1.5rem;
+          line-height: 1.4;
         }
 
-        .action-btn {
-          position: relative;
-          overflow: hidden;
-          border-radius: 10px;
-          padding: 0.8rem 2rem;
-          font-size: 1.05rem;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.3s ease;
-          min-width: 180px;
-          text-align: center;
-        }
-
-        .action-btn-primary {
-          background: linear-gradient(135deg, var(--primary), var(--primary-light));
-          color: white;
-          border: none;
-          box-shadow: 0 4px 12px rgba(75,0,130,0.25);
-        }
-
-        .action-btn-primary:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 8px 20px rgba(75,0,130,0.4);
-        }
-
-        .action-btn-primary::before {
-          content: '';
-          position: absolute;
-          top: -50%;
-          left: -100%;
-          width: 50%;
-          height: 200%;
-          background: linear-gradient(
-            120deg,
-            transparent,
-            rgba(255, 255, 255, 0.45),
-            transparent
-          );
-          transform: skewX(-25deg);
-          animation: shine 3.2s linear infinite;
-        }
-
-        .action-btn-view {
-          background: var(--light-violet-bg);
-          color: var(--light-violet-text);
-          border: 1px solid var(--light-violet-border);
-        }
-
-        .action-btn-view:hover {
-          background: rgba(139, 92, 246, 0.25);
-          transform: translateY(-1px);
-        }
-
-        /* Responsive Styles */
-        @media (max-width: 1024px) {
-          .apply-page-content {
-            padding: 1.2rem 0.5rem;
-          }
-          .apply-card {
-            padding: 1.2rem 0.7rem;
-          }
-        }
-        @media (max-width: 768px) {
-          .apply-page-content {
-            padding: 1rem 0.2rem;
-            min-height: unset;
-          }
-          .job-meta-grid {
+        @media (max-width: 992px) {
+          .apply-grid {
             grid-template-columns: 1fr;
-            gap: 1.1rem;
           }
-          .apply-avatar {
-            width: 60px;
-            height: 60px;
+          .apply-sidebar {
+            position: static;
+          }
+        }
+
+        @media (max-width: 640px) {
+          .apply-hero {
+            flex-direction: column;
+            gap: 1.5rem;
+            padding: 1.5rem;
+          }
+          .hero-left h1 {
             font-size: 1.5rem;
           }
-          .apply-card {
-            padding: 1rem 0.5rem;
-          }
-          .action-btn {
-            padding: 0.6rem 1.1rem;
-            font-size: 0.95rem;
-            min-width: 100px;
-          }
-        }
-        @media (max-width: 480px) {
-          .apply-page-content {
-            padding: 0.5rem 0.1rem;
-          }
-          .apply-avatar {
-            width: 38px;
-            height: 38px;
-            font-size: 0.9rem;
-          }
-          .section-title {
-            font-size: 1.1rem;
-          }
-          .apply-card {
-            padding: 0.5rem 0.1rem;
-          }
-          .action-btn {
-            padding: 0.45rem 0.7rem;
-            font-size: 0.85rem;
-            min-width: 70px;
+          .apply-content-card {
+            padding: 1.5rem;
           }
         }
       `}</style>
 
-      <div className="apply-page-content">
-        <button 
-          className="action-btn action-btn-primary back-action-btn" 
-          onClick={() => navigate(-1)}
-        >
-          ← Back to Jobs
-        </button>
+      <div className="apply-container">
+        {/* Breadcrumb Navigation */}
+        <nav className="apply-breadcrumb">
+          <Link to="/dashboard">Dashboard</Link>
+          <i className="fas fa-chevron-right" style={{ fontSize: '0.7rem' }}></i>
+          <Link to="/dashboard/companies">Jobs</Link>
+          <i className="fas fa-chevron-right" style={{ fontSize: '0.7rem' }}></i>
+          <span>Apply Job</span>
+        </nav>
 
-        <div className="apply-header">
-          <div className="apply-avatar">
-            <i className="fas fa-paper-plane"></i>
+        {/* Hero Section */}
+        <header className="apply-hero">
+          <div className="hero-left">
+            <h1>{job.title}</h1>
+            <div className="job-company">
+              <i className="fas fa-building"></i>
+              {job.company}
+            </div>
           </div>
-          <div>
-            <h1 className="section-title">Apply for {job.title}</h1>
-            <p style={{ color: "var(--text-light)", marginTop: "0.4rem", fontSize: "1.05rem" }}>
-              Submit your application with confidence
-            </p>
+          <div className="hero-badge">
+            {job.job_type || 'Opportunity'}
           </div>
-        </div>
+        </header>
 
-        <div className="apply-card">
-          <div className="job-meta-grid">
-            <div className="meta-block">
-              <h3>Company</h3>
-              <p style={{ fontSize: "1.18rem", fontWeight: 600, color: "var(--violet-text)" }}>
-                {job.company}
-              </p>
-              <p>{job.company_location || 'Not specified'}</p>
+        <div className="apply-grid">
+          {/* Main Details Section */}
+          <main className="apply-content-card">
+            {/* Quick Info Grid */}
+            <div className="job-quick-info">
+              <div className="info-item">
+                <span className="label">Location</span>
+                <span className="value">
+                  <i className="fas fa-map-marker-alt"></i>
+                  {job.job_location || 'Not specified'}
+                </span>
+              </div>
+              <div className="info-item">
+                <span className="label">Salary</span>
+                <span className="value">
+                  <i className="fas fa-wallet"></i>
+                  {job.salary_range || 'Not disclosed'}
+                </span>
+              </div>
+              <div className="info-item">
+                <span className="label">Deadline</span>
+                <span className="value" style={{ color: '#dc2626' }}>
+                  <i className="fas fa-calendar-alt"></i>
+                  {job.last_date_to_apply || 'TBA'}
+                </span>
+              </div>
+              <div className="info-item">
+                <span className="label">Experience</span>
+                <span className="value">
+                  <i className="fas fa-briefcase"></i>
+                  Fresher / Any
+                </span>
+              </div>
             </div>
 
-            <div className="meta-block">
-              <h3>Job Details</h3>
-              <p><strong>Location:</strong> {job.job_location || 'Not specified'}</p>
-              <p><strong>Type:</strong> {job.job_type || 'Full-time'}</p>
-              <p><strong>Salary:</strong> {job.salary_range || 'Not disclosed'}</p>
-              {job.last_date_to_apply && (
-                <p style={{ color: "#dc2626" }}>
-                  <strong>Apply by:</strong> {job.last_date_to_apply}
+            {/* Detailed Description */}
+            <div className="section-header">
+              <i className="fas fa-align-left"></i>
+              <h2>Detailed Job Description</h2>
+            </div>
+            
+            <div className="job-description-text">
+              {job.description?.split('\n').map((line, i) => (
+                <p key={i} className="description-paragraph">
+                  {line}
                 </p>
+              )) || <p>No detailed description provided by the company.</p>}
+            </div>
+            
+            <div style={{ marginTop: '2.5rem', paddingTop: '2rem', borderTop: '1px solid #f3f4f6' }}>
+              <div className="section-header">
+                <i className="fas fa-shield-alt"></i>
+                <h2>Key Requirements</h2>
+              </div>
+              <p style={{ color: '#6b7280', fontSize: '0.95rem' }}>
+                Candidates should possess a strong background in the relevant field and demonstrate a proactive approach to learning. 
+                Please ensure you meet the eligibility criteria before applying.
+              </p>
+            </div>
+          </main>
+
+          {/* Sidebar Application Section */}
+          <aside className="apply-sidebar">
+            <div className="sidebar-card">
+              {alreadyApplied ? (
+                <div className="status-applied">
+                  <i className="fas fa-check-circle"></i>
+                  <h3>Application Submitted</h3>
+                  <p>
+                    You have successfully applied for this position.
+                    Our recruitment team will review your profile shortly.
+                  </p>
+                  <button 
+                    className="btn-submit"
+                    onClick={() => navigate('/dashboard/status')}
+                  >
+                    View Status
+                  </button>
+                </div>
+              ) : (
+                <form onSubmit={handleSubmit}>
+                  <div className="section-header" style={{ marginBottom: '1.25rem' }}>
+                    <i className="fas fa-paper-plane"></i>
+                    <h2>Quick Apply</h2>
+                  </div>
+                  
+                  <div className="form-group">
+                    <label>Cover Letter (Recommended)</label>
+                    <textarea 
+                      className="form-textarea"
+                      placeholder="Write a brief note about why you are interested in this position..."
+                      value={coverLetter}
+                      onChange={(e) => setCoverLetter(e.target.value)}
+                    ></textarea>
+                    <p style={{ fontSize: '0.75rem', color: '#9ca3af', marginTop: '0.5rem' }}>
+                      Tip: Personalized cover letters have a 40% higher chance of being shortlisted.
+                    </p>
+                  </div>
+
+                  <button 
+                    type="submit" 
+                    className="btn-submit"
+                    disabled={submitting}
+                  >
+                    {submitting ? (
+                      <>
+                        <i className="fas fa-circle-notch fa-spin"></i>
+                        Applying...
+                      </>
+                    ) : (
+                      <>
+                        Submit Application
+                        <i className="fas fa-arrow-right"></i>
+                      </>
+                    )}
+                  </button>
+                  
+                  <p style={{ textAlign: 'center', fontSize: '0.8rem', color: '#6b7280', marginTop: '1.25rem' }}>
+                    By clicking submit, you agree to share your profile details with the recruiting company.
+                  </p>
+                </form>
               )}
             </div>
-          </div>
-
-          <div className="mb-4">
-            <h3 style={{ fontSize: "1.32rem", fontWeight: 700, color: "var(--violet-text)", marginBottom: "1rem" }}>
-              Job Description
-            </h3>
-            <div className="job-description">
-              {job.description?.split('\n').map((line, i) => (
-                <p key={i} className="mb-3">{line}</p>
-              )) || 'No description available.'}
-            </div>
-          </div>
-
-          {alreadyApplied ? (
-            <div className="already-applied-box">
-              <h3>You have already applied!</h3>
-              <p style={{ marginBottom: "1.5rem", color: "var(--text-light)" }}>
-                Your application is under review. Check status anytime in "My Applications".
-              </p>
-              <button
-                className="action-btn action-btn-view"
-                onClick={() => navigate('/dashboard/status')}
-              >
-                View My Applications
-              </button>
-            </div>
-          ) : (
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div>
-                <label
-                  className="block text-lg font-medium mb-3"
-                  style={{ color: "var(--text)" }}
-                >
-                  Cover Letter (optional but recommended)
-                </label>
-                <textarea
-                  className="form-textarea"
-                  value={coverLetter}
-                  onChange={(e) => setCoverLetter(e.target.value)}
-                  rows={10}
-                  placeholder="Tell us why you're excited about this role, your relevant skills, experience, or what makes you a strong fit..."
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={submitting}
-                className="action-btn action-btn-primary w-100"
-              >
-                {submitting ? 'Submitting Application...' : 'Submit Application'}
-              </button>
-            </form>
-          )}
+          </aside>
         </div>
       </div>
-    </>
+    </div>
   );
 }
-
-
-
-
-
-
-
-
-

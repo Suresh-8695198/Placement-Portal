@@ -1347,3 +1347,97 @@ def get_jobs_by_company_email(request):
         })
 
     return JsonResponse({"company_name": company.name, "jobs": job_list}, status=200)
+
+
+from .models import Company, Job, JobApplication, OfferLetter
+from students.models import Student
+from django.core.files.storage import FileSystemStorage
+import os
+from django.shortcuts import get_object_or_404
+import traceback
+
+@csrf_exempt
+@require_POST
+def upload_offer_letter(request):
+    try:
+        company_email = request.POST.get("company_email")
+        student_email = request.POST.get("student_email")
+        job_id = request.POST.get("job_id")
+        message = request.POST.get("message", "")
+        file = request.FILES.get("offer_letter")
+
+        if not all([company_email, student_email, job_id, file]):
+            return JsonResponse({"error": "Missing required fields or file"}, status=400)
+
+        company = get_object_or_404(Company, email=company_email)
+        student = get_object_or_404(Student, email=student_email)
+        job = get_object_or_404(Job, id=job_id)
+
+        # Check if student is selected for this job
+        application = JobApplication.objects.filter(student=student, job=job, status="Selected").first()
+        if not application:
+            return JsonResponse({"error": "Student is not selected for this job or application not found"}, status=400)
+
+        offer_letter = OfferLetter.objects.create(
+            company=company,
+            student=student,
+            job=job,
+            offer_letter=file,
+            message=message
+        )
+
+        # Notify Student via Email
+        try:
+            from django.core.mail import send_mail
+            subject = f"Congratulations! You've received an Offer Letter from {company.name}"
+            email_message = f"Hello {student.name},\n\nWe are pleased to inform you that {company.name} has uploaded an offer letter for the position of {job.title}.\n\nYou can view and download it from your student portal dashboard.\n\nMessage from company: {message}\n\nBest regards,\nPlacement Cell"
+            send_mail(subject, email_message, None, [student.email], fail_silently=True)
+        except Exception as mail_err:
+            print(f"Failed to send offer letter email: {mail_err}")
+
+        return JsonResponse({
+            "message": "Offer letter uploaded successfully",
+            "offer_letter_id": offer_letter.id
+        }, status=201)
+
+    except Exception as e:
+        traceback.print_exc()
+        return JsonResponse({"error": str(e)}, status=500)
+
+@csrf_exempt
+@require_GET
+def get_offer_letters(request):
+    student_email = request.GET.get("student_email")
+    company_email = request.GET.get("company_email")
+    is_admin = request.GET.get("is_admin") == "true"
+
+    try:
+        queryset = OfferLetter.objects.select_related('company', 'student', 'job').order_by('-uploaded_at')
+
+        if student_email:
+            queryset = queryset.filter(student__email=student_email)
+        elif company_email:
+            queryset = queryset.filter(company__email=company_email)
+        elif not is_admin:
+             return JsonResponse({"error": "Unauthorized access"}, status=403)
+
+        data = []
+        for ol in queryset:
+            data.append({
+                "id": ol.id,
+                "company_name": ol.company.name,
+                "company_email": ol.company.email,
+                "student_name": ol.student.name,
+                "student_email": ol.student.email,
+                "job_title": ol.job.title,
+                "offer_letter_url": ol.offer_letter.url if ol.offer_letter else None,
+                "message": ol.message,
+                "uploaded_at": ol.uploaded_at.strftime("%d %b %Y %H:%M"),
+                "is_viewed": ol.is_viewed_by_student
+            })
+
+        return JsonResponse({"offer_letters": data}, status=200)
+
+    except Exception as e:
+        traceback.print_exc()
+        return JsonResponse({"error": str(e)}, status=500)

@@ -1,8 +1,4 @@
 
-
-
-
-
 // src/pages/CompanyApplicants.jsx
 import React, { useEffect, useState } from "react";
 import axios from "axios";
@@ -21,6 +17,12 @@ export default function CompanyApplicants() {
   const [profile, setProfile] = useState(null);
   const [profileLoading, setProfileLoading] = useState(false);
   const [profileError, setProfileError] = useState(null);
+  const [activeTab, setActiveTab] = useState("Pending"); // "Pending" or "Selected"
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [selectedAppForLetter, setSelectedAppForLetter] = useState(null);
+  const [offerLetterFile, setOfferLetterFile] = useState(null);
+  const [offerLetterMessage, setOfferLetterMessage] = useState("");
 
   const companyEmail = localStorage.getItem("companyEmail");
 
@@ -36,11 +38,18 @@ export default function CompanyApplicants() {
         const response = await axios.get(
           `${API_BASE}/companies/applicants/?email=${encodeURIComponent(companyEmail)}`
         );
-        // Only show pending applications
-        const filtered = (response.data.applications || []).filter(
-          (app) => app.status !== "Selected" && app.status !== "Rejected"
-        );
-        setApplicants(filtered);
+
+        const allApps = response.data.applications || [];
+        setApplicants(allApps);
+
+        // Filter based on active tab
+        const filtered = allApps.filter(app => {
+          if (activeTab === "Pending") {
+            return app.status !== "Selected" && app.status !== "Rejected";
+          } else {
+            return app.status === "Selected";
+          }
+        });
         setFilteredApplicants(filtered);
       } catch (err) {
         setError(
@@ -52,18 +61,31 @@ export default function CompanyApplicants() {
     };
 
     fetchApplicants();
-  }, [companyEmail]);
+  }, [companyEmail, activeTab]);
 
   // Real-time search filtering
   useEffect(() => {
     if (!searchTerm.trim()) {
-      setFilteredApplicants(applicants);
+      setFilteredApplicants(applicants.filter(app => {
+        if (activeTab === "Pending") {
+          return app.status !== "Selected" && app.status !== "Rejected";
+        } else {
+          return app.status === "Selected";
+        }
+      }));
       return;
     }
 
     const term = searchTerm.toLowerCase().trim();
 
     const results = applicants.filter((app) => {
+      // Respect tab filter first
+      const belongsToTab = activeTab === "Pending" 
+        ? (app.status !== "Selected" && app.status !== "Rejected")
+        : (app.status === "Selected");
+      
+      if (!belongsToTab) return false;
+
       const name = (app.student?.name || "").toLowerCase();
       const email = (app.student?.email || "").toLowerCase();
       const dept = (app.student?.department || "").toLowerCase();
@@ -78,7 +100,7 @@ export default function CompanyApplicants() {
     });
 
     setFilteredApplicants(results);
-  }, [searchTerm, applicants]);
+  }, [searchTerm, applicants, activeTab]);
 
   const updateStatus = async (applicationId, newStatus) => {
     try {
@@ -89,17 +111,44 @@ export default function CompanyApplicants() {
 
       alert(response.data.message);
 
-      // Remove from list if final decision made
+      // Refresh list
       setApplicants((prev) =>
-        prev.filter((app) => {
+        prev.map((app) => {
           if (app.application_id === applicationId) {
-            return newStatus !== "Selected" && newStatus !== "Rejected";
+            return { ...app, status: newStatus };
           }
-          return true;
+          return app;
         })
       );
     } catch (err) {
       alert(err.response?.data?.error || "Failed to update status");
+    }
+  };
+
+  const handleUploadOfferLetter = async (e) => {
+    e.preventDefault();
+    if (!offerLetterFile || !selectedAppForLetter) return;
+
+    setUploading(true);
+    const formData = new FormData();
+    formData.append("company_email", companyEmail);
+    formData.append("student_email", selectedAppForLetter.student.email);
+    formData.append("job_id", selectedAppForLetter.job.id);
+    formData.append("offer_letter", offerLetterFile);
+    formData.append("message", offerLetterMessage);
+
+    try {
+      await axios.post(`${API_BASE}/companies/upload-offer-letter/`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      alert("Offer letter uploaded successfully!");
+      setShowUploadModal(false);
+      setOfferLetterFile(null);
+      setOfferLetterMessage("");
+    } catch (err) {
+      alert(err.response?.data?.error || "Upload failed");
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -154,7 +203,6 @@ export default function CompanyApplicants() {
 
   return (
     <>
-
       <style>{`
         :root {
           --bg-main: #f8fafc;
@@ -186,7 +234,7 @@ export default function CompanyApplicants() {
 
         .section-title {
           font-size: 1.85rem;
-          font-weight: 700; /* Reduced from 800 */
+          font-weight: 700;
           color: var(--text-main);
           margin: 0;
           letter-spacing: -0.02em;
@@ -249,7 +297,7 @@ export default function CompanyApplicants() {
 
         .applicant-name {
           font-size: 1.2rem;
-          font-weight: 600; /* Reduced from 700 */
+          font-weight: 600;
           color: var(--text-main);
           margin: 0;
         }
@@ -278,7 +326,7 @@ export default function CompanyApplicants() {
         .status-badge {
           display: inline-block;
           font-size: 0.75rem;
-          font-weight: 600; /* Reduced from 700 */
+          font-weight: 600;
           text-transform: uppercase;
           padding: 0.2rem 0.6rem;
           border-radius: 999px;
@@ -303,7 +351,7 @@ export default function CompanyApplicants() {
           padding: 0.6rem;
           border-radius: 8px;
           font-size: 0.85rem;
-          font-weight: 500; /* Reduced from 600 */
+          font-weight: 500;
           border: 1px solid var(--border-color);
           cursor: pointer;
           transition: all 0.2s ease;
@@ -402,7 +450,7 @@ export default function CompanyApplicants() {
 
         .profile-name {
           font-size: 2.2rem;
-          font-weight: 700; /* Reduced from 800 */
+          font-weight: 700;
           color: #0f172a;
           letter-spacing: -0.02em;
         }
@@ -431,7 +479,7 @@ export default function CompanyApplicants() {
 
         .section-title-alt {
           font-size: 1.1rem;
-          font-weight: 600; /* Reduced from 700 */
+          font-weight: 600;
           text-transform: uppercase;
           letter-spacing: 0.05em;
           color: var(--primary-brand);
@@ -471,7 +519,7 @@ export default function CompanyApplicants() {
 
         .detail-card-value {
           font-size: 1rem;
-          font-weight: 500; /* Reduced from 600 */
+          font-weight: 500;
           color: #0f172a;
         }
 
@@ -571,7 +619,7 @@ export default function CompanyApplicants() {
           color: #ffffff;
           padding: 1rem 2.5rem;
           border-radius: 12px;
-          font-weight: 600; /* Reduced from 700 */
+          font-weight: 600;
           text-decoration: none;
           display: inline-flex;
           align-items: center;
@@ -597,6 +645,52 @@ export default function CompanyApplicants() {
         <div className="main-content-wrapper">
           <div className="section-header">
             <h1 className="section-title">Inbound Applicants</h1>
+            <div className="tab-navigation-premium" style={{ display: 'flex', gap: '1rem', background: '#f1f5f9', padding: '0.4rem', borderRadius: '14px' }}>
+              <button
+                className={`tab-btn-modern ${activeTab === 'Pending' ? 'active' : ''}`}
+                onClick={() => setActiveTab("Pending")}
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: activeTab === 'Pending' ? '#fff' : 'transparent',
+                  color: activeTab === 'Pending' ? '#0f172a' : '#64748b',
+                  cursor: 'pointer',
+                  fontWeight: '700',
+                  fontSize: '0.9rem',
+                  boxShadow: activeTab === 'Pending' ? '0 4px 12px rgba(0,0,0,0.05)' : 'none',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem'
+                }}
+              >
+                <i className="far fa-clock" style={{ color: activeTab === 'Pending' ? '#4f46e5' : 'inherit' }}></i>
+                Queue
+              </button>
+              <button
+                className={`tab-btn-modern ${activeTab === 'Selected' ? 'active' : ''}`}
+                onClick={() => setActiveTab("Selected")}
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: activeTab === 'Selected' ? '#fff' : 'transparent',
+                  color: activeTab === 'Selected' ? '#166534' : '#64748b',
+                  cursor: 'pointer',
+                  fontWeight: '700',
+                  fontSize: '0.9rem',
+                  boxShadow: activeTab === 'Selected' ? '0 4px 12px rgba(0,0,0,0.05)' : 'none',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem'
+                }}
+              >
+                <i className="fas fa-check-double" style={{ color: activeTab === 'Selected' ? '#10b981' : 'inherit' }}></i>
+                Appointed
+              </button>
+            </div>
           </div>
 
           <div className="search-area">
@@ -609,9 +703,9 @@ export default function CompanyApplicants() {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
             {searchTerm && (
-              <i 
-                className="fas fa-times" 
-                style={{ cursor: "pointer", color: "#94a3b8" }} 
+              <i
+                className="fas fa-times"
+                style={{ cursor: "pointer", color: "#94a3b8" }}
                 onClick={clearSearch}
               ></i>
             )}
@@ -644,12 +738,12 @@ export default function CompanyApplicants() {
                       <span className={`status-badge status-${app.status || "Applied"}`}>{app.status || "Applied"}</span>
                     </div>
                     <div className="applicant-subinfo">
-                       <i className="far fa-envelope"></i>
-                       {app.student?.email}
+                      <i className="far fa-envelope"></i>
+                      {app.student?.email}
                     </div>
                     <div className="applicant-subinfo">
-                       <i className="fas fa-university"></i>
-                       {app.student?.department || "Department N/A"}
+                      <i className="fas fa-university"></i>
+                      {app.student?.department || "N/A"}
                     </div>
                   </div>
 
@@ -666,25 +760,41 @@ export default function CompanyApplicants() {
                       <i className="far fa-user"></i>
                       Review Profile
                     </button>
-                    <button
-                      className="btn-action btn-shortlist-action"
-                      onClick={() => updateStatus(app.application_id, "Shortlisted")}
-                      disabled={app.status === "Shortlisted"}
-                    >
-                      Shortlist
-                    </button>
-                    <button
-                      className="btn-action btn-select-action"
-                      onClick={() => updateStatus(app.application_id, "Selected")}
-                    >
-                      Selected
-                    </button>
-                    <button
-                      className="btn-action btn-reject-action"
-                      onClick={() => updateStatus(app.application_id, "Rejected")}
-                    >
-                      Rejected
-                    </button>
+                    {activeTab === "Pending" ? (
+                      <>
+                        <button
+                          className="btn-action btn-shortlist-action"
+                          onClick={() => updateStatus(app.application_id, "Shortlisted")}
+                          disabled={app.status === "Shortlisted"}
+                        >
+                          Shortlist
+                        </button>
+                        <button
+                          className="btn-action btn-select-action"
+                          onClick={() => updateStatus(app.application_id, "Selected")}
+                        >
+                          Select
+                        </button>
+                        <button
+                          className="btn-action btn-reject-action"
+                          onClick={() => updateStatus(app.application_id, "Rejected")}
+                        >
+                          Reject
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        className="btn-action btn-select-action"
+                        style={{ gridColumn: "span 2", background: "#f0fdf4", color: "#166534" }}
+                        onClick={() => {
+                          setSelectedAppForLetter(app);
+                          setShowUploadModal(true);
+                        }}
+                      >
+                        <i className="fas fa-file-upload"></i>
+                        Upload Offer Letter
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}
@@ -713,16 +823,16 @@ export default function CompanyApplicants() {
                       <div className="profile-name">{profile.student?.name}</div>
                       <div className="profile-badges">
                         <div className="profile-badge-item">
-                           <i className="far fa-envelope"></i>
-                           {profile.student?.email}
+                          <i className="far fa-envelope"></i>
+                          {profile.student?.email}
                         </div>
                         <div className="profile-badge-item">
-                           <i className="fas fa-phone-alt"></i>
-                           {profile.student?.phone || "No phone listed"}
+                          <i className="fas fa-phone-alt"></i>
+                          {profile.student?.phone || "No phone listed"}
                         </div>
                         <div className="profile-badge-item">
-                           <i className="fas fa-id-card"></i>
-                           Reg: {profile.student?.university_reg_no || "N/A"}
+                          <i className="fas fa-id-card"></i>
+                          Reg: {profile.student?.university_reg_no || "N/A"}
                         </div>
                       </div>
                     </div>
@@ -732,110 +842,225 @@ export default function CompanyApplicants() {
                       <div className="profile-section">
                         <div className="section-title-alt">Academic Context</div>
                         <div className="grid-detail">
-                           <div className="detail-card">
-                              <div className="detail-card-label">Department</div>
-                              <div className="detail-card-value">{profile.student?.department || "N/A"}</div>
-                           </div>
-                           <div className="detail-card">
-                              <div className="detail-card-label">Programme</div>
-                              <div className="detail-card-value">{profile.student?.programme || "N/A"}</div>
-                           </div>
+                          <div className="detail-card">
+                            <div className="detail-card-label">Department</div>
+                            <div className="detail-card-value">{profile.student?.department || "N/A"}</div>
+                          </div>
+                          <div className="detail-card">
+                            <div className="detail-card-label">Programme</div>
+                            <div className="detail-card-value">{profile.student?.programme || "N/A"}</div>
+                          </div>
                         </div>
                       </div>
 
                       {/* Technical Stack */}
                       {profile.skills?.length > 0 && (
                         <div className="profile-section">
-                           <div className="section-title-alt">Core Competencies</div>
-                           <div className="skill-tags">
-                              {profile.skills.map((skill, index) => (
-                                <span key={index} className="skill-tag-pill">{skill}</span>
-                              ))}
-                           </div>
+                          <div className="section-title-alt">Core Competencies</div>
+                          <div className="skill-tags">
+                            {profile.skills.map((skill, index) => (
+                              <span key={index} className="skill-tag-pill">{skill}</span>
+                            ))}
+                          </div>
                         </div>
                       )}
 
                       {/* Professional History */}
                       {getArray("internships").length > 0 && (
                         <div className="profile-section">
-                           <div className="section-title-alt">Experience</div>
-                           {getArray("internships").map((exp, idx) => (
-                              <div key={idx} className="timeline-item">
-                                 <div className="timeline-title">{exp.company_name}</div>
-                                 <div className="timeline-subtitle">{exp.domain}</div>
-                                 <div className="timeline-meta">{exp.duration}</div>
-                                 {exp.description && <div className="timeline-desc">{exp.description}</div>}
-                              </div>
-                           ))}
+                          <div className="section-title-alt">Experience</div>
+                          {getArray("internships").map((exp, idx) => (
+                            <div key={idx} className="timeline-item">
+                              <div className="timeline-title">{exp.company_name}</div>
+                              <div className="timeline-subtitle">{exp.domain}</div>
+                              <div className="timeline-meta">{exp.duration}</div>
+                              {exp.description && <div className="timeline-desc">{exp.description}</div>}
+                            </div>
+                          ))}
                         </div>
                       )}
 
                       {/* Project Portfolio */}
                       {getArray("projects").length > 0 && (
                         <div className="profile-section">
-                           <div className="section-title-alt">Key Projects</div>
-                           {getArray("projects").map((proj, idx) => (
-                              <div key={idx} className="timeline-item" style={{ borderLeftColor: "#8b5cf6" }}>
-                                 <div className="timeline-title">{proj.title}</div>
-                                 {proj.technologies && <div className="timeline-meta">Tech: {proj.technologies}</div>}
-                                 {proj.description && <div className="timeline-desc">{proj.description}</div>}
-                                 <div style={{ marginTop: "12px", display: "flex", gap: "12px" }}>
-                                    {proj.github_link && (
-                                       <a href={proj.github_link} target="_blank" rel="noopener noreferrer" style={{ color: "#4f46e5", fontSize: "0.85rem", fontWeight: 600, textDecoration: "none" }}>
-                                          Source Code →
-                                       </a>
-                                    )}
-                                    {proj.live_link && (
-                                       <a href={proj.live_link} target="_blank" rel="noopener noreferrer" style={{ color: "#4f46e5", fontSize: "0.85rem", fontWeight: 600, textDecoration: "none" }}>
-                                          View Live →
-                                       </a>
-                                    )}
-                                 </div>
+                          <div className="section-title-alt">Key Projects</div>
+                          {getArray("projects").map((proj, idx) => (
+                            <div key={idx} className="timeline-item" style={{ borderLeftColor: "#8b5cf6" }}>
+                              <div className="timeline-title">{proj.title}</div>
+                              {proj.technologies && <div className="timeline-meta">Tech: {proj.technologies}</div>}
+                              {proj.description && <div className="timeline-desc">{proj.description}</div>}
+                              <div style={{ marginTop: "12px", display: "flex", gap: "12px" }}>
+                                {proj.github_link && (
+                                  <a href={proj.github_link} target="_blank" rel="noopener noreferrer" style={{ color: "#4f46e5", fontSize: "0.85rem", fontWeight: 600, textDecoration: "none" }}>
+                                    Source Code →
+                                  </a>
+                                )}
+                                {proj.live_link && (
+                                  <a href={proj.live_link} target="_blank" rel="noopener noreferrer" style={{ color: "#4f46e5", fontSize: "0.85rem", fontWeight: 600, textDecoration: "none" }}>
+                                    View Live →
+                                  </a>
+                                )}
                               </div>
-                           ))}
+                            </div>
+                          ))}
                         </div>
                       )}
 
                       {/* Accomplishments */}
                       {getArray("certificates").length > 0 && (
                         <div className="profile-section">
-                           <div className="section-title-alt">Credentials</div>
-                           <div className="grid-detail">
-                              {getArray("certificates").map((cert, idx) => (
-                                 <div key={idx} className="detail-card">
-                                    <div className="detail-card-label">{cert.issued_by} • {cert.year_obtained}</div>
-                                    <div className="detail-card-value" style={{ marginBottom: "8px" }}>{cert.title}</div>
-                                    {cert.file && (
-                                       <a href={formatFileUrl(cert.file)} target="_blank" rel="noopener noreferrer" style={{ color: "#4f46e5", fontSize: "0.8rem", fontWeight: 700, textDecoration: "none" }}>
-                                          View Proof →
-                                       </a>
-                                    )}
-                                 </div>
-                              ))}
-                           </div>
+                          <div className="section-title-alt">Credentials</div>
+                          <div className="grid-detail">
+                            {getArray("certificates").map((cert, idx) => (
+                              <div key={idx} className="detail-card">
+                                <div className="detail-card-label">{cert.issued_by} • {cert.year_obtained}</div>
+                                <div className="detail-card-value" style={{ marginBottom: "8px" }}>{cert.title}</div>
+                                {cert.file && (
+                                  <a href={formatFileUrl(cert.file)} target="_blank" rel="noopener noreferrer" style={{ color: "#4f46e5", fontSize: "0.8rem", fontWeight: 700, textDecoration: "none" }}>
+                                    View Proof →
+                                  </a>
+                                )}
+                              </div>
+                            ))}
+                          </div>
                         </div>
                       )}
 
                       {/* Resume / Document */}
                       <div className="profile-section">
-                         <div className="section-title-alt">Candidate Portfolio</div>
-                         <div className="resume-action-box">
-                            {profile.resume ? (
-                               <>
-                                  <div style={{ marginBottom: "1.5rem", color: "#475569" }}>The candidate has provided a detailed resume for review.</div>
-                                  <a href={profile.resume} target="_blank" rel="noopener noreferrer" className="btn-view-resume">
-                                     <i className="far fa-file-pdf"></i>
-                                     Download Full Resume
-                                  </a>
-                               </>
-                            ) : (
-                               <div style={{ color: "#64748b", fontStyle: "italic" }}>No digital resume attached to this application.</div>
-                            )}
-                         </div>
+                        <div className="section-title-alt">Candidate Portfolio</div>
+                        <div className="resume-action-box">
+                          {profile.resume ? (
+                            <>
+                              <div style={{ marginBottom: "1.5rem", color: "#475569" }}>The candidate has provided a detailed resume for review.</div>
+                              <a href={profile.resume} target="_blank" rel="noopener noreferrer" className="btn-view-resume">
+                                <i className="far fa-file-pdf"></i>
+                                Download Full Resume
+                              </a>
+                            </>
+                          ) : (
+                            <div style={{ color: "#64748b", fontStyle: "italic" }}>No digital resume attached to this application.</div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </>
                 ) : null}
+              </div>
+            </div>
+          )}
+
+          {showUploadModal && selectedAppForLetter && (
+            <div className="modal-overlay-premium" onClick={() => setShowUploadModal(false)}
+              style={{
+                position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.4)',
+                backdropFilter: 'blur(8px)', zIndex: 2000,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem'
+              }}>
+              <div className="modal-content-glass" onClick={(e) => e.stopPropagation()}
+                style={{
+                  maxWidth: '550px', width: '100%', background: '#fff',
+                  borderRadius: '32px', overflow: 'hidden',
+                  boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+                  animation: 'modalSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1)'
+                }}>
+
+                <style>{`
+                  @keyframes modalSlideUp {
+                    from { opacity: 0; transform: translateY(40px) scale(0.95); }
+                    to { opacity: 1; transform: translateY(0) scale(1); }
+                  }
+                  .input-group-modern { margin-bottom: 2rem; }
+                  .input-group-modern label { display: block; margin-bottom: 0.75rem; font-weight: 700; color: #1e293b; font-size: 0.95rem; }
+                  .file-drop-area { 
+                    border: 2px dashed #e2e8f0; border-radius: 20px; padding: 2.5rem; text-align: center; 
+                    transition: all 0.2s; cursor: pointer; background: #f8fafc;
+                  }
+                  .file-drop-area:hover { border-color: #4f46e5; background: #f1f5f9; }
+                `}</style>
+
+                <div className="modal-header-gradient"
+                  style={{
+                    background: 'linear-gradient(135deg, #0f172a 0%, #334155 100%)',
+                    padding: '3rem 2.5rem', color: '#fff', position: 'relative'
+                  }}>
+                  <div style={{ position: 'relative', zIndex: 1 }}>
+                    <h2 style={{ fontSize: '1.75rem', fontWeight: 800, marginBottom: '0.5rem', fontFamily: 'Outfit, sans-serif' }}>
+                      Dispatch Offer
+                    </h2>
+                    <p style={{ opacity: 0.8, fontSize: '0.95rem', fontWeight: 500 }}>
+                      Issuing official document to <span style={{ color: '#818cf8', fontWeight: 700 }}>{selectedAppForLetter.student.name}</span>
+                    </p>
+                  </div>
+                  <div style={{ position: 'absolute', top: '-50px', right: '-50px', width: '150px', height: '150px', background: 'rgba(255,255,255,0.05)', borderRadius: '50%' }}></div>
+                </div>
+
+                <div className="modal-body-premium" style={{ padding: '2.5rem' }}>
+                  <form onSubmit={handleUploadOfferLetter}>
+                    <div className="input-group-modern">
+                      <label>Offer Letter Document (PDF)</label>
+                      <div className="file-drop-area" onClick={() => document.getElementById('fileInput').click()}>
+                        <i className="fas fa-file-upload" style={{ fontSize: '2rem', color: '#4f46e5', marginBottom: '1rem', display: 'block' }}></i>
+                        <span style={{ fontSize: '0.9rem', color: '#64748b', fontWeight: 600 }}>
+                          {offerLetterFile ? offerLetterFile.name : 'Click to browse or drag & drop'}
+                        </span>
+                        <input
+                          id="fileInput"
+                          type="file"
+                          accept=".pdf"
+                          onChange={(e) => setOfferLetterFile(e.target.files[0])}
+                          style={{ display: 'none' }}
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div className="input-group-modern">
+                      <label>Complimentary Message</label>
+                      <textarea
+                        value={offerLetterMessage}
+                        onChange={(e) => setOfferLetterMessage(e.target.value)}
+                        placeholder="Write a welcoming note for your new hire..."
+                        style={{
+                          width: '100%', padding: '1.25rem', border: '1px solid #e2e8f0',
+                          borderRadius: '16px', minHeight: '120px', fontSize: '0.95rem',
+                          outline: 'none', transition: 'border-color 0.2s', background: '#f8fafc'
+                        }}
+                        onFocus={(e) => e.target.style.borderColor = '#4f46e5'}
+                        onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
+                      />
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '1.25rem', marginTop: '1rem' }}>
+                      <button
+                        type="button"
+                        onClick={() => setShowUploadModal(false)}
+                        style={{
+                          flex: 1, padding: '1rem', borderRadius: '16px', border: '1px solid #e2e8f0',
+                          background: '#fff', cursor: 'pointer', fontWeight: 700, color: '#64748b'
+                        }}
+                      >
+                        Discard
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={uploading}
+                        style={{
+                          flex: 1.5, padding: '1rem', borderRadius: '16px', border: 'none',
+                          background: 'linear-gradient(90deg, #4f46e5 0%, #6366f1 100%)',
+                          color: '#fff', cursor: 'pointer', fontWeight: 800, fontSize: '1rem',
+                          boxShadow: '0 10px 15px -3px rgba(79, 70, 229, 0.3)'
+                        }}
+                      >
+                        {uploading ? (
+                          <><i className="fas fa-circle-notch fa-spin me-2"></i> Syncing...</>
+                        ) : (
+                          <><i className="fas fa-paper-plane me-2"></i> Send Notification</>
+                        )}
+                      </button>
+                    </div>
+                  </form>
+                </div>
               </div>
             </div>
           )}

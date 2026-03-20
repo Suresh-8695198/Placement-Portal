@@ -7,39 +7,51 @@ import axios from "axios";
 
 const Topbar = () => {
   const [studentName, setStudentName] = useState("Student");
+  const [studentEmail, setStudentEmail] = useState("");
+  const [studentDepartment, setStudentDepartment] = useState("");
+  const [studentPhoto, setStudentPhoto] = useState("");
+  const [photoError, setPhotoError] = useState(false);
 
   useEffect(() => {
     const email = localStorage.getItem("studentEmail");
     if (!email) return;
+    setStudentEmail(email);
 
     axios
       .get(`http://localhost:8000/api/students/profile/?email=${email}`)
       .then((res) => {
-        if (res.data.student && res.data.student.name) {
-          setStudentName(res.data.student.name);
-        } else if (res.data.student && res.data.student.username) {
-          setStudentName(res.data.student.username);
+        const student = res.data?.student || {};
+        const profilePhoto = res.data?.profile_image || student.profile_image || "";
+
+        if (res.data.student && res.data.student.email) {
+          setStudentEmail(res.data.student.email);
+        }
+        if (student.name) {
+          setStudentName(student.name);
+        } else if (student.username) {
+          setStudentName(student.username);
+        }
+
+        setStudentDepartment(student.department || "Department");
+
+        if (profilePhoto) {
+          const normalizedPhoto = profilePhoto.startsWith("/")
+            ? `http://localhost:8000${profilePhoto}`
+            : profilePhoto;
+          setStudentPhoto(normalizedPhoto);
         }
       })
       .catch((err) => console.log("Failed to load student name:", err));
   }, []);
 
-  const handleLogout = () => {
-    localStorage.clear();
-    window.location.href = "/login";
-  };
+  const avatarInitial = (studentName || "S").trim().charAt(0).toUpperCase();
 
   return (
     <>
       <style>{`
         .topbar-area {
-          background: rgba(30, 20, 50, 0.92);
-          backdrop-filter: blur(24px) saturate(160%);
-          -webkit-backdrop-filter: blur(24px) saturate(160%);
-          border-bottom: 1px solid rgba(75,0,130,0.3);
-          box-shadow: 
-            0 8px 32px rgba(0,0,0,0.4),
-            inset 0 0 20px rgba(75,0,130,0.18);
+          background: #ffffff;
+          border-bottom: 1px solid #e5e7eb;
           padding: 1rem 2rem;
           display: flex;
           align-items: center;
@@ -47,132 +59,137 @@ const Topbar = () => {
           position: sticky;
           top: 0;
           z-index: 1000;
-          color: #e2e8f0;
-          overflow: hidden;
-        }
-
-        /* Subtle moving violet overlay - same as sidebar vibe */
-        .topbar-area::after {
-          content: '';
-          position: absolute;
-          inset: 0;
-          background: linear-gradient(
-            135deg,
-            transparent 0%,
-            rgba(106,13,173,0.22) 20%,
-            transparent 40%,
-            rgba(75,0,130,0.18) 60%,
-            transparent 100%
-          );
-          opacity: 0.6;
-          pointer-events: none;
-          animation: crystalMove 18s linear infinite;
-        }
-
-        @keyframes crystalMove {
-          0%   { transform: translateX(-30%) translateY(-30%); }
-          100% { transform: translateX(30%)  translateY(30%);  }
+          color: #111827;
+          gap: 1rem;
         }
 
         .welcome {
-          font-size: 1.45rem;
+          font-size: 1.1rem;
           font-weight: 600;
-          letter-spacing: -0.01em;
-          position: relative;
-          z-index: 2;
+          white-space: nowrap;
         }
 
         .welcome span {
-          font-weight: 800;
-          background: linear-gradient(90deg, #4B0082, #6A0DAD);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          text-shadow: 0 2px 8px rgba(75,0,130,0.35);
+          font-weight: 700;
+          color: #0f172a;
         }
 
-        .logout-btn {
-          position: relative;
-          overflow: hidden;
-          background: linear-gradient(135deg, #4B0082, #6A0DAD);
-          color: white;
-          border: none;
-          border-radius: 12px;
-          padding: 0.7rem 1.6rem;
-          font-size: 1rem;
-          font-weight: 600;
-          cursor: pointer;
+        .student-meta {
           display: flex;
           align-items: center;
-          gap: 0.8rem;
-          transition: all 0.32s cubic-bezier(0.34, 1.56, 0.64, 1);
-          box-shadow: 0 6px 20px rgba(75,0,130,0.4);
-          z-index: 2;
+          gap: 0.75rem;
+          padding: 0.45rem 0.7rem;
+          border: 1px solid #dbe2ea;
+          border-radius: 10px;
+          background: #f8fafc;
+          min-width: 250px;
+          max-width: 440px;
         }
 
-        .logout-btn:hover {
-          transform: scale(1.08) translateY(-2px);
-          box-shadow: 0 12px 32px rgba(75,0,130,0.55);
+        .student-avatar {
+          width: 38px;
+          height: 38px;
+          border-radius: 50%;
+          overflow: hidden;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: #0f172a;
+          color: #ffffff;
+          font-size: 0.95rem;
+          font-weight: 700;
+          flex-shrink: 0;
         }
 
-        /* Continuous shine effect */
-        .logout-btn::before {
-          content: '';
-          position: absolute;
-          inset: -50%;
-          background: linear-gradient(
-            90deg,
-            transparent,
-            rgba(255,255,255,0.45),
-            transparent
-          );
-          animation: shine 2.8s infinite;
-          opacity: 0;
-          transition: opacity 0.4s;
+        .student-avatar img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          display: block;
         }
 
-        .logout-btn:hover::before {
-          opacity: 1;
+        .student-text {
+          display: flex;
+          flex-direction: column;
+          min-width: 0;
+          line-height: 1.25;
         }
 
-        @keyframes shine {
-          0%   { transform: translateX(-120%) rotate(30deg); }
-          60%, 100% { transform: translateX(120%) rotate(30deg); }
+        .student-email {
+          font-size: 0.86rem;
+          font-weight: 600;
+          color: #0f172a;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
 
-        .logout-btn i {
-          font-size: 1.2rem;
-          transition: transform 0.35s ease;
+        .student-dept {
+          font-size: 0.76rem;
+          font-weight: 500;
+          color: #64748b;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
 
-        .logout-btn:hover i {
-          transform: rotate(180deg) scale(1.2);
+        @media (max-width: 992px) {
+          .topbar-area {
+            padding-right: 3.2rem;
+          }
+
+          .welcome {
+            max-width: 48%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+          }
         }
 
         @media (max-width: 768px) {
           .topbar-area {
-            padding: 0.9rem 1.5rem;
-            flex-wrap: wrap;
-            gap: 1rem;
+            padding: 0.8rem 1.5rem;
           }
-
           .welcome {
-            font-size: 1.2rem;
+            font-size: 1rem;
           }
 
-          .logout-btn {
-            padding: 0.65rem 1.3rem;
-            font-size: 0.95rem;
+          .student-meta {
+            min-width: 210px;
+            max-width: 290px;
+          }
+
+          .student-avatar {
+            width: 34px;
+            height: 34px;
+            font-size: 0.85rem;
+          }
+
+          .student-email {
+            font-size: 0.8rem;
           }
         }
 
         @media (max-width: 576px) {
           .topbar-area {
-            flex-direction: column;
-            align-items: flex-start;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
           }
 
-          .welcome {
-            margin-bottom: 0.5rem;
+          .student-meta {
+            min-width: 0;
+            max-width: 195px;
+            padding: 0.4rem 0.5rem;
+            gap: 0.55rem;
+          }
+
+          .student-avatar {
+            width: 30px;
+            height: 30px;
+            font-size: 0.8rem;
+          }
+
+          .student-dept {
+            font-size: 0.72rem;
           }
         }
       `}</style>
@@ -182,10 +199,28 @@ const Topbar = () => {
           Welcome, <span>{studentName}</span>!
         </div>
 
-        <button className="logout-btn" onClick={handleLogout}>
-          Logout
-          <i className="fas fa-sign-out-alt"></i>
-        </button>
+        <div className="student-meta">
+          <div className="student-avatar">
+            {studentPhoto && !photoError ? (
+              <img
+                src={studentPhoto}
+                alt={studentName}
+                onError={() => setPhotoError(true)}
+              />
+            ) : (
+              <span>{avatarInitial}</span>
+            )}
+          </div>
+
+          <div className="student-text">
+            <div className="student-email" title={studentEmail || "Email unavailable"}>
+              {studentEmail || "Unavailable"}
+            </div>
+            <div className="student-dept" title={studentDepartment || "Department unavailable"}>
+              {studentDepartment || "Department unavailable"}
+            </div>
+          </div>
+        </div>
       </div>
     </>
   );
