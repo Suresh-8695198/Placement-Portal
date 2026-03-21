@@ -1,6 +1,6 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
-import logo from '/Logo.png'; // Importing the logo
+import logo from '/Logo.png'; 
 
 const Sidebar = ({ onNavigate, onClose }) => {
   const handleLogout = () => {
@@ -64,7 +64,7 @@ const Sidebar = ({ onNavigate, onClose }) => {
         .sidebar-title {
           font-size: 1.55rem;
           font-weight: 700;
-          color: var(--text-on-dark);
+          color: #ffffff;
           text-align: center;
           letter-spacing: 0.5px;
           text-transform: uppercase;
@@ -74,7 +74,7 @@ const Sidebar = ({ onNavigate, onClose }) => {
         
         .sidebar-subtitle {
           font-size: 0.9rem;
-          color: var(--text-on-dark-muted);
+          color: #94a3b8;
           text-align: center;
           letter-spacing: 0.5px;
           text-transform: uppercase;
@@ -97,94 +97,39 @@ const Sidebar = ({ onNavigate, onClose }) => {
           align-items: center !important;
           gap: 1rem !important;
           padding: 0.8rem 1rem !important;
-          color: var(--text-on-dark-muted) !important;
+          color: #94a3b8 !important;
           text-decoration: none !important;
           font-size: 1rem !important;
           font-weight: 600 !important;
           border-radius: 8px !important;
-          transition: var(--transition) !important;
+          transition: 0.2s ease !important;
           background: transparent !important;
         }
 
         .sidebar-wrapper .nav-link:hover {
-          color: var(--text-on-dark) !important;
+          color: #ffffff !important;
         }
 
         .sidebar-wrapper .nav-link.active {
-          color: var(--white) !important;
+          color: #ffffff !important;
           font-weight: 700 !important;
           box-shadow: 0 4px 12px rgba(17, 24, 39, 0.28);
         }
 
-        .sidebar-wrapper .nav-item:nth-child(1) .nav-link.active {
-          background: #2f6fd6 !important;
-        }
-
-        .sidebar-wrapper .nav-item:nth-child(2) .nav-link.active {
-          background: #0e7490 !important;
-        }
-
-        .sidebar-wrapper .nav-item:nth-child(3) .nav-link.active {
-          background: #4f46e5 !important;
-        }
-
-        .sidebar-wrapper .nav-item:nth-child(4) .nav-link.active {
-          background: #0f766e !important;
-        }
-
-        .sidebar-wrapper .nav-item:nth-child(5) .nav-link.active {
-          background: #9a3412 !important;
-        }
-
-        .sidebar-wrapper .nav-item:nth-child(6) .nav-link.active {
-          background: #047857 !important;
-        }
-
-        .sidebar-wrapper .nav-item:nth-child(7) .nav-link.active {
-          background: #7c3aed !important;
-        }
-
-        .sidebar-wrapper .nav-item:nth-child(1) .nav-link:hover {
-          background: rgba(47, 111, 214, 0.18) !important;
-        }
-
-        .sidebar-wrapper .nav-item:nth-child(2) .nav-link:hover {
-          background: rgba(14, 116, 144, 0.18) !important;
-        }
-
-        .sidebar-wrapper .nav-item:nth-child(3) .nav-link:hover {
-          background: rgba(79, 70, 229, 0.18) !important;
-        }
-
-        .sidebar-wrapper .nav-item:nth-child(4) .nav-link:hover {
-          background: rgba(15, 118, 110, 0.18) !important;
-        }
-
-        .sidebar-wrapper .nav-item:nth-child(5) .nav-link:hover {
-          background: rgba(154, 52, 18, 0.18) !important;
-        }
-
-        .sidebar-wrapper .nav-item:nth-child(6) .nav-link:hover {
-          background: rgba(4, 120, 87, 0.18) !important;
-        }
-
-        .sidebar-wrapper .nav-item:nth-child(7) .nav-link:hover {
-          background: rgba(124, 58, 237, 0.18) !important;
-        }
-
-        .sidebar-wrapper .nav-link.active .nav-icon {
-          color: var(--white) !important;
-        }
+        /* Specific Link Colors */
+        .sidebar-wrapper .nav-item:nth-child(1) .nav-link.active { background: #2f6fd6 !important; }
+        .sidebar-wrapper .nav-item:nth-child(2) .nav-link.active { background: #0e7490 !important; }
+        .sidebar-wrapper .nav-item:nth-child(3) .nav-link.active { background: #4f46e5 !important; }
+        .sidebar-wrapper .nav-item:nth-child(4) .nav-link.active { background: #0f766e !important; }
+        .sidebar-wrapper .nav-item:nth-child(5) .nav-link.active { background: #9a3412 !important; }
+        .sidebar-wrapper .nav-item:nth-child(6) .nav-link.active { background: #047857 !important; }
+        .sidebar-wrapper .nav-item:nth-child(7) .nav-link.active { background: #7c3aed !important; }
+        .sidebar-wrapper .nav-item:nth-child(8) .nav-link.active { background: #10b981 !important; }
 
         .sidebar-wrapper .nav-icon {
           font-size: 1.15rem !important;
           min-width: 20px !important;
           text-align: center !important;
-          transition: var(--transition) !important;
-        }
-
-        .sidebar-wrapper .nav-link.active .nav-icon {
-          color: var(--white) !important;
         }
         
         .nav-label {
@@ -224,9 +169,7 @@ const Sidebar = ({ onNavigate, onClose }) => {
         }
 
         @media (max-width: 992px) {
-          .mobile-close-btn {
-            display: inline-flex;
-          }
+          .mobile-close-btn { display: inline-flex; }
         }
       `}</style>
 
@@ -247,90 +190,49 @@ const Sidebar = ({ onNavigate, onClose }) => {
 
         <ul className="nav-list">
           <li className="nav-item">
-            <NavLink
-              to="profile"
-              onClick={onNavigate}
-              className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}
-            >
+            <NavLink to="profile" onClick={onNavigate} className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
               <i className="fas fa-user nav-icon"></i>
               <span className="nav-label">Profile</span>
             </NavLink>
           </li>
-
           <li className="nav-item">
-            <NavLink
-              to="internship"
-              onClick={onNavigate}
-              className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}
-            >
+            <NavLink to="internship" onClick={onNavigate} className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
               <i className="fas fa-briefcase nav-icon"></i>
               <span className="nav-label">Internship</span>
             </NavLink>
           </li>
-
           <li className="nav-item">
-            <NavLink
-              to="projects"
-              onClick={onNavigate}
-              className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}
-            >
+            <NavLink to="projects" onClick={onNavigate} className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
               <i className="fas fa-code nav-icon"></i>
               <span className="nav-label">Projects</span>
             </NavLink>
           </li>
-
           <li className="nav-item">
-            <NavLink
-              to="skills"
-              onClick={onNavigate}
-              className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}
-            >
+            <NavLink to="skills" onClick={onNavigate} className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
               <i className="fas fa-tools nav-icon"></i>
               <span className="nav-label">Skills</span>
             </NavLink>
           </li>
-
           <li className="nav-item">
-            <NavLink
-              to="companies"
-              onClick={onNavigate}
-              className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}
-            >
+            <NavLink to="companies" onClick={onNavigate} className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
               <i className="fas fa-building nav-icon"></i>
               <span className="nav-label">Companies</span>
             </NavLink>
           </li>
-
           <li className="nav-item">
-            <NavLink
-              to="status"
-              onClick={onNavigate}
-              className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}
-            >
+            <NavLink to="status" onClick={onNavigate} className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
               <i className="fas fa-check-circle nav-icon"></i>
               <span className="nav-label">Status</span>
             </NavLink>
           </li>
           <li className="nav-item">
-            <NavLink
-              to="announcements"
-              onClick={onNavigate}
-              className={({ isActive }) =>
-                isActive ? "nav-link active" : "nav-link"
-              }
-            >
+            <NavLink to="announcements" onClick={onNavigate} className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
               <i className="fas fa-bullhorn nav-icon"></i>
               <span className="nav-label">Announcements</span>
             </NavLink>
           </li>
           <li className="nav-item">
-            <NavLink
-              to="offer-letters"
-              onClick={onNavigate}
-              className={({ isActive }) =>
-                isActive ? "nav-link active" : "nav-link"
-              }
-            >
+            <NavLink to="offer-letters" onClick={onNavigate} className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
               <i className="fas fa-file-invoice nav-icon" style={{ color: '#10b981' }}></i>
               <span className="nav-label">Offer Letters</span>
             </NavLink>

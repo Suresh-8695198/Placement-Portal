@@ -1,10 +1,9 @@
+
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import {
   BarChart,
   Bar,
-  LineChart,
-  Line,
   XAxis,
   YAxis,
   Tooltip,
@@ -13,14 +12,20 @@ import {
   PieChart,
   Pie,
   Cell,
-  Legend,
   AreaChart,
   Area,
+  LineChart,
+  Line,
+  Legend,
 } from "recharts";
 
 const API = "http://localhost:8000/admin-panel";
 
 export default function Dashboard() {
+  const COLORS = ["#4f46e5", "#10b981", "#0ea5e9", "#f59e0b", "#ef4444", "#8b5cf6"];
+  const [activeTab, setActiveTab] = useState("General");
+
+  // General tab data
   const [data, setData] = useState({
     totalStudents: 0,
     totalCompanies: 0,
@@ -29,14 +34,69 @@ export default function Dashboard() {
     pendingJobs: 0,
     totalSelected: 0,
   });
-
   const [yearDeptStats, setYearDeptStats] = useState([]);
   const [selectedDepartment, setSelectedDepartment] = useState("");
+
+  // Students tab data
+  const [studentsPerDept, setStudentsPerDept] = useState([]);
+  const [ugPgDistribution, setUgPgDistribution] = useState([]);
+  const [studentsPerBatch, setStudentsPerBatch] = useState([]);
+  const [studentsLoading, setStudentsLoading] = useState(false);
+  const [studentsError, setStudentsError] = useState(null);
+
+  // Companies tab data
+  const [jobsPerCompany, setJobsPerCompany] = useState([]);
+  const [jobTypesDistribution, setJobTypesDistribution] = useState([]);
+  const [monthlyJobsTrend, setMonthlyJobsTrend] = useState([]);
+  const [companiesLoading, setCompaniesLoading] = useState(false);
+  const [companiesError, setCompaniesError] = useState(null);
+
+  // Jobs tab data (same structure)
+  const [jobsByType, setJobsByType] = useState([]);
+  const [jobsByLocation, setJobsByLocation] = useState([]);
+  const [monthlyJobsPostedTrend, setMonthlyJobsPostedTrend] = useState([]);
+  const [jobsLoading, setJobsLoading] = useState(false);
+  const [jobsError, setJobsError] = useState(null);
+
+  // Reports tab data
+  const [reportsLoading, setReportsLoading] = useState(false);
+  const [reportsError, setReportsError] = useState(null);
+  const [placementSummary, setPlacementSummary] = useState({
+    total_students: 0,
+    total_placed: 0,
+    placement_percentage: 0,
+    top_department: "N/A",
+    top_dept_count: 0,
+  });
+  const [placementByDepartment, setPlacementByDepartment] = useState([]);
+  const [placementTrend, setPlacementTrend] = useState([]);
+  const [topStudents, setTopStudents] = useState([]);
+  const [topCompanies, setTopCompanies] = useState([]);
+  const [salaryDistribution, setSalaryDistribution] = useState([]);
+  const [exportStatus, setExportStatus] = useState({
+    overall: "",
+    department: "",
+    batch: "",
+  });
+
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchDashboard();
   }, []);
+
+  useEffect(() => {
+    if (activeTab === "Students") {
+      fetchStudentsData();
+    }
+    if (activeTab === "Companies") {
+      fetchCompaniesData();
+    }
+    if (activeTab === "Jobs") {
+      fetchJobsData();
+    }
+    if (activeTab === "Reports") fetchReportsData(); // ✅ ADD THIS
+  }, [activeTab]);
 
   const fetchDashboard = async () => {
     try {
@@ -51,15 +111,15 @@ export default function Dashboard() {
       ]);
 
       setData({
-        totalStudents: responses[0].data.total_students || responses[0].data.count || 0,
-        totalCompanies: responses[1].data.total_companies || responses[1].data.count || 0,
-        totalJobs: responses[2].data.total_jobs || responses[2].data.count || 0,
-        approvedJobs: responses[3].data.approved_jobs || responses[3].data.approved || 0,
-        pendingJobs: responses[4].data.pending_jobs || responses[4].data.pending || 0,
-        totalSelected: responses[5].data.total_selected || responses[5].data.selected || 0,
+        totalStudents: responses[0]?.data?.total_students || responses[0]?.data?.count || 0,
+        totalCompanies: responses[1]?.data?.total_companies || responses[1]?.data?.count || 0,
+        totalJobs: responses[2]?.data?.total_jobs || responses[2]?.data?.count || 0,
+        approvedJobs: responses[3]?.data?.approved_jobs || responses[3]?.data?.approved || 0,
+        pendingJobs: responses[4]?.data?.pending_jobs || responses[4]?.data?.pending || 0,
+        totalSelected: responses[5]?.data?.total_selected || responses[5]?.data?.selected || 0,
       });
 
-      const yearData = responses[6].data || [];
+      const yearData = responses[6]?.data || [];
       const mapped = yearData.map((item) => ({
         year: item.year ?? item.batch ?? "Unknown",
         department: item.department || item.dept || item.department_name || item.name || "Unknown",
@@ -76,12 +136,127 @@ export default function Dashboard() {
       setLoading(false);
     } catch (error) {
       console.error("Dashboard fetch error:", error);
-      // Even on error, we want to show dummy data, so set loading to false
       setLoading(false);
     }
   };
 
-  // ─── Dynamic Data ──────────────────────────────────────────
+  const fetchStudentsData = async () => {
+    setStudentsLoading(true);
+    setStudentsError(null);
+    try {
+      const [deptRes, ugPgRes, batchRes] = await Promise.all([
+        axios.get(`${API}/students-per-department/`),
+        axios.get(`${API}/students-ug-pg-distribution/`),
+        axios.get(`${API}/students-per-batch/`),
+      ]);
+
+      setStudentsPerDept(deptRes.data || []);
+      setUgPgDistribution(ugPgRes.data || []);
+      setStudentsPerBatch(batchRes.data || []);
+    } catch (err) {
+      console.error("Students fetch error:", err);
+      setStudentsError("Failed to load student statistics.");
+    } finally {
+      setStudentsLoading(false);
+    }
+  };
+
+  const fetchCompaniesData = async () => {
+    setCompaniesLoading(true);
+    setCompaniesError(null);
+    try {
+      const [companyRes, typesRes, trendRes] = await Promise.all([
+        axios.get(`${API}/jobs-per-company/`),
+        axios.get(`${API}/job-types-distribution/`),
+        axios.get(`${API}/monthly-jobs-trend/`),
+      ]);
+
+      setJobsPerCompany(companyRes.data || []);
+      setJobTypesDistribution(typesRes.data || []);
+      setMonthlyJobsTrend(trendRes.data || []);
+    } catch (err) {
+      console.error("Companies fetch error:", err);
+      setCompaniesError("Failed to load company statistics.");
+    } finally {
+      setCompaniesLoading(false);
+    }
+  };
+
+  const fetchJobsData = async () => {
+    setJobsLoading(true);
+    setJobsError(null);
+    try {
+      const [typeRes, locationRes, trendRes] = await Promise.all([
+        axios.get(`${API}/jobs-by-type/`),
+        axios.get(`${API}/jobs-by-location/`),
+        axios.get(`${API}/monthly-jobs-posted-trend/`),
+      ]);
+
+      setJobsByType(typeRes.data || []);
+      setJobsByLocation(locationRes.data || []);
+      setMonthlyJobsPostedTrend(trendRes.data || []);
+    } catch (err) {
+      console.error("Jobs fetch error:", err);
+      setJobsError("Failed to load job statistics.");
+    } finally {
+      setJobsLoading(false);
+    }
+  };
+
+  const fetchReportsData = async () => {
+    setReportsLoading(true);
+    setReportsError(null);
+
+    try {
+      const [summaryRes, deptRes, trendRes, topStudentsRes, topCompaniesRes, salaryRes] = await Promise.allSettled([
+        axios.get(`${API}/reports/summary/`),
+        axios.get(`${API}/reports/placement-by-department/`),
+        axios.get(`${API}/reports/placement-trend/`),
+        axios.get(`${API}/reports/top-students/`),
+        axios.get(`${API}/reports/top-companies/`),
+        axios.get(`${API}/reports/salary-distribution/`),
+      ]);
+
+      if (summaryRes.status === "fulfilled") {
+        const summary = summaryRes.value?.data || {};
+        setPlacementSummary({
+          total_students: Number(summary.total_students || summary.totalStudents || data.totalStudents || 0),
+          total_placed: Number(summary.total_placed || summary.totalPlaced || data.totalSelected || 0),
+          placement_percentage: Number(summary.placement_percentage || summary.placementPercentage || 0),
+          top_department: summary.top_department || summary.topDepartment || "N/A",
+          top_dept_count: Number(summary.top_dept_count || summary.topDeptCount || 0),
+        });
+      } else {
+        setPlacementSummary({
+          total_students: Number(data.totalStudents || 0),
+          total_placed: Number(data.totalSelected || 0),
+          placement_percentage: data.totalStudents
+            ? Number(((data.totalSelected / data.totalStudents) * 100).toFixed(2))
+            : 0,
+          top_department: "N/A",
+          top_dept_count: 0,
+        });
+      }
+
+      setPlacementByDepartment(deptRes.status === "fulfilled" && Array.isArray(deptRes.value?.data) ? deptRes.value.data : []);
+      setPlacementTrend(trendRes.status === "fulfilled" && Array.isArray(trendRes.value?.data) ? trendRes.value.data : []);
+      setTopStudents(topStudentsRes.status === "fulfilled" && Array.isArray(topStudentsRes.value?.data) ? topStudentsRes.value.data : []);
+      setTopCompanies(topCompaniesRes.status === "fulfilled" && Array.isArray(topCompaniesRes.value?.data) ? topCompaniesRes.value.data : []);
+      setSalaryDistribution(salaryRes.status === "fulfilled" && Array.isArray(salaryRes.value?.data) ? salaryRes.value.data : []);
+    } catch (err) {
+      console.error("Reports fetch error:", err);
+      setReportsError("Failed to load reports data.");
+      setPlacementByDepartment([]);
+      setPlacementTrend([]);
+      setTopStudents([]);
+      setTopCompanies([]);
+      setSalaryDistribution([]);
+    } finally {
+      setReportsLoading(false);
+    }
+  };
+
+  // General Chart Data (unchanged)
   const jobChartData = [
     { name: "Total", value: data.totalJobs },
     { name: "Approved", value: data.approvedJobs },
@@ -99,18 +274,15 @@ export default function Dashboard() {
     .filter((item) => item.department === selectedDepartment)
     .sort((a, b) => Number(a.year) - Number(b.year));
 
-  // ─── Dummy Data for Immediate Visualization ───────────────────
   const dummyJobChartData = [
     { name: "Total", value: 520 },
     { name: "Approved", value: 410 },
     { name: "Pending", value: 110 },
   ];
-
   const dummyPlacementChartData = [
     { name: "Selected", value: 340 },
     { name: "Not Selected", value: 160 },
   ];
-
   const dummyFilteredYearData = [
     { year: "2021", placed_students: 150 },
     { year: "2022", placed_students: 210 },
@@ -119,10 +291,54 @@ export default function Dashboard() {
     { year: "2025", placed_students: 310 },
   ];
 
-  // Use dummy data if real data is not available or empty (e.g. while loading or on error)
+  const handleExport = async (type) => {
+  try {
+    setExportStatus((prev) => ({ ...prev, [type]: "Downloading..." }));
+
+    const response = await axios.get(`${API}/reports/export/${type}/`, {
+      responseType: "blob",
+    });
+
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement("a");
+    link.href = url;
+
+    link.setAttribute("download", `${type}_report`);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+
+    setExportStatus((prev) => ({ ...prev, [type]: "Downloaded ✅" }));
+  } catch (err) {
+    console.error("Export error:", err);
+    setExportStatus((prev) => ({ ...prev, [type]: "Failed ❌" }));
+  }
+};
+
   const activeJobChartData = data.totalJobs > 0 ? jobChartData : dummyJobChartData;
   const activePlacementChartData = data.totalSelected > 0 ? placementChartData : dummyPlacementChartData;
   const activeYearData = filteredYearData.length > 0 ? filteredYearData : dummyFilteredYearData;
+
+  const deptBarData = placementByDepartment.map((item) => ({
+    department: item.department || item.dept || item.department_name || item.name || "Unknown",
+    placed: Number(item.placed || item.placed_students || item.count || 0),
+    percentage: Number(item.percentage || item.placement_percentage || 0),
+  }));
+
+  const trendData = placementTrend.map((item) => ({
+    month: String(item.month || item.label || item.period || item.year || "Unknown"),
+    placed: Number(item.placed || item.placed_students || item.count || 0),
+  }));
+
+  const pieData = salaryDistribution.map((item) => ({
+    job_type: item.range || item.salary_range || item.band || item.name || "Unknown",
+    count: Number(item.count || item.students || item.total || 0),
+  }));
+
+  const topCompaniesData = topCompanies.map((item) => ({
+    company: item.company || item.company_name || item.name || "Unknown",
+    count: Number(item.count || item.hires || item.selected || 0),
+  }));
 
   if (loading) {
     return (
@@ -139,83 +355,18 @@ export default function Dashboard() {
 
   return (
     <>
-
       <style>{`
-        body {
-          background-color: #f1f5f9;
-          font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
-          color: #1e293b;
-        }
+        body { background-color: #f1f5f9; font-family: 'Plus Jakarta Sans', 'Inter', sans-serif; color: #1e293b; }
+        .page-wrapper { padding: 1.5rem; max-width: 1400px; margin: 0 auto; }
+        .header { margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: flex-end; }
+        .page-title { font-family: 'Outfit', sans-serif; font-size: 1.75rem; font-weight: 800; color: #0f172a; margin-bottom: 0.25rem; }
+        .page-subtitle { color: #64748b; font-size: 0.9rem; font-weight: 500; }
 
-        .page-wrapper {
-          padding: 1.5rem;
-          max-width: 1400px;
-          margin: 0 auto;
-        }
+        .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 1.5rem; margin-bottom: 3rem; padding: 10px 5px; }
 
-        .header {
-          margin-bottom: 2rem;
-          display: flex;
-          justify-content: space-between;
-          align-items: flex-end;
-        }
-
-        .page-title {
-          font-family: 'Outfit', sans-serif;
-          font-size: 1.75rem;
-          font-weight: 800;
-          color: #0f172a;
-          margin-bottom: 0.25rem;
-        }
-
-        .page-subtitle {
-          color: #64748b;
-          font-size: 0.9rem;
-          font-weight: 500;
-        }
-
-        /* ─── Premium Modern Cards ─────────────────────────────────── */
-        .stat-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
-          gap: 1.5rem;
-          margin-bottom: 3rem;
-          padding: 10px 5px; /* Add padding to prevent hover transform/shadow clipping */
-        }
-
-        .modern-card {
-          position: relative;
-          border-radius: 1.5rem;
-          padding: 1.75rem;
-          color: white;
-          overflow: hidden;
-          min-height: 180px;
-          display: flex;
-          flex-direction: column;
-          justify-content: space-between;
-          border: none;
-          box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
-          transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        .modern-card:hover {
-          transform: translateY(-5px);
-          box-shadow: 0 20px 35px -10px rgba(0, 0, 0, 0.15);
-        }
-
-        /* Wavy Background Pattern */
-        .modern-card::after {
-          content: '';
-          position: absolute;
-          bottom: 0;
-          left: 0;
-          right: 0;
-          height: 60px;
-          background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'%3E%3Cpath fill='rgba(255,255,255,0.15)' fill-opacity='1' d='M0,192L48,197.3C96,203,192,213,288,192C384,171,480,117,576,112C672,107,768,149,864,165.3C960,181,1056,171,1152,144C1248,117,1344,75,1392,53.3L1440,32L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z'%3E%3C/path%3E%3C/svg%3E");
-          background-size: cover;
-          opacity: 0.6;
-          pointer-events: none;
-        }
+        .modern-card { position: relative; border-radius: 1.5rem; padding: 1.75rem; color: white; overflow: hidden; min-height: 180px; display: flex; flex-direction: column; justify-content: space-between; border: none; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); transition: transform 0.3s ease, box-shadow 0.3s ease; }
+        .modern-card:hover { transform: translateY(-5px); box-shadow: 0 20px 35px -10px rgba(0,0,0,0.15); }
+        .modern-card::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 60px; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'%3E%3Cpath fill='rgba(255,255,255,0.15)' fill-opacity='1' d='M0,192L48,197.3C96,203,192,213,288,192C384,171,480,117,576,112C672,107,768,149,864,165.3C960,181,1056,171,1152,144C1248,117,1344,75,1392,53.3L1440,32L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z'%3E%3C/path%3E%3C/svg%3E"); background-size: cover; opacity: 0.6; pointer-events: none; }
 
         .card-blue { background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%); }
         .card-gold { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
@@ -224,217 +375,36 @@ export default function Dashboard() {
         .card-rose { background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%); }
         .card-indigo { background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); }
 
-        .card-top {
-          display: flex;
-          justify-content: space-between;
-          align-items: flex-start;
-          z-index: 1;
-        }
+        .card-top { display: flex; justify-content: space-between; align-items: flex-start; z-index: 1; }
+        .card-title { font-size: 0.95rem; font-weight: 600; opacity: 0.9; }
+        .card-value { font-family: 'Sora', sans-serif; font-size: 2.5rem; font-weight: 800; margin-top: 0.5rem; z-index: 1; }
 
-        .card-title {
-          font-size: 0.95rem;
-          font-weight: 600;
-          opacity: 0.9;
-        }
+        .card-filters { display: flex; flex-direction: column; gap: 0.35rem; }
+        .filter-pill { background: rgba(255,255,255,0.2); border: none; padding: 0.3rem 0.8rem; border-radius: 2rem; color: white; font-size: 0.7rem; font-weight: 600; transition: all 0.2s; cursor: pointer; }
+        .filter-pill:hover { background: rgba(255,255,255,0.35); }
+        .filter-pill.active { background: white; color: #1e293b; }
 
-        .card-value {
-          font-family: 'Sora', sans-serif;
-          font-size: 2.5rem;
-          font-weight: 800;
-          margin-top: 0.5rem;
-          z-index: 1;
-        }
+        .chart-card { background: white; border-radius: 1.25rem; padding: 1.5rem 1.25rem; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.08); border: 1px solid rgba(226,232,240,0.6); transition: all 0.28s cubic-bezier(0.4,0,0.2,1); opacity: 0; transform: translateY(15px) scale(0.98); animation: chartFadeIn 0.9s cubic-bezier(0.22,1,0.36,1) forwards; }
+        .chart-card:hover { transform: translateY(-6px); box-shadow: 0 20px 35px -10px rgba(0,0,0,0.12); }
 
-        .card-filters {
-          display: flex;
-          flex-direction: column;
-          gap: 0.35rem;
-        }
+        @keyframes chartFadeIn { to { opacity: 1; transform: translateY(0) scale(1); } }
 
-        .filter-pill {
-          background: rgba(255, 255, 255, 0.2);
-          border: none;
-          padding: 0.3rem 0.8rem;
-          border-radius: 2rem;
-          color: white;
-          font-size: 0.7rem;
-          font-weight: 600;
-          transition: all 0.2s;
-          white-space: nowrap;
-          cursor: pointer;
-        }
+        .analytics-title { font-family: 'Outfit', sans-serif; font-size: 1.35rem; font-weight: 800; color: #0f172a; margin: 0 0 1.5rem 0; }
 
-        .filter-pill:hover {
-          background: rgba(255, 255, 255, 0.35);
-        }
-
-        .filter-pill.active {
-          background: white;
-          color: #1e293b;
-        }
-
-        /* ─── Chart Containers ──────────────────────────────────────── */
-        .analytics-container {
-          background: transparent; /* Removed background */
-          border-radius: 0;
-          padding: 1rem 0; /* Adjusted padding for minimal look */
-          border: none;
-          box-shadow: none; /* Removed box shadow */
-          height: auto;
-          transition: all 0.3s ease;
-          overflow: visible;
-        }
-
-        .analytics-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 2rem;
-        }
-
-        .analytics-title {
-          font-family: 'Outfit', sans-serif;
-          font-size: 1.25rem;
-          font-weight: 700;
-          color: #1e293b;
-          margin: 0;
-          display: flex;
-          align-items: center;
-          gap: 0.65rem;
-        }
-
-        .view-details {
-          color: #2563eb;
-          background: #eff6ff;
-          padding: 0.5rem 1rem;
-          border-radius: 0.75rem;
-          font-size: 0.75rem;
-          font-weight: 700;
-          text-decoration: none;
-          transition: all 0.2s;
-        }
-
-        .view-details:hover {
-          background: #dbeafe;
-          transform: translateY(-1px);
-        }
-
-        .dept-select {
-          padding: 0.6rem 1.25rem;
-          font-size: 0.85rem;
-          font-weight: 600;
-          border-radius: 0.75rem;
-          border: 1px solid #e2e8f0;
-          background: #ffffff;
-          color: #475569;
-          outline: none;
-          transition: all 0.2s;
-          cursor: pointer;
-        }
-
-        .dept-select:focus {
-          border-color: #2563eb;
-          box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.05);
-        }
-
-        .legend-list {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 1rem;
-          list-style: none;
-          padding: 0;
-          margin-top: 1.5rem;
-        }
-
-        .category-tabs {
-          display: flex;
-          gap: 1.5rem;
-          margin-bottom: 2rem;
-          overflow-x: auto;
-          padding: 0.5rem 0 1rem 0;
-          scrollbar-width: none;
-          max-width: 100%;
-          -ms-overflow-style: none; /* Hide scrollbar for IE/Edge */
-        }
+        .category-tabs { display: flex; gap: 1.5rem; margin-bottom: 2.5rem; overflow-x: auto; padding: 0.5rem 0 1rem 0; scrollbar-width: none; }
         .category-tabs::-webkit-scrollbar { display: none; }
 
-        .category-tab {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 0.75rem;
-          cursor: pointer;
-          min-width: 80px;
-          transition: all 0.3s ease;
-        }
-
-        .tab-icon-box {
-          width: 50px;
-          height: 50px;
-          border-radius: 12px;
-          background: white;
-          border: 1px solid #e2e8f0;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 1.25rem;
-          color: #64748b;
-          transition: all 0.3s ease;
-        }
-
-        .category-tab:hover .tab-icon-box {
-          border-color: #3b82f6;
-          color: #3b82f6;
-          transform: translateY(-2px);
-          box-shadow: none; /* Removed glow effect */
-        }
-
-        .category-tab.active .tab-icon-box {
-          background: #3b82f6;
-          border-color: #3b82f6;
-          color: white;
-          box-shadow: none; /* Removed glow effect */
-        }
-
-        .tab-label {
-          font-size: 0.75rem;
-          font-weight: 700;
-          color: #64748b;
-          text-align: center;
-          width: 100%;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
+        .category-tab { display: flex; flex-direction: column; align-items: center; gap: 0.75rem; cursor: pointer; min-width: 80px; transition: all 0.3s ease; }
+        .tab-icon-box { width: 54px; height: 54px; border-radius: 14px; background: white; border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; color: #64748b; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+        .category-tab:hover .tab-icon-box { border-color: #3b82f6; color: #3b82f6; transform: translateY(-3px); }
+        .category-tab.active .tab-icon-box { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); border-color: transparent; color: white; box-shadow: 0 6px 16px rgba(59,130,246,0.35); }
+        .tab-label { font-size: 0.78rem; font-weight: 700; color: #64748b; text-align: center; }
         .category-tab.active .tab-label { color: #1e293b; }
 
-        /* Fix potential chart overflow */
-        .recharts-responsive-container {
-          overflow: hidden !important;
-          max-width: 100%;
-        }
-
-        .row {
-          margin-right: 0;
-          margin-left: 0;
-        }
-
-        .col-lg-8, .col-lg-4 {
-          padding-left: 0;
-          padding-right: 0;
-        }
-
-        @media (min-width: 992px) {
-          .col-lg-8 { padding-right: 1.5rem; }
-        }
-
-        .metric-row {
-          display: flex;
-          justify-content: space-between;
-          padding: 0.6rem 0;
-          border-bottom: 1px solid #f1f5f9;
-        }
-        .metric-label { font-size: 0.8rem; font-weight: 600; color: #64748b; }
-        .metric-value { font-size: 0.8rem; font-weight: 700; color: #1e293b; }
+        .recharts-responsive-container { overflow: hidden !important; max-width: 100%; }
+        .row { margin-right: 0; margin-left: 0; }
+        .col-lg-8, .col-lg-4, .col-lg-6, .col-12 { padding-left: 0; padding-right: 0; }
+        @media (min-width: 992px) { .col-lg-8 { padding-right: 1.5rem; } }
       `}</style>
 
       <div className="page-wrapper">
@@ -448,8 +418,8 @@ export default function Dashboard() {
           </a>
         </div>
 
+        {/* Stat Cards (unchanged) */}
         <div className="stat-grid">
-          {/* Total Students */}
           <div className="modern-card card-blue">
             <div className="card-top">
               <div className="card-title">Total Students</div>
@@ -462,7 +432,6 @@ export default function Dashboard() {
             <div className="card-value">{data.totalStudents.toLocaleString()}</div>
           </div>
 
-          {/* Total Companies */}
           <div className="modern-card card-gold">
             <div className="card-top">
               <div className="card-title">Total Companies</div>
@@ -475,7 +444,6 @@ export default function Dashboard() {
             <div className="card-value">{data.totalCompanies.toLocaleString()}</div>
           </div>
 
-          {/* Total Jobs */}
           <div className="modern-card card-cyan">
             <div className="card-top">
               <div className="card-title">Total Jobs Posted</div>
@@ -488,7 +456,6 @@ export default function Dashboard() {
             <div className="card-value">{data.totalJobs.toLocaleString()}</div>
           </div>
 
-          {/* Placed Students */}
           <div className="modern-card card-green">
             <div className="card-top">
               <div className="card-title">Placed Students</div>
@@ -501,7 +468,6 @@ export default function Dashboard() {
             <div className="card-value">{data.totalSelected.toLocaleString()}</div>
           </div>
 
-          {/* Approved Jobs */}
           <div className="modern-card card-indigo">
             <div className="card-top">
               <div className="card-title">Approved Jobs</div>
@@ -514,7 +480,6 @@ export default function Dashboard() {
             <div className="card-value">{data.approvedJobs.toLocaleString()}</div>
           </div>
 
-          {/* Pending Jobs */}
           <div className="modern-card card-rose">
             <div className="card-top">
               <div className="card-title">Pending Jobs</div>
@@ -528,189 +493,576 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div className="row g-4">
-          <div className="col-lg-8">
-            <div className="analytics-container">
-              <div className="category-tabs">
-            <div className="category-tab active">
-              <div className="tab-icon-box"><i className="fas fa-chart-line"></i></div>
-              <span className="tab-label">General</span>
+        {/* Tabs */}
+        <div className="category-tabs">
+          {["General", "Students", "Companies", "Jobs", "Reports"].map((tab) => (
+            <div
+              key={tab}
+              className={`category-tab ${activeTab === tab ? "active" : ""}`}
+              onClick={() => setActiveTab(tab)}
+            >
+              <div className="tab-icon-box">
+                <i
+                  className={
+                    tab === "General" ? "fas fa-chart-line" :
+                    tab === "Students" ? "fas fa-user-graduate" :
+                    tab === "Companies" ? "fas fa-building" :
+                    tab === "Jobs" ? "fas fa-briefcase" :
+                    "fas fa-file-invoice"
+                  }
+                />
+              </div>
+              <span className="tab-label">{tab}</span>
             </div>
-            <div className="category-tab">
-              <div className="tab-icon-box"><i className="fas fa-user-graduate"></i></div>
-              <span className="tab-label">Students</span>
-            </div>
-            <div className="category-tab">
-              <div className="tab-icon-box"><i className="fas fa-building"></i></div>
-              <span className="tab-label">Companies</span>
-            </div>
-            <div className="category-tab">
-              <div className="tab-icon-box"><i className="fas fa-briefcase"></i></div>
-              <span className="tab-label">Jobs</span>
-            </div>
-            <div className="category-tab">
-              <div className="tab-icon-box"><i className="fas fa-file-invoice"></i></div>
-              <span className="tab-label">Reports</span>
-            </div>
-          </div>
-
-          <div style={{ marginBottom: '1.5rem' }}>
-            <span style={{ fontSize: '0.8rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05rem' }}>
-              Job Posting Activity
-            </span>
-          </div>
-
-          <ResponsiveContainer width="100%" height={320}>
-            <BarChart data={activeJobChartData} margin={{ top: 10, right: 10, left: -20, bottom: 40 }}>
-              <defs>
-                <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#3b82f6" stopOpacity={1} />
-                  <stop offset="100%" stopColor="#1e40af" stopOpacity={1} />
-                </linearGradient>
-                <linearGradient id="barGradientGreen" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#10b981" stopOpacity={1} />
-                  <stop offset="100%" stopColor="#065f46" stopOpacity={1} />
-                </linearGradient>
-                <linearGradient id="barGradientOrange" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#f59e0b" stopOpacity={1} />
-                  <stop offset="100%" stopColor="#92400e" stopOpacity={1} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-              <XAxis
-                dataKey="name"
-                axisLine={false}
-                tickLine={false}
-                tick={{ fill: '#64748b', fontSize: 12, fontWeight: 700 }}
-                dy={10}
-              />
-              <YAxis
-                axisLine={false}
-                tickLine={false}
-                tick={{ fill: '#64748b', fontSize: 12 }}
-              />
-              <Tooltip
-                cursor={{ fill: '#f1f5f9', radius: 10 }}
-                contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' }}
-              />
-              <Bar dataKey="value" radius={[10, 10, 0, 0]} barSize={50}>
-                {activeJobChartData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={index === 0 ? 'url(#barGradient)' : index === 1 ? 'url(#barGradientGreen)' : 'url(#barGradientOrange)'} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-            </div>
-          </div>
-
-          <div className="col-lg-4">
-        <div className="analytics-container">
-          <div className="analytics-header">
-            <h3 className="analytics-title">Placement Analysis</h3>
-            <a href="#" className="view-details" onClick={(e) => e.preventDefault()}>Refresh</a>
-          </div>
-
-          <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
-            <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#1e293b' }}>
-              Current Academic Year Ratio
-            </span>
-          </div>
-
-          <ResponsiveContainer width="100%" height={260}>
-            <PieChart>
-              <Pie
-                data={activePlacementChartData}
-                cx="50%"
-                cy="50%"
-                innerRadius={70}
-                outerRadius={100}
-                dataKey="value"
-                paddingAngle={10}
-                stroke="none"
-              >
-                <Cell fill="#4f46e5" strokeWidth={0} />
-                <Cell fill="#e2e8f0" strokeWidth={0} />
-              </Pie>
-              <Tooltip
-                contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' }}
-              />
-            </PieChart>
-          </ResponsiveContainer>
-
-          <div className="chart-card-footer">
-            <div className="legend-item">
-              <div className="legend-dot" style={{ background: '#4f46e5' }}></div>
-              Placed
-            </div>
-            <div className="legend-item">
-              <div className="legend-dot" style={{ background: '#e2e8f0' }}></div>
-              Pending
-            </div>
-          </div>
-        </div>
-      </div>
-    </div >
-
-      <div className="analytics-container" style={{ marginTop: "2rem" }}>
-        <div className="analytics-header">
-          <h3 className="analytics-title">Year-wise Placement Trend</h3>
-          <select
-            value={selectedDepartment}
-            onChange={(e) => setSelectedDepartment(e.target.value)}
-            className="dept-select"
-            disabled={departments.length === 0}
-          >
-            {departments.length === 0 ? (
-              <option>No departments</option>
-            ) : (
-              departments.map((dept) => (
-                <option key={dept} value={dept}>{dept}</option>
-              ))
-            )}
-          </select>
+          ))}
         </div>
 
-        <ResponsiveContainer width="100%" height={380}>
-          {activeYearData.length === 0 ? (
-            <div className="no-data">
-              {selectedDepartment ? `No data for ${selectedDepartment}` : "Select a department"}
+        {/* Tab Content */}
+        <div className="mt-4">
+          {activeTab === "General" && (
+            <div className="row g-4">
+              {/* Your existing General tab – unchanged */}
+              <div className="col-lg-8">
+                <div className="chart-card">
+                  <div style={{ marginBottom: '1.25rem' }}>
+                    <span style={{ fontSize: '0.9rem', fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.8px' }}>
+                      Job Posting Activity
+                    </span>
+                  </div>
+                  <ResponsiveContainer width="100%" height={340}>
+                    <BarChart data={activeJobChartData} margin={{ top: 12, right: 12, left: -24, bottom: 40 }}>
+                      <defs>
+                        <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#3b82f6" stopOpacity={1} />
+                          <stop offset="100%" stopColor="#1e40af" stopOpacity={1} />
+                        </linearGradient>
+                        <linearGradient id="barGradientGreen" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#10b981" stopOpacity={1} />
+                          <stop offset="100%" stopColor="#065f46" stopOpacity={1} />
+                        </linearGradient>
+                        <linearGradient id="barGradientOrange" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#f59e0b" stopOpacity={1} />
+                          <stop offset="100%" stopColor="#92400e" stopOpacity={1} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="4 6" vertical={false} stroke="#e2e8f0" opacity={0.7} />
+                      <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 13, fontWeight: 600 }} dy={12} />
+                      <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} />
+                      <Tooltip cursor={{ fill: 'rgba(59,130,246,0.08)', radius: 10 }} contentStyle={{ background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)', border: 'none', borderRadius: '14px', boxShadow: '0 18px 32px -10px rgba(0,0,0,0.15)', padding: '12px 16px' }} />
+                      <Bar dataKey="value" radius={[12, 12, 0, 0]} barSize={54} animationDuration={1400}>
+                        {activeJobChartData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={index === 0 ? 'url(#barGradient)' : index === 1 ? 'url(#barGradientGreen)' : 'url(#barGradientOrange)'} />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+              <div className="col-lg-4">
+                <div className="chart-card">
+                  <h3 className="analytics-title">Placement Ratio</h3>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <PieChart>
+                      <Pie data={activePlacementChartData} cx="50%" cy="50%" innerRadius={75} outerRadius={110} dataKey="value" paddingAngle={8} stroke="none">
+                        <Cell fill="#4f46e5" />
+                        <Cell fill="#e2e8f0" />
+                      </Pie>
+                      <Tooltip contentStyle={{ background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)', border: 'none', borderRadius: '14px', boxShadow: '0 18px 32px -10px rgba(0,0,0,0.15)', padding: '12px 16px' }} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+              <div className="col-12">
+                <div className="chart-card">
+                  <div className="d-flex justify-content-between align-items-center mb-4">
+                    <h3 className="analytics-title">Year-wise Placement Trend</h3>
+                    <select value={selectedDepartment} onChange={(e) => setSelectedDepartment(e.target.value)} className="dept-select" disabled={departments.length === 0}>
+                      {departments.length === 0 ? <option>No departments</option> : departments.map((dept) => <option key={dept} value={dept}>{dept}</option>)}
+                    </select>
+                  </div>
+                  <ResponsiveContainer width="100%" height={400}>
+                    {activeYearData.length === 0 ? (
+                      <div className="text-center py-5 text-muted fs-5">
+                        {selectedDepartment ? `No data for ${selectedDepartment}` : "Select a department"}
+                      </div>
+                    ) : (
+                      <AreaChart data={activeYearData} margin={{ top: 25, right: 35, left: -20, bottom: 45 }}>
+                        <defs>
+                          <linearGradient id="colorPlaced" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="4%" stopColor="#3b82f6" stopOpacity={0.38} />
+                            <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.03} />
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="4 6" vertical={false} stroke="#e2e8f0" opacity={0.7} />
+                        <XAxis dataKey="year" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 13, fontWeight: 600 }} dy={15} />
+                        <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} />
+                        <Tooltip cursor={{ stroke: '#3b82f6', strokeWidth: 2, strokeDasharray: '5 5' }} contentStyle={{ background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)', border: 'none', borderRadius: '14px', boxShadow: '0 18px 32px -10px rgba(0,0,0,0.15)', padding: '12px 16px' }} />
+                        <Area type="monotone" dataKey="placed_students" stroke="#3b82f6" strokeWidth={3.5} fillOpacity={0.35} fill="url(#colorPlaced)" dot={{ r: 6, fill: "#fff", stroke: "#3b82f6", strokeWidth: 3 }} activeDot={{ r: 9, stroke: "#fff", strokeWidth: 4, fill: "#3b82f6" }} animationDuration={1600} />
+                      </AreaChart>
+                    )}
+                  </ResponsiveContainer>
+                </div>
+              </div>
             </div>
-          ) : (
-            <AreaChart data={activeYearData} margin={{ top: 20, right: 30, left: -20, bottom: 40 }}>
-              <defs>
-                <linearGradient id="colorPlaced" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.4} />
-                  <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-              <XAxis
-                dataKey="year"
-                axisLine={false}
-                tickLine={false}
-                tick={{ fill: '#64748b', fontSize: 13, fontWeight: 700 }}
-                dy={15}
-              />
-              <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} />
-              <Tooltip
-                contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' }}
-                cursor={{ stroke: '#3b82f6', strokeWidth: 2 }}
-              />
-              <Area
-                type="monotone"
-                dataKey="placed_students"
-                stroke="#3b82f6"
-                strokeWidth={4}
-                fillOpacity={1}
-                fill="url(#colorPlaced)"
-                dot={{ r: 6, fill: '#3b82f6', strokeWidth: 3, stroke: '#fff' }}
-                activeDot={{ r: 8, strokeWidth: 0, fill: '#1e40af' }}
-              />
-            </AreaChart>
           )}
-        </ResponsiveContainer>
+
+          {activeTab === "Students" && (
+            <div className="row g-4">
+              {studentsLoading ? (
+                <div className="col-12 text-center py-5">
+                  <div className="spinner-border text-primary" role="status">
+                    <span className="visually-hidden">Loading students data...</span>
+                  </div>
+                </div>
+              ) : studentsError ? (
+                <div className="col-12 text-center py-5 text-danger">{studentsError}</div>
+              ) : (
+                <>
+                  <div className="col-lg-6">
+                    <div className="chart-card">
+                      <h3 className="analytics-title mb-4">Students per Department</h3>
+                      {studentsPerDept.length === 0 ? (
+                        <p className="text-muted text-center py-4">No data available</p>
+                      ) : (
+                        <ResponsiveContainer width="100%" height={360}>
+                          <BarChart data={studentsPerDept} margin={{ top: 20, right: 30, left: -10, bottom: 60 }}>
+                            <CartesianGrid strokeDasharray="4 6" vertical={false} stroke="#e2e8f0" opacity={0.6} />
+                            <XAxis dataKey="department" angle={-35} textAnchor="end" height={70} tick={{ fontSize: 12, fill: "#475569" }} />
+                            <YAxis tick={{ fontSize: 12, fill: "#475569" }} />
+                            <Tooltip cursor={{ fill: "rgba(79,70,229,0.08)" }} contentStyle={{ background: "rgba(255,255,255,0.96)", border: "none", borderRadius: "12px", boxShadow: "0 12px 24px rgba(0,0,0,0.12)", padding: "12px 16px" }} />
+                            <Bar dataKey="count" radius={[8, 8, 0, 0]} barSize={42} fill="#4f46e5" animationDuration={1400} />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="col-lg-6">
+                    <div className="chart-card">
+                      <h3 className="analytics-title mb-4">UG vs PG Distribution</h3>
+                      {ugPgDistribution.length === 0 ? (
+                        <p className="text-muted text-center py-4">No data available</p>
+                      ) : (
+                        <ResponsiveContainer width="100%" height={360}>
+                          <PieChart>
+                            <Pie
+                              data={ugPgDistribution}
+                              cx="50%"
+                              cy="50%"
+                              innerRadius={75}
+                              outerRadius={115}
+                              paddingAngle={5}
+                              dataKey="count"
+                              nameKey="ug_pg"
+                              label={({ name, percent }) => `${name || "Unknown"} • ${(percent * 100).toFixed(0)}%`}
+                              labelStyle={{ fontSize: "13px", fill: "#1e293b", fontWeight: 600 }}
+                            >
+                              <Cell fill="#4f46e5" />
+                              <Cell fill="#10b981" />
+                            </Pie>
+                            <Tooltip formatter={(value) => [`${value} students`, null]} contentStyle={{ background: "rgba(255,255,255,0.96)", border: "none", borderRadius: "12px", boxShadow: "0 12px 24px rgba(0,0,0,0.12)", padding: "12px 16px" }} />
+                            <Legend verticalAlign="bottom" height={40} iconType="circle" iconSize={12} wrapperStyle={{ fontSize: "13px", color: "#475569" }} />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="col-12">
+                    <div className="chart-card">
+                      <h3 className="analytics-title mb-4">Students Enrollment by Batch / Year</h3>
+                      {studentsPerBatch.length === 0 ? (
+                        <p className="text-muted text-center py-4">No data available</p>
+                      ) : (
+                        <ResponsiveContainer width="100%" height={380}>
+                          <LineChart data={studentsPerBatch} margin={{ top: 20, right: 40, left: -10, bottom: 40 }}>
+                            <CartesianGrid strokeDasharray="4 6" stroke="#e2e8f0" opacity={0.7} />
+                            <XAxis dataKey="passed_out_year" axisLine={false} tickLine={false} tick={{ fill: "#475569", fontSize: 13 }} dy={10} />
+                            <YAxis axisLine={false} tickLine={false} tick={{ fill: "#475569", fontSize: 12 }} />
+                            <Tooltip contentStyle={{ background: "rgba(255,255,255,0.96)", border: "none", borderRadius: "12px", boxShadow: "0 12px 24px rgba(0,0,0,0.12)", padding: "12px 16px" }} />
+                            <Line type="monotone" dataKey="count" stroke="#3b82f6" strokeWidth={3.5} dot={{ r: 5, strokeWidth: 2, fill: "#fff", stroke: "#3b82f6" }} activeDot={{ r: 8, stroke: "#fff", strokeWidth: 3, fill: "#3b82f6" }} animationDuration={1800} />
+                          </LineChart>
+                        </ResponsiveContainer>
+                      )}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
+          {activeTab === "Companies" && (
+            <div className="row g-4">
+              {companiesLoading ? (
+                <div className="col-12 text-center py-5">
+                  <div className="spinner-border text-primary" role="status">
+                    <span className="visually-hidden">Loading companies data...</span>
+                  </div>
+                </div>
+              ) : companiesError ? (
+                <div className="col-12 text-center py-5 text-danger">{companiesError}</div>
+              ) : (
+                <>
+                  <div className="col-lg-6">
+                    <div className="chart-card">
+                      <h3 className="analytics-title mb-4">Jobs Posted per Company</h3>
+                      {jobsPerCompany.length === 0 ? (
+                        <p className="text-muted text-center py-4">No data available</p>
+                      ) : (
+                        <ResponsiveContainer width="100%" height={360}>
+                          <BarChart data={jobsPerCompany} margin={{ top: 20, right: 30, left: -10, bottom: 60 }}>
+                            <CartesianGrid strokeDasharray="4 6" vertical={false} stroke="#e2e8f0" opacity={0.6} />
+                            <XAxis dataKey="company" angle={-35} textAnchor="end" height={70} tick={{ fontSize: 12, fill: "#475569" }} />
+                            <YAxis tick={{ fontSize: 12, fill: "#475569" }} />
+                            <Tooltip cursor={{ fill: "rgba(245,158,11,0.08)" }} contentStyle={{ background: "rgba(255,255,255,0.96)", border: "none", borderRadius: "12px", boxShadow: "0 12px 24px rgba(0,0,0,0.12)", padding: "12px 16px" }} />
+                            <Bar dataKey="count" radius={[8, 8, 0, 0]} barSize={42} fill="#f59e0b" animationDuration={1400} />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="col-lg-6">
+                    <div className="chart-card">
+                      <h3 className="analytics-title mb-4">Job Types Distribution</h3>
+                      {jobTypesDistribution.length === 0 ? (
+                        <p className="text-muted text-center py-4">No data available</p>
+                      ) : (
+                        <ResponsiveContainer width="100%" height={360}>
+                          <PieChart>
+                            <Pie
+                              data={jobTypesDistribution}
+                              cx="50%"
+                              cy="50%"
+                              innerRadius={75}
+                              outerRadius={115}
+                              paddingAngle={5}
+                              dataKey="count"
+                              nameKey="job_type"
+                              label={({ name, percent }) => `${name || "Unknown"} • ${(percent * 100).toFixed(0)}%`}
+                              labelStyle={{ fontSize: "13px", fill: "#1e293b", fontWeight: 600 }}
+                            >
+                              <Cell fill="#f59e0b" />
+                              <Cell fill="#10b981" />
+                              <Cell fill="#3b82f6" />
+                            </Pie>
+                            <Tooltip formatter={(value) => [`${value} jobs`, null]} contentStyle={{ background: "rgba(255,255,255,0.96)", border: "none", borderRadius: "12px", boxShadow: "0 12px 24px rgba(0,0,0,0.12)", padding: "12px 16px" }} />
+                            <Legend verticalAlign="bottom" height={40} iconType="circle" iconSize={12} wrapperStyle={{ fontSize: "13px", color: "#475569" }} />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="col-12">
+                    <div className="chart-card">
+                      <h3 className="analytics-title mb-4">Jobs Posted Trend (Monthly)</h3>
+                      {monthlyJobsTrend.length === 0 ? (
+                        <p className="text-muted text-center py-4">No data available</p>
+                      ) : (
+                        <ResponsiveContainer width="100%" height={380}>
+                          <LineChart data={monthlyJobsTrend} margin={{ top: 20, right: 40, left: -10, bottom: 40 }}>
+                            <CartesianGrid strokeDasharray="4 6" stroke="#e2e8f0" opacity={0.7} />
+                            <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: "#475569", fontSize: 13 }} dy={10} />
+                            <YAxis axisLine={false} tickLine={false} tick={{ fill: "#475569", fontSize: 12 }} />
+                            <Tooltip contentStyle={{ background: "rgba(255,255,255,0.96)", border: "none", borderRadius: "12px", boxShadow: "0 12px 24px rgba(0,0,0,0.12)", padding: "12px 16px" }} />
+                            <Line type="monotone" dataKey="count" stroke="#f59e0b" strokeWidth={3.5} dot={{ r: 5, strokeWidth: 2, fill: "#fff", stroke: "#f59e0b" }} activeDot={{ r: 8, stroke: "#fff", strokeWidth: 3, fill: "#f59e0b" }} animationDuration={1800} />
+                          </LineChart>
+                        </ResponsiveContainer>
+                      )}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
+          {activeTab === "Jobs" && (
+            <div className="row g-4">
+              {jobsLoading ? (
+                <div className="col-12 text-center py-5">
+                  <div className="spinner-border text-primary" role="status">
+                    <span className="visually-hidden">Loading jobs data...</span>
+                  </div>
+                </div>
+              ) : jobsError ? (
+                <div className="col-12 text-center py-5 text-danger">{jobsError}</div>
+              ) : (
+                <>
+                  {/* Jobs by Type - Bar Chart */}
+                  <div className="col-lg-6">
+                    <div className="chart-card">
+                      <h3 className="analytics-title mb-4">Jobs by Type</h3>
+                      {jobsByType.length === 0 ? (
+                        <p className="text-muted text-center py-4">No job type data available</p>
+                      ) : (
+                        <ResponsiveContainer width="100%" height={360}>
+                          <BarChart data={jobsByType} margin={{ top: 20, right: 30, left: -10, bottom: 60 }}>
+                            <CartesianGrid strokeDasharray="4 6" vertical={false} stroke="#e2e8f0" opacity={0.6} />
+                            <XAxis dataKey="job_type" angle={-35} textAnchor="end" height={70} tick={{ fontSize: 12, fill: "#475569" }} />
+                            <YAxis tick={{ fontSize: 12, fill: "#475569" }} />
+                            <Tooltip cursor={{ fill: "rgba(16,185,129,0.08)" }} contentStyle={{ background: "rgba(255,255,255,0.96)", border: "none", borderRadius: "12px", boxShadow: "0 12px 24px rgba(0,0,0,0.12)", padding: "12px 16px" }} />
+                            <Bar dataKey="count" radius={[8, 8, 0, 0]} barSize={42} fill="#10b981" animationDuration={1400} />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Jobs by Location - Pie Chart */}
+                  <div className="col-lg-6">
+                    <div className="chart-card">
+                      <h3 className="analytics-title mb-4">Jobs by Location (Top)</h3>
+                      {jobsByLocation.length === 0 ? (
+                        <p className="text-muted text-center py-4">No location data available</p>
+                      ) : (
+                        <ResponsiveContainer width="100%" height={360}>
+                          <PieChart>
+                            <Pie
+                              data={jobsByLocation}
+                              cx="50%"
+                              cy="50%"
+                              innerRadius={75}
+                              outerRadius={115}
+                              paddingAngle={5}
+                              dataKey="count"
+                              nameKey="location"
+                              label={({ name, percent }) => `${name || "Unknown"} • ${(percent * 100).toFixed(0)}%`}
+                              labelStyle={{ fontSize: "13px", fill: "#1e293b", fontWeight: 600 }}
+                            >
+                              <Cell fill="#3b82f6" />
+                              <Cell fill="#6366f1" />
+                              <Cell fill="#8b5cf6" />
+                              {/* Add more colors if needed */}
+                            </Pie>
+                            <Tooltip formatter={(value) => [`${value} jobs`, null]} contentStyle={{ background: "rgba(255,255,255,0.96)", border: "none", borderRadius: "12px", boxShadow: "0 12px 24px rgba(0,0,0,0.12)", padding: "12px 16px" }} />
+                            <Legend verticalAlign="bottom" height={40} iconType="circle" iconSize={12} wrapperStyle={{ fontSize: "13px", color: "#475569" }} />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Monthly Jobs Posted Trend - Line Chart */}
+                  <div className="col-12">
+                    <div className="chart-card">
+                      <h3 className="analytics-title mb-4">Job Posting Trend (Monthly)</h3>
+                      {monthlyJobsPostedTrend.length === 0 ? (
+                        <p className="text-muted text-center py-4">No trend data available</p>
+                      ) : (
+                        <ResponsiveContainer width="100%" height={380}>
+                          <LineChart data={monthlyJobsPostedTrend} margin={{ top: 20, right: 40, left: -10, bottom: 40 }}>
+                            <CartesianGrid strokeDasharray="4 6" stroke="#e2e8f0" opacity={0.7} />
+                            <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: "#475569", fontSize: 13 }} dy={10} />
+                            <YAxis axisLine={false} tickLine={false} tick={{ fill: "#475569", fontSize: 12 }} />
+                            <Tooltip contentStyle={{ background: "rgba(255,255,255,0.96)", border: "none", borderRadius: "12px", boxShadow: "0 12px 24px rgba(0,0,0,0.12)", padding: "12px 16px" }} />
+                            <Line type="monotone" dataKey="count" stroke="#6366f1" strokeWidth={3.5} dot={{ r: 5, strokeWidth: 2, fill: "#fff", stroke: "#6366f1" }} activeDot={{ r: 8, stroke: "#fff", strokeWidth: 3, fill: "#6366f1" }} animationDuration={1800} />
+                          </LineChart>
+                        </ResponsiveContainer>
+                      )}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+          {activeTab === "Reports" && (
+            <div className="row g-4">
+              {reportsLoading ? (
+                <div className="col-12 text-center py-5">
+                  <div className="spinner-border text-primary" role="status">
+                    <span className="visually-hidden">Loading reports...</span>
+                  </div>
+                </div>
+              ) : reportsError ? (
+                <div className="col-12 text-center py-5 text-danger">{reportsError}</div>
+              ) : (
+                <>
+                  <div className="col-12">
+                    <div className="row g-3">
+                      <div className="col-md-3">
+                        <div className="chart-card text-center p-4">
+                          <h5 className="mb-2 text-muted">Total Students</h5>
+                          <p className="fs-3 fw-bold">{placementSummary.total_students.toLocaleString()}</p>
+                        </div>
+                      </div>
+                      <div className="col-md-3">
+                        <div className="chart-card text-center p-4">
+                          <h5 className="mb-2 text-muted">Placed Students</h5>
+                          <p className="fs-3 fw-bold text-success">{placementSummary.total_placed.toLocaleString()}</p>
+                        </div>
+                      </div>
+                      <div className="col-md-3">
+                        <div className="chart-card text-center p-4">
+                          <h5 className="mb-2 text-muted">Placement %</h5>
+                          <p className="fs-3 fw-bold text-primary">{placementSummary.placement_percentage}%</p>
+                        </div>
+                      </div>
+                      <div className="col-md-3">
+                        <div className="chart-card text-center p-4">
+                          <h5 className="mb-2 text-muted">Top Dept</h5>
+                          <p className="fs-4 fw-bold">{placementSummary.top_department}</p>
+                          <small>({placementSummary.top_dept_count} placed)</small>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="col-lg-8">
+                    <div className="chart-card">
+                      <h3 className="analytics-title mb-4">Placements by Department</h3>
+                      {deptBarData.length === 0 ? (
+                        <p className="text-center text-muted py-5">No placement data yet</p>
+                      ) : (
+                        <ResponsiveContainer width="100%" height={420}>
+                          <BarChart data={deptBarData} margin={{ top: 20, right: 30, left: -20, bottom: 80 }}>
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.6} />
+                            <XAxis dataKey="department" angle={-35} textAnchor="end" height={90} tick={{ fontSize: 13 }} />
+                            <YAxis yAxisId="left" orientation="left" tick={{ fontSize: 12 }} />
+                            <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 12 }} />
+                            <Tooltip />
+                            <Bar yAxisId="left" dataKey="placed" name="Placed Students" fill="#4f46e5" radius={[8, 8, 0, 0]} barSize={38} />
+                            <Bar yAxisId="right" dataKey="percentage" name="Placement %" fill="#10b981" radius={[8, 8, 0, 0]} barSize={38} />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="col-lg-4">
+                    <div className="chart-card">
+                      <h3 className="analytics-title mb-4">Salary Distribution</h3>
+                      {pieData.length === 0 ? (
+                        <p className="text-center text-muted py-5">No data</p>
+                      ) : (
+                        <ResponsiveContainer width="100%" height={360}>
+                          <PieChart>
+                            <Pie
+                              data={pieData}
+                              cx="50%"
+                              cy="50%"
+                              innerRadius={70}
+                              outerRadius={110}
+                              paddingAngle={4}
+                              dataKey="count"
+                              nameKey="job_type"
+                              label={({ name, percent }) => `${name} • ${(percent * 100).toFixed(0)}%`}
+                              labelStyle={{ fontSize: "13px", fill: "#1e293b", fontWeight: 600 }}
+                            >
+                              {pieData.map((entry, index) => (
+                                <Cell key={`cell-${entry.job_type}-${index}`} fill={COLORS[index % COLORS.length]} />
+                              ))}
+                            </Pie>
+                            <Tooltip />
+                            <Legend verticalAlign="bottom" height={40} iconType="circle" />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="col-lg-6">
+                    <div className="chart-card">
+                      <h3 className="analytics-title mb-4">Top Companies</h3>
+                      {topCompaniesData.length === 0 ? (
+                        <p className="text-center text-muted py-5">No company data</p>
+                      ) : (
+                        <ResponsiveContainer width="100%" height={340}>
+                          <BarChart data={topCompaniesData} margin={{ top: 20, right: 30, left: -10, bottom: 60 }}>
+                            <CartesianGrid strokeDasharray="4 6" vertical={false} stroke="#e2e8f0" opacity={0.6} />
+                            <XAxis dataKey="company" angle={-35} textAnchor="end" height={70} tick={{ fontSize: 12, fill: "#475569" }} />
+                            <YAxis tick={{ fontSize: 12, fill: "#475569" }} />
+                            <Tooltip />
+                            <Bar dataKey="count" radius={[8, 8, 0, 0]} barSize={42} fill="#f59e0b" animationDuration={1400} />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="col-lg-6">
+                    <div className="chart-card">
+                      <h3 className="analytics-title mb-4">Monthly Placement Trend</h3>
+                      {trendData.length === 0 ? (
+                        <p className="text-center text-muted py-5">No placement activity recorded</p>
+                      ) : (
+                        <ResponsiveContainer width="100%" height={340}>
+                          <AreaChart data={trendData} margin={{ top: 20, right: 30, left: -20, bottom: 40 }}>
+                            <defs>
+                              <linearGradient id="colorPlacedReports" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="#10b981" stopOpacity={0.6} />
+                                <stop offset="95%" stopColor="#10b981" stopOpacity={0.05} />
+                              </linearGradient>
+                            </defs>
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.5} />
+                            <XAxis dataKey="month" tick={{ fontSize: 12 }} />
+                            <YAxis tick={{ fontSize: 12 }} />
+                            <Tooltip />
+                            <Area type="monotone" dataKey="placed" stroke="#10b981" fillOpacity={1} fill="url(#colorPlacedReports)" strokeWidth={2.5} />
+                          </AreaChart>
+                        </ResponsiveContainer>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="col-12">
+                    <div className="chart-card">
+                      <h3 className="analytics-title mb-4">Top Students</h3>
+                      {topStudents.length === 0 ? (
+                        <p className="text-muted text-center py-4">No top students found</p>
+                      ) : (
+                        <div className="table-responsive">
+                          <table className="table table-hover">
+                            <thead>
+                              <tr>
+                                <th>Student</th>
+                                <th>Department</th>
+                                <th>Company</th>
+                                <th>CGPA</th>
+                                <th>Package</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {topStudents.map((s, idx) => (
+                                <tr key={idx}>
+                                  <td>{s.student_name || s.name || "-"}</td>
+                                  <td>{s.department || s.dept || "-"}</td>
+                                  <td>{s.company || s.company_name || "-"}</td>
+                                  <td>{s.cgpa ?? "-"}</td>
+                                  <td>{s.package || s.ctc || s.salary || "-"}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="col-12">
+                    <div className="chart-card">
+                      <h3 className="analytics-title mb-4">Generate Reports</h3>
+                      <div className="d-grid gap-3" style={{ maxWidth: 500 }}>
+                        <button className="btn btn-primary btn-lg export-btn" onClick={() => handleExport("overall")} disabled={Boolean(exportStatus.overall)}>
+                          {exportStatus.overall || "Download Overall Placement Report (PDF)"}
+                        </button>
+                        <button className="btn btn-outline-primary btn-lg export-btn" onClick={() => handleExport("department")} disabled={Boolean(exportStatus.department)}>
+                          {exportStatus.department || "Department-wise Summary (Excel)"}
+                        </button>
+                        <button className="btn btn-outline-secondary btn-lg export-btn" onClick={() => handleExport("batch")} disabled={Boolean(exportStatus.batch)}>
+                          {exportStatus.batch || "Batch-wise Statistics (CSV)"}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+        </div>
       </div>
-      </div >
     </>
   );
 }

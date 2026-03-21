@@ -152,7 +152,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 from django.http import JsonResponse
 import json
-
+import uuid
 
 from companies.models import Job
 
@@ -161,38 +161,35 @@ from companies.models import Job
 def coordinator_login(request):
     try:
         data = json.loads(request.body)
-        username = data.get("username", "").strip()
+        username = data.get("username")
         password = data.get("password")
 
-        # If the user entered an email instead of a username, look up the actual username
-        if "@" in username:
-            try:
-                user_obj = User.objects.get(email=username)
-                username = user_obj.username
-            except User.DoesNotExist:
-                return JsonResponse({"error": "Invalid credentials"}, status=401)
+        if not username or not password:
+            return JsonResponse({"error": "Username & password required"}, status=400)
 
         user = authenticate(username=username, password=password)
 
         if user is None:
             return JsonResponse({"error": "Invalid credentials"}, status=401)
 
-        login(request, user)
-
-        # Debug: confirm session is active right after login
-        print("After login - user.is_authenticated:", request.user.is_authenticated)
-        print("Session key after login:", request.session.session_key)
-
+        # Check if user is coordinator
         if not hasattr(user, 'departmentcoordinator'):
             return JsonResponse({"error": "Not a coordinator"}, status=403)
+
+        # ✅ Generate new token on every login
+        user.auth_token = uuid.uuid4()
+        user.save()
 
         return JsonResponse({
             "message": "Login successful",
             "username": user.username,
-            "department": user.departmentcoordinator.department
+            "department": user.departmentcoordinator.department,
+            "token": str(user.auth_token)   # frontend must store this
         })
+
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
+
 
 
 
@@ -749,48 +746,31 @@ def coordinator_dashboard_stats(request):
     if not department:
         return JsonResponse({"error": "Department parameter is required"}, status=400)
 
-    # Base students query for this department
-    students_qs = Student.objects.filter(department=department, is_active=True)
-    total_students = students_qs.count()
+    total_students = Student.objects.filter(
+        department=department,
+        is_active=True
+    ).count()
 
     today = date.today()
 
-    # Active Jobs: Approved, Active, Not Expired, and Matching Department
-    # Adding icontains for SQLite string-matching fallback
     active_jobs = Job.objects.filter(
         is_active=True,
         is_approved=True,
         last_date_to_apply__gte=today
     ).filter(
         Q(show_to_all_departments=True) |
-        Q(departments__contains=department) |
-        Q(departments__icontains=department)
+        Q(departments__contains=department)
     ).distinct().count()
 
-    # All Approved Jobs for this department (to show scale/pipeline)
-    all_jobs = Job.objects.filter(is_approved=True).filter(
+    all_jobs = Job.objects.filter(
         Q(show_to_all_departments=True) |
-        Q(departments__contains=department) |
-        Q(departments__icontains=department)
+        Q(departments__contains=department)
     ).distinct().count()
-
-    # Placement Stats for Pie Chart labels used in frontend
-    # 1. Placed Students (Selected)
-    placed_students = students_qs.filter(applications__status='Selected').distinct().count()
-    
-    # 2. In Process (Shortlisted or any active non-selected status)
-    in_process = students_qs.filter(applications__status='Shortlisted').distinct().count()
-    
-    # 3. Pending (Applied)
-    pending_apps = students_qs.filter(applications__status='Applied').distinct().count()
 
     return JsonResponse({
         "total_students": total_students,
         "active_jobs": active_jobs,
         "all_jobs": all_jobs,
-        "placed_students": placed_students,
-        "approved_jobs": in_process,  # Used by frontend for 'In Process' slice
-        "pending_jobs": pending_apps,   # Used by frontend for 'Pending' slice
     })
 
 from django.db.models import Count, Q
@@ -1084,6 +1064,7 @@ from companies.models import Job
 
 @require_GET
 def coordinator_jobs(request):
+
     department = request.GET.get("department")
     programme = request.GET.get("programme")
     graduation_year = request.GET.get("graduation_year")
@@ -1092,31 +1073,26 @@ def coordinator_jobs(request):
     jobs = Job.objects.filter(is_approved=True)
 
     if department:
-        # Match against JSON list of departments using multiple lookups for robustness
-        jobs = jobs.filter(
-            Q(show_to_all_departments=True) |
-            Q(departments__contains=department) |
-            Q(departments__icontains=department)
-        )
+        jobs = jobs.filter(eligible_departments__icontains=department)
 
     if programme:
-        jobs = jobs.filter(programmes__icontains=programme)
+        jobs = jobs.filter(eligible_programmes__icontains=programme)
 
     if graduation_year:
-        jobs = jobs.filter(graduation_years__icontains=graduation_year)
+        jobs = jobs.filter(eligible_years__icontains=graduation_year)
 
     if status == "active":
         jobs = jobs.filter(is_active=True)
 
     results = []
 
-    for job in jobs.distinct():
+    for job in jobs:
         results.append({
             "id": job.id,
             "title": job.title,
             "company": job.company.name if job.company else "",
             "location": job.location,
-            "salary": getattr(job, "salary_range", "N/A"),
+            "salary": job.salary,
             "deadline": job.last_date_to_apply,
             "active": job.is_active
         })
@@ -1320,4 +1296,4 @@ def recent_student_activity(request):
             "applied_at": app.applied_at.strftime("%Y-%m-%d %H:%M")
         })
 
-    return JsonResponse({"activity": activity_list})
+    return JsonResponse({"activity": activity_list})

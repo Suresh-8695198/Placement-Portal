@@ -107,33 +107,43 @@ def company_register(request):
     })
 
 
+import uuid
 @csrf_exempt
 @require_POST
 def company_login(request):
-    data = json.loads(request.body)
+    try:
+        data = json.loads(request.body)
 
-    email = data.get("email")
-    password = data.get("password")
+        email = data.get("email")
+        password = data.get("password")
 
-    if not email or not password:
-        return JsonResponse({"error": "Email & password required"}, status=400)
+        if not email or not password:
+            return JsonResponse({"error": "Email & password required"}, status=400)
 
-    company = Company.objects.filter(email=email).first()
-    if not company:
-        return JsonResponse({"error": "Company not found"}, status=404)
+        company = Company.objects.filter(email=email).first()
+        if not company:
+            return JsonResponse({"error": "Company not found"}, status=404)
 
-    if not check_password(password, company.password):
-        return JsonResponse({"error": "Invalid credentials"}, status=401)
+        if not check_password(password, company.password):
+            return JsonResponse({"error": "Invalid credentials"}, status=401)
 
-    if not company.is_approved:
-        return JsonResponse({"error": "Not approved"}, status=403)
+        if not company.is_approved:
+            return JsonResponse({"error": "Not approved"}, status=403)
 
-    return JsonResponse({
-        "message": "Login successful",
-        "company_id": company.id,
-        "name": company.name,
-        "email": company.email
-    })
+        # ✅ Generate new token every login (important)
+        company.auth_token = uuid.uuid4()
+        company.save()
+
+        return JsonResponse({
+            "message": "Login successful",
+            "company_id": company.id,
+            "name": company.name,
+            "email": company.email,
+            "token": str(company.auth_token)   # <-- frontend must store this
+        })
+
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
 @csrf_exempt
 @require_GET
 def get_company_by_email(request):
@@ -1289,25 +1299,60 @@ def get_company_website(request):
 
 
 
+
+from django.core.mail import send_mail
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
+from .models import JobApplication, Company
+
 @csrf_exempt
 @require_POST
 def update_application_status(request, application_id):
+    """
+    Update a student's application status (selected/rejected) and send email.
+    """
+    import json
     try:
         data = json.loads(request.body)
-        new_status = data.get("status")
+        status = data.get("status")  # Expected: "Selected" or "Rejected"
 
-        if new_status not in ["Selected", "Rejected", "Shortlisted"]:
+        if status not in ["Selected", "Rejected"]:
             return JsonResponse({"error": "Invalid status"}, status=400)
 
-        application = get_object_or_404(JobApplication, id=application_id)
-        application.status = new_status
+        application = JobApplication.objects.select_related("student", "job").get(id=application_id)
+        application.status = status
         application.save(update_fields=["status"])
 
-        return JsonResponse({
-            "message": f"Application marked as {new_status}"
-        }, status=200)
+        student_email = application.student.email
+        student_name = application.student.name
+        job_title = application.job.title
+        company_name = application.job.company.name
 
+        # Email subject and message
+        if status == "Selected":
+            subject = f"Congratulations! Selected for {job_title}"
+            message = f"Dear {student_name},\n\nCongratulations! You have been selected by {company_name} for the position '{job_title}'.\n\nBest wishes,\n{company_name} Team"
+        else:
+            subject = f"Application Update: {job_title}"
+            message = f"Dear {student_name},\n\nThank you for applying to {company_name} for the position '{job_title}'. We regret to inform you that you were not selected.\n\nBest regards,\n{company_name} Team"
+
+        # Send email
+        send_mail(
+            subject,
+            message,
+            "no-reply@yourdomain.com",  # Replace with your from email
+            [student_email],
+            fail_silently=False
+        )
+
+        return JsonResponse({"message": f"Status updated and email sent to {student_email}"})
+
+    except JobApplication.DoesNotExist:
+        return JsonResponse({"error": "Application not found"}, status=404)
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         return JsonResponse({"error": str(e)}, status=500)
 
 

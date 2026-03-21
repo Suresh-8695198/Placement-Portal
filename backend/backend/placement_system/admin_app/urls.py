@@ -77,6 +77,30 @@ urlpatterns = [
    path('announcements/', views.get_announcements, name='get-announcements'),
    path('announcements/<int:pk>/', views.update_announcement),
    path('announcements/<int:pk>/delete/', views.delete_announcement),
+
+
+
+   path('students-per-department/', views.students_per_department, name='students_per_department'),
+   path('students-ug-pg-distribution/', views.students_ug_pg_distribution, name='students_ug_pg_distribution'),
+   path('students-per-batch/', views.students_per_batch, name='students_per_batch'),
+
+
+
+    path('jobs-per-company/', views.jobs_per_company, name='jobs_per_company'),
+    path('job-types-distribution/', views.job_types_distribution, name='job_types_distribution'),
+    path('monthly-jobs-trend/', views.monthly_jobs_trend, name='monthly_jobs_trend'),
+    
+
+    path('jobs-by-type/', views.jobs_by_type, name='jobs_by_type'),
+    path('jobs-by-location/', views.jobs_by_location, name='jobs_by_location'),
+    path('monthly-jobs-posted-trend/', views.monthly_jobs_posted_trend, name='monthly_jobs_posted_trend'),
+
+
+
+
+
+
+
 ]
 
 

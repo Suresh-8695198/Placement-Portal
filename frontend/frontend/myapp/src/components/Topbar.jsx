@@ -1,6 +1,3 @@
-
-
-
 // src/components/Topbar.jsx
 import React, { useEffect, useState } from "react";
 import axios from "axios";
@@ -134,63 +131,23 @@ const Topbar = () => {
         }
 
         @media (max-width: 992px) {
-          .topbar-area {
-            padding-right: 3.2rem;
-          }
-
-          .welcome {
-            max-width: 48%;
-            overflow: hidden;
-            text-overflow: ellipsis;
-          }
+          .topbar-area { padding-right: 3.2rem; }
+          .welcome { max-width: 48%; overflow: hidden; text-overflow: ellipsis; }
         }
 
         @media (max-width: 768px) {
-          .topbar-area {
-            padding: 0.8rem 1.5rem;
-          }
-          .welcome {
-            font-size: 1rem;
-          }
-
-          .student-meta {
-            min-width: 210px;
-            max-width: 290px;
-          }
-
-          .student-avatar {
-            width: 34px;
-            height: 34px;
-            font-size: 0.85rem;
-          }
-
-          .student-email {
-            font-size: 0.8rem;
-          }
+          .topbar-area { padding: 0.8rem 1.5rem; }
+          .welcome { font-size: 1rem; }
+          .student-meta { min-width: 210px; max-width: 290px; }
+          .student-avatar { width: 34px; height: 34px; font-size: 0.85rem; }
+          .student-email { font-size: 0.8rem; }
         }
 
         @media (max-width: 576px) {
-          .topbar-area {
-            gap: 0.75rem;
-            padding: 0.75rem 1rem;
-          }
-
-          .student-meta {
-            min-width: 0;
-            max-width: 195px;
-            padding: 0.4rem 0.5rem;
-            gap: 0.55rem;
-          }
-
-          .student-avatar {
-            width: 30px;
-            height: 30px;
-            font-size: 0.8rem;
-          }
-
-          .student-dept {
-            font-size: 0.72rem;
-          }
+          .topbar-area { gap: 0.75rem; padding: 0.75rem 1rem; }
+          .student-meta { min-width: 0; max-width: 195px; padding: 0.4rem 0.5rem; gap: 0.55rem; }
+          .student-avatar { width: 30px; height: 30px; font-size: 0.8rem; }
+          .student-dept { font-size: 0.72rem; }
         }
       `}</style>
 
