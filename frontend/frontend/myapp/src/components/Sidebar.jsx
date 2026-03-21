@@ -1,6 +1,6 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
-import logo from '/Logo.png'; 
+import logo from '/Logo.png';
 
 const Sidebar = ({ onNavigate, onClose }) => {
   const handleLogout = () => {
@@ -116,15 +116,65 @@ const Sidebar = ({ onNavigate, onClose }) => {
           box-shadow: 0 4px 12px rgba(17, 24, 39, 0.28);
         }
 
-        /* Specific Link Colors */
-        .sidebar-wrapper .nav-item:nth-child(1) .nav-link.active { background: #2f6fd6 !important; }
-        .sidebar-wrapper .nav-item:nth-child(2) .nav-link.active { background: #0e7490 !important; }
-        .sidebar-wrapper .nav-item:nth-child(3) .nav-link.active { background: #4f46e5 !important; }
-        .sidebar-wrapper .nav-item:nth-child(4) .nav-link.active { background: #0f766e !important; }
-        .sidebar-wrapper .nav-item:nth-child(5) .nav-link.active { background: #9a3412 !important; }
-        .sidebar-wrapper .nav-item:nth-child(6) .nav-link.active { background: #047857 !important; }
-        .sidebar-wrapper .nav-item:nth-child(7) .nav-link.active { background: #7c3aed !important; }
-        .sidebar-wrapper .nav-item:nth-child(8) .nav-link.active { background: #10b981 !important; }
+        .sidebar-wrapper .nav-item:nth-child(1) .nav-link.active {
+          background: #2f6fd6 !important;
+        }
+
+        .sidebar-wrapper .nav-item:nth-child(2) .nav-link.active {
+          background: #0e7490 !important;
+        }
+
+        .sidebar-wrapper .nav-item:nth-child(3) .nav-link.active {
+          background: #4f46e5 !important;
+        }
+
+        .sidebar-wrapper .nav-item:nth-child(4) .nav-link.active {
+          background: #0f766e !important;
+        }
+
+        .sidebar-wrapper .nav-item:nth-child(5) .nav-link.active {
+          background: #9a3412 !important;
+        }
+
+        .sidebar-wrapper .nav-item:nth-child(6) .nav-link.active {
+          background: #047857 !important;
+        }
+
+        .sidebar-wrapper .nav-item:nth-child(7) .nav-link.active {
+          background: #7c3aed !important;
+        }
+
+        .sidebar-wrapper .nav-item:nth-child(1) .nav-link:hover {
+          background: rgba(47, 111, 214, 0.18) !important;
+        }
+
+        .sidebar-wrapper .nav-item:nth-child(2) .nav-link:hover {
+          background: rgba(14, 116, 144, 0.18) !important;
+        }
+
+        .sidebar-wrapper .nav-item:nth-child(3) .nav-link:hover {
+          background: rgba(79, 70, 229, 0.18) !important;
+        }
+
+        .sidebar-wrapper .nav-item:nth-child(4) .nav-link:hover {
+          background: rgba(15, 118, 110, 0.18) !important;
+        }
+
+        .sidebar-wrapper .nav-item:nth-child(5) .nav-link:hover {
+          background: rgba(154, 52, 18, 0.18) !important;
+        }
+
+        .sidebar-wrapper .nav-item:nth-child(6) .nav-link:hover {
+          background: rgba(4, 120, 87, 0.18) !important;
+        }
+
+        .sidebar-wrapper .nav-item:nth-child(7) .nav-link:hover {
+          background: rgba(124, 58, 237, 0.18) !important;
+        }
+
+        .sidebar-wrapper .nav-link.active .nav-icon {
+          color: var(--white) !important;
+        }
 
         .sidebar-wrapper .nav-icon {
           font-size: 1.15rem !important;

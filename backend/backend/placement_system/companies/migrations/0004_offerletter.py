@@ -7,7 +7,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('companies', '0003_job_programmes'),
+        ('companies', '0002_alter_company_email_and_more'),
         ('students', '0009_alter_certificate_certificate_file_and_more'),
     ]
 

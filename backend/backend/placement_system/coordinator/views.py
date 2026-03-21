@@ -167,25 +167,38 @@ def coordinator_login(request):
         if not username or not password:
             return JsonResponse({"error": "Username & password required"}, status=400)
 
-        user = authenticate(username=username, password=password)
+        # 🚀 Support email-based login
+        actual_username = username
+        if "@" in username:
+            try:
+                user_obj = User.objects.get(email=username)
+                actual_username = user_obj.username
+            except User.DoesNotExist:
+                return JsonResponse({"error": "No account found with this email"}, status=401)
+
+        user = authenticate(username=actual_username, password=password)
 
         if user is None:
-            return JsonResponse({"error": "Invalid credentials"}, status=401)
+            return JsonResponse({"error": "Invalid credentials. Please check your password."}, status=401)
 
-        # Check if user is coordinator
+        # Confirm if user is a coordinator
         if not hasattr(user, 'departmentcoordinator'):
-            return JsonResponse({"error": "Not a coordinator"}, status=403)
+            return JsonResponse({"error": "This account is not registered as a coordinator"}, status=403)
 
-        # ✅ Generate new token on every login
-        user.auth_token = uuid.uuid4()
-        user.save()
+        # Token for frontend (not stored in User table to avoid crash if field missing)
+        token = str(uuid.uuid4())
 
         return JsonResponse({
             "message": "Login successful",
             "username": user.username,
             "department": user.departmentcoordinator.department,
-            "token": str(user.auth_token)   # frontend must store this
+            "token": token
         })
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({"error": "Internal server error"}, status=500)
 
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)

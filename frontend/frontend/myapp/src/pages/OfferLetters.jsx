@@ -39,399 +39,433 @@ export default function OfferLetters() {
   };
 
   return (
-    <div className="offer-letter-modern-page">
+    <div className="offer-letter-modern-container">
+      <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet" />
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
-
-        .offer-letter-modern-page {
+        .offer-letter-modern-container {
           min-height: 100vh;
-          background: #f0f2f5;
-          font-family: 'Plus Jakarta Sans', sans-serif;
-          padding: 2rem;
-          color: #1a1a1a;
-          position: relative;
-          overflow: hidden;
+          background-color: #FFFFFF;
+          font-family: 'Inter', system-ui, sans-serif;
+          color: #111827;
+          padding-bottom: 4rem;
+          -webkit-font-smoothing: antialiased;
         }
 
-        .offer-letter-modern-page::before {
-          content: "";
-          position: absolute;
-          top: -10%;
-          right: -5%;
-          width: 500px;
-          height: 500px;
-          background: radial-gradient(circle, rgba(79, 70, 229, 0.08) 0%, rgba(255, 255, 255, 0) 70%);
-          border-radius: 50%;
-          z-index: 0;
-        }
-
-        .offer-letter-modern-page::after {
-          content: "";
-          position: absolute;
-          bottom: -10%;
-          left: -5%;
-          width: 400px;
-          height: 400px;
-          background: radial-gradient(circle, rgba(16, 185, 129, 0.08) 0%, rgba(255, 255, 255, 0) 70%);
-          border-radius: 50%;
-          z-index: 0;
-        }
-
-        .page-content {
-          position: relative;
-          z-index: 1;
-          max-width: 1200px;
-          margin: 0 auto;
-        }
-
-        .header-section {
-          text-align: center;
-          margin-bottom: 4rem;
-          animation: fadeInDown 0.8s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        .badge-success {
-          display: inline-flex;
+        .hero-banner {
+          background-color: #ECFDF5;
+          padding: 3rem 2rem;
+          border-radius: 0;
+          margin-bottom: 2.5rem;
+          display: flex;
           align-items: center;
-          gap: 0.5rem;
-          background: #ecfdf5;
-          color: #059669;
-          padding: 0.5rem 1rem;
-          border-radius: 100px;
-          font-size: 0.85rem;
-          font-weight: 700;
-          margin-bottom: 1.5rem;
-          border: 1px solid rgba(5, 150, 105, 0.1);
-          text-transform: uppercase;
-          letter-spacing: 0.05rem;
+          justify-content: space-between;
+          max-width: 1200px;
+          margin-left: auto;
+          margin-right: auto;
+          border: 1px solid #B1DFBB;
+          border-top: none;
         }
 
-        .title-main {
-          font-family: 'Outfit', sans-serif;
-          font-size: 3.5rem;
-          font-weight: 800;
-          background: linear-gradient(135deg, #0f172a 0%, #334155 100%);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          margin-bottom: 1rem;
-          letter-spacing: -0.05rem;
-        }
-
-        .subtitle-main {
-          font-size: 1.25rem;
-          color: #64748b;
+        .hero-content {
           max-width: 600px;
-          margin: 0 auto;
+        }
+
+        .hero-content h1 {
+          font-family: 'Outfit', sans-serif;
+          font-size: 28px;
+          font-weight: 700;
+          color: #065F46;
+          margin-bottom: 12px;
+          letter-spacing: -0.02em;
+        }
+
+        .hero-content p {
+          font-size: 15px;
+          color: #064E3B;
+          opacity: 0.8;
           line-height: 1.6;
         }
 
-        /* Card Grid */
-        .offer-grid {
+        .hero-illustration {
+          font-size: 80px;
+          filter: drop-shadow(0 10px 15px rgba(5, 150, 105, 0.1));
+          user-select: none;
+        }
+
+        .main-wrapper {
+          max-width: 1100px;
+          margin: 0 auto;
+          padding: 0 1.5rem;
+        }
+
+        .stats-row {
           display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
-          gap: 2.5rem;
-          perspective: 1000px;
+          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+          gap: 1.5rem;
+          margin-bottom: 3rem;
         }
 
-        @media (max-width: 480px) {
-          .offer-grid {
-            grid-template-columns: 1fr;
-          }
-        }
-
-        .offer-card-premium {
-          background: rgba(255, 255, 255, 0.85);
-          backdrop-filter: blur(12px);
-          -webkit-backdrop-filter: blur(12px);
-          border: 1px solid rgba(255, 255, 255, 0.4);
-          border-radius: 32px;
-          padding: 2.5rem;
-          box-shadow: 0 10px 15px -3px rgba(0,0,0,0.02), 0 4px 6px -4px rgba(0,0,0,0.02);
-          transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        .stat-card {
+          padding: 1.5rem;
+          border-radius: 20px;
           display: flex;
           flex-direction: column;
+          align-items: flex-start;
+          justify-content: space-between;
+          text-align: left;
+          color: #FFFFFF;
+          border: none;
           position: relative;
           overflow: hidden;
-          animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+          min-height: 140px;
         }
 
-        .offer-card-premium::before {
+        .stat-card::before {
           content: "";
           position: absolute;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 8px;
-          background: linear-gradient(90deg, #4f46e5, #06b6d4);
-          opacity: 0;
-          transition: opacity 0.3s;
+          width: 80px;
+          height: 80px;
+          border-radius: 50%;
+          bottom: -30px;
+          right: -20px;
+          z-index: 0;
         }
 
-        .offer-card-premium:hover {
-          transform: translateY(-12px) scale(1.02);
-          box-shadow: 0 30px 60px -12px rgba(0,0,0,0.12), 0 18px 36px -18px rgba(0,0,0,0.12);
-          border-color: rgba(79, 70, 229, 0.2);
-        }
+        .stat-card.bg-purple { background-color: #9333EA; }
+        .stat-card.bg-purple::before { background-color: #FACC15; opacity: 0.8; }
+        
+        .stat-card.bg-blue { background-color: #2563EB; }
+        .stat-card.bg-blue::before { background-color: #2DD4BF; opacity: 0.8; }
+        
+        .stat-card.bg-cyan { background-color: #0EA5E9; }
+        .stat-card.bg-cyan::before { background-color: #FACC15; opacity: 0.8; }
 
-        .offer-card-premium:hover::before {
-          opacity: 1;
-        }
-
-        .card-header-flex {
-          display: flex;
-          justify-content: space-between;
-          align-items: flex-start;
-          margin-bottom: 2rem;
-        }
-
-        .brand-icon {
-          width: 72px;
-          height: 72px;
-          background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%);
-          color: white;
+        .stat-icon-wrap {
+          width: auto;
+          height: auto;
           display: flex;
           align-items: center;
           justify-content: center;
-          border-radius: 20px;
-          font-size: 1.75rem;
-          font-weight: 800;
-          box-shadow: 0 10px 20px rgba(79, 70, 229, 0.2);
+          margin-bottom: 12px;
+          z-index: 1;
         }
 
-        .date-chip {
-          font-size: 0.75rem;
-          font-weight: 600;
-          color: #94a3b8;
-          background: #f1f5f9;
-          padding: 0.4rem 0.8rem;
-          border-radius: 8px;
+        .stat-icon-wrap i {
+          font-size: 24px;
         }
 
-        .company-name {
-          font-size: 1.5rem;
-          font-weight: 800;
-          color: #0f172a;
-          margin-bottom: 0.25rem;
+        .stat-info {
+          z-index: 1;
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+        }
+
+        .stat-info .label {
+          font-size: 13px;
+          font-weight: 500;
+          opacity: 0.9;
+        }
+
+        .stat-info .value {
           font-family: 'Outfit', sans-serif;
+          font-size: 32px;
+          font-weight: 700;
+          line-height: 1.2;
+          letter-spacing: -0.01em;
         }
 
-        .role-name {
-          font-size: 1.05rem;
-          color: #4f46e5;
-          font-weight: 700;
+        .offers-title {
+          font-family: 'Outfit', sans-serif;
+          font-size: 18px;
+          font-weight: 600;
           margin-bottom: 1.5rem;
           display: flex;
           align-items: center;
-          gap: 0.5rem;
+          gap: 10px;
+          color: #111827;
         }
 
-        .message-bubble {
-          background: #f8fafc;
-          padding: 1.25rem;
-          border-radius: 20px;
-          margin-bottom: 2rem;
-          border: 1px solid #f1f5f9;
-          position: relative;
-        }
-
-        .message-bubble::after {
-          content: '"';
-          position: absolute;
-          top: 5px;
-          right: 15px;
-          font-size: 3rem;
-          font-family: serif;
-          color: rgba(79, 70, 229, 0.05);
-          line-height: 1;
-        }
-
-        .message-text {
-          font-size: 0.95rem;
-          color: #475569;
-          line-height: 1.5;
-          font-style: italic;
-        }
-
-        .action-container {
-          margin-top: auto;
-          display: flex;
-          flex-direction: column;
+        .offers-list {
+          display: grid;
           gap: 1rem;
         }
 
-        .btn-view-offer {
-          width: 100%;
-          background: linear-gradient(90deg, #0f172a 0%, #1e293b 100%);
-          color: white;
-          padding: 1.1rem;
-          border-radius: 16px;
+        .offer-row {
+          background: #FFFFFF;
+          border: 1.5px solid #D1FAE5;
+          border-radius: 0;
+          padding: 20px;
+          display: flex;
+          align-items: center;
+          transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+          position: relative;
+          overflow: hidden;
+        }
+
+        .offer-row:hover {
+          border-color: #10B981;
+          transform: none;
+          background-color: #F0FDF4;
+        }
+
+        .company-badge {
+          width: 48px;
+          height: 48px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
           font-weight: 700;
+          color: #059669;
+          font-size: 24px;
+          flex-shrink: 0;
+          margin-right: 20px;
+        }
+
+        .role-details {
+          flex: 1;
+          padding-right: 20px;
+        }
+
+        .role-details h3 {
+          font-family: 'Outfit', sans-serif;
+          font-size: 16px;
+          font-weight: 600;
+          color: #111827;
+          margin-bottom: 2px;
+        }
+
+        .role-details p {
+          font-size: 13px;
+          color: #6B7280;
+          font-weight: 500;
+          margin: 0;
+        }
+
+        .date-container {
+          width: 200px;
+          text-align: center;
+          color: #6B7280;
+          font-size: 13px;
+          font-weight: 500;
+          border-left: 1px solid #F1F5F9;
+          border-right: 1px solid #F1F5F9;
+          padding: 8px 0;
+        }
+
+        .action-cell {
+          width: 260px;
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          justify-content: flex-end;
+          padding-left: 20px;
+        }
+
+        .status-pill {
+          font-size: 11px;
+          font-weight: 600;
+          padding: 4px 10px;
+          border-radius: 0;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          border: 1px solid transparent;
+        }
+
+        .status-pill.accepted { background-color: #DCFCE7; color: #15803D; }
+        .status-pill.pending { background-color: #FEF9C3; color: #A16207; }
+        .status-pill.viewed { background-color: #F3F4F6; color: #4B5563; }
+
+        .btn-download {
+          background-color: #059669;
+          color: #FFFFFF;
+          height: 40px;
+          padding: 0 18px;
+          border-radius: 0;
+          font-size: 13px;
+          font-weight: 600;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
           text-decoration: none;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 0.75rem;
-          transition: all 0.3s;
-          box-shadow: 0 4px 12px rgba(15, 23, 42, 0.1);
+          transition: all 150ms ease;
+          border: none;
+          cursor: pointer;
         }
 
-        .btn-view-offer:hover {
-          background: linear-gradient(90deg, #4f46e5 0%, #6366f1 100%);
-          transform: translateY(-2px);
-          box-shadow: 0 10px 20px rgba(79, 70, 229, 0.25);
-          color: white;
+        .btn-download:hover {
+          background-color: #047857;
         }
 
-        .status-badge-bottom {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          font-size: 0.85rem;
-          color: #10b981;
-          font-weight: 700;
-          justify-content: center;
+        .btn-download:active {
+          transform: translateY(0);
         }
 
-        /* Animations */
-        @keyframes fadeInDown {
-          from { opacity: 0; transform: translateY(-30px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-
-        @keyframes fadeInUp {
-          from { opacity: 0; transform: translateY(40px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Loading Spinner */
-        .loading-wrap {
+        /* Loading */
+        .loader-wrap {
           display: flex;
           flex-direction: column;
           align-items: center;
           justify-content: center;
-          padding: 10rem 0;
+          padding: 6rem 2rem;
         }
 
-        .modern-loader {
-          width: 48px;
-          height: 48px;
-          border: 4px solid #e2e8f0;
-          border-bottom-color: #4f46e5;
+        .spinner {
+          width: 32px;
+          height: 32px;
+          border: 3px solid #E5E7EB;
+          border-top-color: #059669;
           border-radius: 50%;
-          animation: rotation 1s linear infinite;
-          margin-bottom: 1.5rem;
+          animation: spin 0.6s linear infinite;
+          margin-bottom: 20px;
         }
 
-        @keyframes rotation {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
+        @keyframes spin {
+          to { transform: rotate(360deg); }
         }
 
         /* Empty State */
-        .empty-visual {
-          background: white;
-          border-radius: 40px;
-          padding: 6rem 3rem;
+        .empty-dashboard {
+          background: #FFFFFF;
+          border: 2px solid #D1D5DB;
+          border-radius: 0;
+          padding: 5rem 2rem;
           text-align: center;
-          box-shadow: 0 20px 40px -10px rgba(0,0,0,0.05);
-          animation: fadeInUp 1s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        
+        .empty-dashboard:hover {
+          border-color: #059669;
         }
 
-        .lottie-placeholder {
-          font-size: 6rem;
-          margin-bottom: 2rem;
-          filter: drop-shadow(0 10px 20px rgba(0,0,0,0.1));
+        .empty-dashboard h2 {
+          font-size: 20px;
+          font-weight: 700;
+          color: #111827;
+          margin-bottom: 8px;
         }
 
-        .empty-title {
-          font-family: 'Outfit', sans-serif;
-          font-size: 2rem;
-          font-weight: 800;
-          color: #1e293b;
-          margin-bottom: 0.75rem;
+        .empty-dashboard p {
+          font-size: 14px;
+          color: #6B7280;
         }
 
-        .empty-desc {
-          font-size: 1.1rem;
-          color: #64748b;
-          max-width: 400px;
-          margin: 0 auto;
+        @media (max-width: 850px) {
+          .offer-row {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 20px;
+          }
+          .date-container {
+            padding: 0;
+            text-align: left;
+          }
+          .action-cell {
+            width: 100%;
+            justify-content: space-between;
+          }
+          .hero-illustration {
+            display: none;
+          }
         }
       `}</style>
 
-      <div className="page-content">
-        <div className="header-section">
-          <div className="badge-success">
-            <i className="fas fa-medal"></i> Career Milestones
+      <section className="hero-banner">
+        <div className="hero-content">
+          <h1>Your Success Portal 🎉</h1>
+          <p>This is where your professional journey begins. Access your official offer letters, track your achievements, and prepare for your big debut in the industry.</p>
+        </div>
+        <div className="hero-illustration">🎓</div>
+      </section>
+
+      <div className="main-wrapper">
+        <div className="stats-row">
+          <div className="stat-card bg-purple">
+            <div className="stat-icon-wrap">
+              <i className="fas fa-medal"></i>
+            </div>
+            <div className="stat-info">
+              <span className="label">Total Offers</span>
+              <span className="value">{offerLetters.length}</span>
+            </div>
           </div>
-          <h1 className="title-main">Success Unlocked</h1>
-          <p className="subtitle-main">
-            Your persistence has paid off! Browse through your official offer letters and prepare for the next chapter of your professional journey.
-          </p>
+          <div className="stat-card bg-blue">
+            <div className="stat-icon-wrap">
+              <i className="fas fa-check-double"></i>
+            </div>
+            <div className="stat-info">
+              <span className="label">Status</span>
+              <span className="value">Selected</span>
+            </div>
+          </div>
+          <div className="stat-card bg-cyan">
+            <div className="stat-icon-wrap">
+              <i className="fas fa-clock"></i>
+            </div>
+            <div className="stat-info">
+              <span className="label">Last Updated</span>
+              <span className="value">Today</span>
+            </div>
+          </div>
         </div>
 
+        <h2 className="offers-title">
+          <i className="fas fa-award" style={{ color: '#059669' }}></i>
+          Recent Offer Letters
+        </h2>
+
         {loading ? (
-          <div className="loading-wrap">
-            <div className="modern-loader"></div>
-            <p style={{ fontWeight: 600, color: '#64748b' }}>Curating your achievements...</p>
+          <div className="loader-wrap">
+            <div className="spinner"></div>
+            <p style={{ fontWeight: 500, color: '#6B7280' }}>Preparing your achievements...</p>
           </div>
         ) : error ? (
-          <div className="empty-visual" style={{ borderColor: '#fee2e2', background: '#fffafa' }}>
-             <div className="lottie-placeholder">⚠️</div>
-             <h3 className="empty-title" style={{ color: '#ef4444' }}>System Sync Error</h3>
-             <p className="empty-desc">{error}</p>
+          <div className="empty-dashboard" style={{ borderColor: '#FEE2E2', backgroundColor: '#FFF5F5' }}>
+            <span style={{ fontSize: '40px', marginBottom: '16px', display: 'block' }}>⚠️</span>
+            <h2>Connection Error</h2>
+            <p>{error}</p>
           </div>
         ) : offerLetters.length === 0 ? (
-          <div className="empty-visual">
-            <div className="lottie-placeholder">🏙️</div>
-            <h3 className="empty-title">Your Big Moment is Coming</h3>
-            <p className="empty-desc">
-              Continue showcasing your incredible talent. Your next offer letter is just around the corner!
-            </p>
+          <div className="empty-dashboard">
+            <span style={{ fontSize: '48px', marginBottom: '20px', display: 'block' }}>🚀</span>
+            <h2>Your first offer is on its way!</h2>
+            <p>Keep honing your skills and applying. Your next big success story will appear right here.</p>
           </div>
         ) : (
-          <div className="offer-grid">
-            {offerLetters.map((ol, index) => (
-              <div 
-                key={ol.id} 
-                className="offer-card-premium"
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
-                <div className="card-header-flex">
-                  <div className="brand-icon">
-                    {ol.company_name.charAt(0)}
-                  </div>
-                  <div className="date-chip">
-                    {new Date(ol.uploaded_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                  </div>
+          <div className="offers-list">
+            {offerLetters.map((ol) => (
+              <div key={ol.id} className="offer-row">
+                <div className="company-badge">
+                  {ol.company_name ? ol.company_name.charAt(0).toUpperCase() : "?"}
+                </div>
+                
+                <div className="role-details">
+                  <h3>{ol.company_name}</h3>
+                  <p>{ol.job_title}</p>
                 </div>
 
-                <div className="company-name">{ol.company_name}</div>
-                <div className="role-name">
-                  <i className="fas fa-briefcase" style={{ fontSize: '0.9rem', opacity: 0.7 }}></i>
-                  {ol.job_title}
+                <div className="date-container">
+                  <span className="label" style={{ display: 'block', textTransform: 'uppercase', fontSize: '10px', color: '#9CA3AF', marginBottom: '4px' }}>Date Issued</span>
+                  {new Date(ol.uploaded_at).toLocaleDateString("en-US", { 
+                    month: "long", 
+                    day: "numeric", 
+                    year: "numeric" 
+                  })}
                 </div>
 
-                {ol.message && (
-                  <div className="message-bubble">
-                    <div className="message-text">"{ol.message}"</div>
-                  </div>
-                )}
-
-                <div className="action-container">
+                <div className="action-cell">
+                  <span className={`status-pill ${ol.status ? ol.status.toLowerCase() : "accepted"}`}>
+                    {ol.status || "Selected"}
+                  </span>
                   <a 
                     href={formatFileUrl(ol.offer_letter_url)} 
                     target="_blank" 
                     rel="noopener noreferrer" 
-                    className="btn-view-offer"
+                    className="btn-download"
                   >
-                    <i className="fas fa-file-pdf"></i>
-                    View Official Offer
+                    <i className="fas fa-cloud-download-alt"></i>
+                    Download
                   </a>
-                  <div className="status-badge-bottom">
-                    <i className="fas fa-check-double"></i>
-                    Officially Selected
-                  </div>
                 </div>
               </div>
             ))}

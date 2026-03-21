@@ -95,12 +95,17 @@ urlpatterns = [
     path('jobs-by-location/', views.jobs_by_location, name='jobs_by_location'),
     path('monthly-jobs-posted-trend/', views.monthly_jobs_posted_trend, name='monthly_jobs_posted_trend'),
 
+    # 📊 REPORTS
+    path('reports/consolidated/', views.consolidated_reports),
+    path('reports/summary/', views.reports_summary),
+    path('reports/placement-by-department/', views.reports_placement_by_department),
+    path('reports/placement-trend/', views.reports_placement_trend),
+    path('reports/top-students/', views.reports_top_students),
+    path('reports/top-companies/', views.reports_top_companies),
+    path('reports/salary-distribution/', views.reports_salary_distribution),
 
-
-
-
-
-
+    # 📥 EXPORTS
+    path('reports/export/<str:type>/', views.export_report),
 ]
 
 
